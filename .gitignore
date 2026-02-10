@@ -1,0 +1,17 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+
+# Vite
+*.local
+
+# Editor
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
