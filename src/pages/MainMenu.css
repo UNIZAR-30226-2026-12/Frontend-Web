@@ -1,0 +1,133 @@
+/* ===== Layout principal del menú ===== */
+.menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* ===== Contenido central ===== */
+.menu__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  padding: 3rem 2rem;
+  max-width: 520px;
+  text-align: center;
+}
+
+/* ===== Título ===== */
+.menu__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.menu__title {
+  display: flex;
+  flex-direction: column;
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.menu__title-random {
+  color: var(--color-primary);
+}
+
+.menu__title-reversi {
+  color: var(--color-text);
+}
+
+.menu__subtitle {
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+/* ===== Tarjetas de opciones ===== */
+.menu__options {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  max-width: 600px;
+  justify-content: center;
+}
+
+.menu__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem 1.2rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  text-align: center;
+  width: calc(50% - 0.5rem);
+  transition: all var(--transition);
+}
+
+.menu__card:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.15);
+}
+
+/* Icono de la tarjeta */
+.menu__card-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+/* Texto de la tarjeta */
+.menu__card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.menu__card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.menu__card-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* ===== Footer ===== */
+.menu__footer {
+  margin-top: 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+  .menu__title {
+    font-size: 2.2rem;
+  }
+
+  .menu__options {
+    max-width: 100%;
+  }
+
+  .menu__card {
+    padding: 1rem 1.2rem;
+  }
+}
