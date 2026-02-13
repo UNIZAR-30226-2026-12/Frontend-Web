@@ -1,6 +1,12 @@
+import { useState } from 'react'
+import LoginModal from '../components/LoginModal'
+import RegisterModal from '../components/RegisterModal'
 import './Home.css'
 
 function Home() {
+  const [showLogin, setShowLogin] = useState(false)
+  const [showRegister, setShowRegister] = useState(false)
+
   return (
     <div className="home">
       {/* Fondo animado con fichas flotantes */}
@@ -36,10 +42,10 @@ function Home() {
 
         {/* Botones de acción */}
         <div className="home__actions">
-          <button className="home__btn home__btn--primary">
+          <button className="home__btn home__btn--primary" onClick={() => setShowLogin(true)}>
             Iniciar Sesión
           </button>
-          <button className="home__btn home__btn--secondary">
+          <button className="home__btn home__btn--secondary" onClick={() => setShowRegister(true)}>
             Crear Cuenta
           </button>
         </div>
@@ -49,6 +55,10 @@ function Home() {
           <p>HuQ Games Studio &middot; Universidad de Zaragoza</p>
         </footer>
       </main>
+
+      {/* Modales */}
+      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
+      <RegisterModal isOpen={showRegister} onClose={() => setShowRegister(false)} />
     </div>
   )
 }
