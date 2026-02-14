@@ -1,7 +1,11 @@
 import '../Background.css'
 import './MainMenu.css'
 
-function MainMenu() {
+interface MainMenuProps {
+    onNavigate: (screen: string) => void
+}
+
+function MainMenu({ onNavigate }: MainMenuProps) {
     return (
         <div className="menu">
             {/* Fondo animado con fichas flotantes */}
@@ -50,7 +54,7 @@ function MainMenu() {
                         </div>
                     </button>
 
-                    <button className="menu__card">
+                    <button className="menu__card" onClick={() => onNavigate('customization')}>
                         <span className="menu__card-icon">🎨</span>
                         <div className="menu__card-info">
                             <span className="menu__card-title">Personalización</span>

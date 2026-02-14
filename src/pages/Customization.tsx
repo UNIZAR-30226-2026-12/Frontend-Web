@@ -28,7 +28,11 @@ const AVATARS = [
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>,
 ]
 
-function Customization() {
+interface CustomizationProps {
+    onNavigate: (screen: string) => void
+}
+
+function Customization({ onNavigate }: CustomizationProps) {
     const [selectedPiece, setSelectedPiece] = useState(0)
     const [selectedBoard, setSelectedBoard] = useState(0)
     const [selectedAvatar, setSelectedAvatar] = useState(0)
@@ -64,41 +68,43 @@ function Customization() {
                     {/* Sección: Perfil */}
                     <div className="custom__section">
                         <div className="custom__section-header">
-                            <span className="custom__section-icon">👤</span>
                             <span className="custom__section-title">Perfil</span>
                         </div>
 
                         <div className="custom__profile">
-                            {/* Vista previa del avatar seleccionado */}
-                            <div className="custom__avatar-preview">
-                                {AVATARS[selectedAvatar]}
+                            <div className="custom__profile-top">
+                                {/* Vista previa del avatar seleccionado */}
+                                <div className="custom__avatar-preview">
+                                    {AVATARS[selectedAvatar]}
+                                </div>
+
+                                <div className="custom__profile-content">
+                                    <span className="custom__selector-label">Foto de perfil</span>
+                                    <div className="custom__avatar-selector">
+                                        {AVATARS.map((avatar, i) => (
+                                            <button
+                                                key={i}
+                                                className={`custom__avatar-option ${i === selectedAvatar ? 'custom__avatar-option--selected' : ''}`}
+                                                onClick={() => setSelectedAvatar(i)}
+                                            >
+                                                {avatar}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="custom__profile-content">
-                                <span className="custom__selector-label">Foto de perfil</span>
-                                <div className="custom__avatar-selector">
-                                    {AVATARS.map((avatar, i) => (
-                                        <button
-                                            key={i}
-                                            className={`custom__avatar-option ${i === selectedAvatar ? 'custom__avatar-option--selected' : ''}`}
-                                            onClick={() => setSelectedAvatar(i)}
-                                        >
-                                            {avatar}
-                                        </button>
-                                    ))}
+                            <div className="custom__profile-fields">
+                                <div className="custom__field">
+                                    <span className="custom__field-label">Nombre</span>
+                                    <div className="custom__field-row">
+                                        <span className="custom__field-value">Jugador</span>
+                                        <button className="custom__field-edit">✏️</button>
+                                    </div>
                                 </div>
-                                <div className="custom__profile-fields">
-                                    <div className="custom__field">
-                                        <span className="custom__field-label">Nombre</span>
-                                        <div className="custom__field-row">
-                                            <span className="custom__field-value">Jugador</span>
-                                            <button className="custom__field-edit">✏️</button>
-                                        </div>
-                                    </div>
-                                    <div className="custom__field">
-                                        <span className="custom__field-label">Correo electrónico</span>
-                                        <span className="custom__field-value">jugador@email.com</span>
-                                    </div>
+                                <div className="custom__field">
+                                    <span className="custom__field-label">Correo electrónico</span>
+                                    <span className="custom__field-value">jugador@email.com</span>
                                 </div>
                             </div>
                         </div>
@@ -107,7 +113,6 @@ function Customization() {
                     {/* Sección: Fichas y Tablero con vista previa */}
                     <div className="custom__section">
                         <div className="custom__section-header">
-                            <span className="custom__section-icon">🎯</span>
                             <span className="custom__section-title">Fichas y Tablero</span>
                         </div>
 
@@ -188,7 +193,7 @@ function Customization() {
                 </div>
 
                 {/* Botón volver */}
-                <button className="custom__back">Volver al menú</button>
+                <button className="custom__back" onClick={() => onNavigate('menu')}>Volver al menú</button>
             </main>
         </div>
     )
