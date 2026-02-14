@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import GameModal from '../components/GameModal'
 import '../Background.css'
 import './MainMenu.css'
 
@@ -6,13 +8,14 @@ interface MainMenuProps {
 }
 
 function MainMenu({ onNavigate }: MainMenuProps) {
+    const [showIAModal, setShowIAModal] = useState(false)
     return (
         <div className="menu">
             {/* Barra de usuario y cierre de sesión */}
             <div className="menu__user-bar">
                 <div className="menu__user-info">
                     <span className="menu__user-icon">👤</span>
-                    <span className="menu__user-name">Alejo</span>
+                    <span className="menu__user-name">Jugador</span>
                 </div>
                 <button className="menu__logout-btn" onClick={() => onNavigate('home')} title="Cerrar Sesión">
                     <span className="menu__logout-icon">🚪</span>
@@ -58,7 +61,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                         </div>
                     </button>
 
-                    <button className="menu__card">
+                    <button className="menu__card" onClick={() => setShowIAModal(true)}>
                         <span className="menu__card-icon">🤖</span>
                         <div className="menu__card-info">
                             <span className="menu__card-title">Jugar contra la IA</span>
@@ -88,6 +91,18 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                     <p>HuQ Games Studio &middot; Universidad de Zaragoza</p>
                 </footer>
             </main>
+
+            {/* Modales */}
+            <GameModal
+                isOpen={showIAModal}
+                onClose={() => setShowIAModal(false)}
+                title="Jugar contra la IA"
+                subtitle="Elige el modo de juego"
+                onSelectMode={(mode) => {
+                    console.log(`IA Mode selected: ${mode}`)
+                    setShowIAModal(false)
+                }}
+            />
         </div>
     )
 }

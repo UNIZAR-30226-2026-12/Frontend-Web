@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import GameModal from '../components/GameModal'
 import '../Background.css'
 import './Friends.css'
 
@@ -41,6 +42,8 @@ function Friends({ onNavigate }: FriendsProps) {
     const [gameRequests, setGameRequests] = useState<Friend[]>(MOCK_GAME_REQUESTS)
     const [newFriendName, setNewFriendName] = useState('')
     const [toast, setToast] = useState<Toast>({ message: '', type: 'info', visible: false })
+    const [isGameModalOpen, setIsGameModalOpen] = useState(false)
+    const [selectedFriend, setSelectedFriend] = useState('')
     const toastTimer = useRef<number | null>(null)
 
     const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
@@ -94,7 +97,13 @@ function Friends({ onNavigate }: FriendsProps) {
     }
 
     const handleInvite = (friendName: string) => {
-        showToast(`Invitación enviada a ${friendName}`, 'info')
+        setSelectedFriend(friendName)
+        setIsGameModalOpen(true)
+    }
+
+    const handleConfirmInvite = () => {
+        setIsGameModalOpen(false)
+        showToast(`Invitación enviada a ${selectedFriend}`, 'info')
     }
 
     const handleRemove = (id: number) => {
@@ -275,6 +284,15 @@ function Friends({ onNavigate }: FriendsProps) {
                 </span>
                 <span className="toast__message">{toast.message}</span>
             </div>
+
+            {/* Modal de selección de modo de juego */}
+            <GameModal
+                isOpen={isGameModalOpen}
+                onClose={() => setIsGameModalOpen(false)}
+                title="Retar a un duelo"
+                subtitle={`¿Qué modo de juego quieres jugar contra ${selectedFriend}?`}
+                onSelectMode={handleConfirmInvite}
+            />
         </div>
     )
 }
