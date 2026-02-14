@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import '../Background.css'
 import './Customization.css'
 
@@ -20,13 +20,8 @@ const BOARD_COLORS = [
     { color: '#5b2d8e', label: 'Púrpura' },
 ]
 
-/* Avatares predefinidos */
-const AVATARS = [
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" /></svg>,
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 4c1.93 0 3.68.79 4.95 2.05L12 13 7.05 8.05C8.32 6.79 10.07 6 12 6m-6 3.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5m12 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5" /></svg>,
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.64 3.19L6.44 9h11.12l-5.2-5.81a.56.56 0 0 0-.72 0M5.09 9L3 11.59l8.28 9.3c.36.41.97.41 1.34 0L21 11.59 18.91 9H5.09z" /></svg>,
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>,
-]
+/* Avatares predefinidos (Emojis) */
+const AVATARS = ['🥷', '🦊', '🤖', '👻', '🎮', '🎨', '⭐', '🚀']
 
 interface CustomizationProps {
     onNavigate: (screen: string) => void
@@ -35,7 +30,38 @@ interface CustomizationProps {
 function Customization({ onNavigate }: CustomizationProps) {
     const [selectedPiece, setSelectedPiece] = useState(0)
     const [selectedBoard, setSelectedBoard] = useState(0)
-    const [selectedAvatar, setSelectedAvatar] = useState(0)
+    const [selectedAvatar, setSelectedAvatar] = useState<number | 'custom'>(0)
+    const [customAvatar, setCustomAvatar] = useState<string | null>(null)
+    const [username, setUsername] = useState('Jugador')
+    const [isEditingName, setIsEditingName] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const url = URL.createObjectURL(file)
+            setCustomAvatar(url)
+            setSelectedAvatar('custom')
+        }
+    }
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click()
+    }
+
+    const toggleEditName = () => {
+        setIsEditingName(!isEditingName)
+    }
+
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setUsername(e.target.value)
+    }
+
+    const handleNameKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            setIsEditingName(false)
+        }
+    }
 
     return (
         <div className="custom">
@@ -75,7 +101,11 @@ function Customization({ onNavigate }: CustomizationProps) {
                             <div className="custom__profile-top">
                                 {/* Vista previa del avatar seleccionado */}
                                 <div className="custom__avatar-preview">
-                                    {AVATARS[selectedAvatar]}
+                                    {selectedAvatar === 'custom' && customAvatar ? (
+                                        <img src={customAvatar} alt="Avatar" className="custom__avatar-img" />
+                                    ) : (
+                                        typeof selectedAvatar === 'number' && AVATARS[selectedAvatar]
+                                    )}
                                 </div>
 
                                 <div className="custom__profile-content">
@@ -84,12 +114,39 @@ function Customization({ onNavigate }: CustomizationProps) {
                                         {AVATARS.map((avatar, i) => (
                                             <button
                                                 key={i}
-                                                className={`custom__avatar-option ${i === selectedAvatar ? 'custom__avatar-option--selected' : ''}`}
+                                                className={`custom__avatar-option ${selectedAvatar === i ? 'custom__avatar-option--selected' : ''}`}
                                                 onClick={() => setSelectedAvatar(i)}
                                             >
                                                 {avatar}
                                             </button>
                                         ))}
+
+                                        {/* Avatar personalizado subido */}
+                                        {customAvatar && (
+                                            <button
+                                                className={`custom__avatar-option custom__avatar-option--custom ${selectedAvatar === 'custom' ? 'custom__avatar-option--selected' : ''}`}
+                                                onClick={() => setSelectedAvatar('custom')}
+                                            >
+                                                <img src={customAvatar} alt="Custom" className="custom__avatar-img" />
+                                            </button>
+                                        )}
+
+                                        {/* Botón para subir imagen */}
+                                        <button
+                                            className="custom__avatar-option custom__avatar-upload"
+                                            onClick={triggerFileInput}
+                                            title="Subir foto propia"
+                                        >
+                                            ➕
+                                        </button>
+
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleImageUpload}
+                                            accept="image/*"
+                                            className="custom__file-input"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -98,8 +155,26 @@ function Customization({ onNavigate }: CustomizationProps) {
                                 <div className="custom__field">
                                     <span className="custom__field-label">Nombre</span>
                                     <div className="custom__field-row">
-                                        <span className="custom__field-value">Jugador</span>
-                                        <button className="custom__field-edit">✏️</button>
+                                        {isEditingName ? (
+                                            <input
+                                                type="text"
+                                                className="custom__input-name"
+                                                value={username}
+                                                onChange={handleNameChange}
+                                                onKeyDown={handleNameKeyDown}
+                                                onBlur={() => setIsEditingName(false)}
+                                                autoFocus
+                                            />
+                                        ) : (
+                                            <span className="custom__field-value">{username}</span>
+                                        )}
+                                        <button
+                                            className="custom__field-edit"
+                                            onClick={toggleEditName}
+                                            title={isEditingName ? "Guardar" : "Editar nombre"}
+                                        >
+                                            {isEditingName ? '✅' : '✏️'}
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="custom__field">

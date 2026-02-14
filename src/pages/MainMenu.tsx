@@ -62,7 +62,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                         </div>
                     </button>
 
-                    <button className="menu__card">
+                    <button className="menu__card" onClick={() => onNavigate('friends')}>
                         <span className="menu__card-icon">👥</span>
                         <div className="menu__card-info">
                             <span className="menu__card-title">Amigos</span>

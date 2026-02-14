@@ -94,18 +94,17 @@
 }
 
 .custom__avatar-preview {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
+    width: 80px;
+    height: 80px;
     background: var(--color-surface-light);
-    border: 3px solid var(--color-primary);
-    color: var(--color-text);
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
-    flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-size: 3rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
 }
 
 .custom__profile-content {
@@ -133,9 +132,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.75rem;
+    font-size: 1.8rem;
+    padding: 0;
     cursor: pointer;
     transition: all var(--transition);
+    overflow: hidden;
 }
 
 .custom__avatar-option:hover {
@@ -149,6 +150,27 @@
     box-shadow: 0 0 12px rgba(108, 99, 255, 0.4);
     color: var(--color-primary);
     background: var(--color-surface);
+}
+
+.custom__avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.custom__avatar-upload {
+    font-size: 1.2rem;
+    background: rgba(108, 99, 255, 0.1);
+    border-style: dashed;
+    color: var(--color-primary);
+}
+
+.custom__avatar-upload:hover {
+    background: rgba(108, 99, 255, 0.2);
+}
+
+.custom__file-input {
+    display: none;
 }
 
 .custom__profile-fields {
@@ -185,16 +207,39 @@
     color: var(--color-text);
 }
 
+.custom__input-name {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+    padding: 0.2rem 0.5rem;
+    font-size: 0.95rem;
+    outline: none;
+    width: 154px;
+    transition: all var(--transition);
+}
+
+.custom__input-name:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 5px rgba(108, 99, 255, 0.3);
+}
+
 .custom__field-edit {
     background: none;
-    font-size: 0.85rem;
-    padding: 0.15rem;
-    opacity: 0.5;
-    transition: opacity var(--transition);
+    border: none;
+    font-size: 0.9rem;
+    padding: 0.3rem;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .custom__field-edit:hover {
     opacity: 1;
+    transform: scale(1.1);
 }
 
 /* ===== Vista previa del tablero ===== */
