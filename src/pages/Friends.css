@@ -62,19 +62,19 @@
 
 /* Distribución espacio para 4 secciones */
 .friends__list-section {
-    flex: 1.5;
+    flex: 1.3;
 }
 
 .friends__add-section {
-    flex: 0.8;
+    flex: 0.7;
 }
 
 .friends__requests-section {
-    flex: 1.1;
+    flex: 1.15;
 }
 
 .friends__game-requests-section {
-    flex: 1.1;
+    flex: 1.3;
 }
 
 .friends__section-title {
@@ -201,9 +201,10 @@
     font-size: 1.4rem;
 }
 
-.friend-card__details {
+.friend-card__name-row {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
     min-width: 0;
 }
 
@@ -213,6 +214,17 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.friend-card__rr {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.1);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .friend-card__status {
@@ -254,6 +266,33 @@
 .friend-card__status--playing::before {
     background: #facc15;
     box-shadow: 0 0 5px #facc15;
+}
+
+/* Información de juego en invitaciones */
+.friend-card__game-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.2rem;
+}
+
+.friend-card__mode-tag {
+    background: rgba(108, 99, 255, 0.15);
+    color: #a78bfa;
+    padding: 0.1rem 0.2rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 1px solid rgba(108, 99, 255, 0.2);
+}
+
+.friend-card__players-count {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
 }
 
 /* Botones de acción */

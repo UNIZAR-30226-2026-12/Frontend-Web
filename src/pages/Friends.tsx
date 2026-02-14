@@ -12,6 +12,9 @@ interface Friend {
     name: string
     status: 'online' | 'offline' | 'playing'
     avatar: string
+    rr: number
+    gameMode?: '1vs1' | '1vs1vs1vs1'
+    playersCount?: number
 }
 
 interface Toast {
@@ -21,19 +24,20 @@ interface Toast {
 }
 
 const MOCK_FRIENDS: Friend[] = [
-    { id: 1, name: 'CyberNinja', status: 'online', avatar: '🥷' },
-    { id: 2, name: 'ReversiMaster', status: 'playing', avatar: '🦊' },
-    { id: 3, name: 'StarPlayer99', status: 'offline', avatar: '⭐' },
-    { id: 4, name: 'RoboTactics', status: 'online', avatar: '🤖' },
+    { id: 1, name: 'CyberNinja', status: 'online', avatar: '🥷', rr: 1420 },
+    { id: 2, name: 'ReversiMaster', status: 'playing', avatar: '🦊', rr: 2150 },
+    { id: 3, name: 'StarPlayer99', status: 'offline', avatar: '⭐', rr: 1100 },
+    { id: 4, name: 'RoboTactics', status: 'online', avatar: '🤖', rr: 1575 },
 ]
 
 const MOCK_REQUESTS: Friend[] = [
-    { id: 101, name: 'GamerX', status: 'offline', avatar: '🎮' },
-    { id: 102, name: 'PixelArtist', status: 'offline', avatar: '🎨' },
+    { id: 101, name: 'GamerX', status: 'offline', avatar: '🎮', rr: 845 },
+    { id: 102, name: 'PixelArtist', status: 'offline', avatar: '🎨', rr: 1320 },
 ]
 
 const MOCK_GAME_REQUESTS: Friend[] = [
-    { id: 201, name: 'ProPlayer_01', status: 'online', avatar: '🕹️' },
+    { id: 201, name: 'ProPlayer_01', status: 'online', avatar: '🕹️', gameMode: '1vs1', playersCount: 1, rr: 1720 },
+    { id: 202, name: 'UltraStrategist', status: 'online', avatar: '🧠', gameMode: '1vs1vs1vs1', playersCount: 3, rr: 1950 },
 ]
 
 function Friends({ onNavigate }: FriendsProps) {
@@ -88,7 +92,8 @@ function Friends({ onNavigate }: FriendsProps) {
             id: Date.now(),
             name: newFriendName,
             status: 'offline',
-            avatar: '👤'
+            avatar: '👤',
+            rr: 1000
         }
 
         setFriends([...friends, newFriend])
@@ -151,7 +156,10 @@ function Friends({ onNavigate }: FriendsProps) {
                                         <div className="friend-card__info">
                                             <span className="friend-card__avatar">{friend.avatar}</span>
                                             <div className="friend-card__details">
-                                                <span className="friend-card__name">{friend.name}</span>
+                                                <div className="friend-card__name-row">
+                                                    <span className="friend-card__name">{friend.name}</span>
+                                                    <span className="friend-card__rr">{friend.rr} RR</span>
+                                                </div>
                                                 <span className={`friend-card__status friend-card__status--${friend.status}`}>
                                                     {friend.status === 'online' && 'En línea'}
                                                     {friend.status === 'offline' && 'Desconectado'}
@@ -210,7 +218,12 @@ function Friends({ onNavigate }: FriendsProps) {
                                     <div key={request.id} className="friend-card friend-card--request">
                                         <div className="friend-card__info">
                                             <span className="friend-card__avatar">{request.avatar}</span>
-                                            <span className="friend-card__name">{request.name}</span>
+                                            <div className="friend-card__details">
+                                                <div className="friend-card__name-row">
+                                                    <span className="friend-card__name">{request.name}</span>
+                                                    <span className="friend-card__rr">{request.rr} RR</span>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div className="friend-card__actions">
                                             <button
@@ -242,10 +255,19 @@ function Friends({ onNavigate }: FriendsProps) {
                                 <p className="friends__empty">Sin solicitudes de juego</p>
                             ) : (
                                 gameRequests.map(request => (
-                                    <div key={request.id} className="friend-card friend-card--request">
+                                    <div key={request.id} className="friend-card friend-card--game-request">
                                         <div className="friend-card__info">
                                             <span className="friend-card__avatar">{request.avatar}</span>
-                                            <span className="friend-card__name">{request.name}</span>
+                                            <div className="friend-card__details">
+                                                <div className="friend-card__name-row">
+                                                    <span className="friend-card__name">{request.name}</span>
+                                                    <span className="friend-card__rr">{request.rr} RR</span>
+                                                </div>
+                                                <div className="friend-card__game-info">
+                                                    <span className="friend-card__mode-tag">{request.gameMode}</span>
+                                                    <span className="friend-card__players-count">👥 {request.playersCount}/4</span>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div className="friend-card__actions">
                                             <button

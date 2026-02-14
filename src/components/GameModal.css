@@ -98,19 +98,19 @@
 }
 
 .board-preview__piece--white {
-    background: radgamel-gradient(circle at 30% 30%, #ffffff 0%, #d0d0d0 100%);
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #d0d0d0 100%);
 }
 
 .board-preview__piece--black {
-    background: radgamel-gradient(circle at 30% 30%, #444 0%, #000 100%);
+    background: radial-gradient(circle at 30% 30%, #444 0%, #000 100%);
 }
 
 .board-preview__piece--red {
-    background: radgamel-gradient(circle at 30% 30%, #ff5555 0%, #880000 100%);
+    background: radial-gradient(circle at 30% 30%, #ff5555 0%, #880000 100%);
 }
 
 .board-preview__piece--blue {
-    background: radgamel-gradient(circle at 30% 30%, #55aaff 0%, #0033aa 100%);
+    background: radial-gradient(circle at 30% 30%, #55aaff 0%, #0033aa 100%);
 }
 
 /* Casillas Especiales (?) */

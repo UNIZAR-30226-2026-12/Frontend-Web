@@ -53,7 +53,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
 
                 {/* Opciones del menú */}
                 <div className="menu__options">
-                    <button className="menu__card">
+                    <button className="menu__card" onClick={() => onNavigate('online-game')}>
                         <span className="menu__card-icon">🌐</span>
                         <div className="menu__card-info">
                             <span className="menu__card-title">Jugar Online</span>
