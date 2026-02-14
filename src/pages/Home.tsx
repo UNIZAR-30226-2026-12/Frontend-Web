@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import LoginModal from '../components/LoginModal'
 import RegisterModal from '../components/RegisterModal'
+import '../Background.css'
 import './Home.css'
 
 function Home() {
@@ -35,7 +36,7 @@ function Home() {
             <span className="home__title-reversi">Reversi</span>
           </h1>
           <p className="home__subtitle">
-            El clásico Reversi reinventado con habilidades especiales, 
+            El clásico Reversi reinventado con habilidades especiales,
             casillas sorpresa y partidas de hasta 4 jugadores.
           </p>
         </div>

@@ -8,56 +8,6 @@
   overflow: hidden;
 }
 
-/* ===== Fichas flotantes de fondo ===== */
-.home__bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.home__chip {
-  position: absolute;
-  font-size: 2.5rem;
-  opacity: 0.15;
-  animation: float 5s ease-in-out infinite;
-}
-
-.home__chip--1  { top: 8%;  left: 6%;   animation-delay: 0s;   }
-.home__chip--2  { top: 15%; right: 10%; animation-delay: 0.5s; }
-.home__chip--3  { bottom: 25%; left: 12%; animation-delay: 1s; }
-.home__chip--4  { bottom: 10%; right: 6%; animation-delay: 1.5s; }
-.home__chip--5  { top: 45%; left: 4%;   animation-delay: 2s;   }
-.home__chip--6  { top: 35%; right: 18%; animation-delay: 2.5s; }
-.home__chip--7  { top: 65%; right: 5%;  animation-delay: 3s;   }
-.home__chip--8  { bottom: 40%; left: 20%; animation-delay: 3.5s; }
-.home__chip--9  { top: 5%;  right: 30%; animation-delay: 4s;   }
-.home__chip--10 { bottom: 5%; left: 35%; animation-delay: 4.5s; }
-
-/* Interrogantes */
-.home__chip--question {
-  opacity: 0.2;
-  font-size: 2rem;
-  animation: float 5s ease-in-out infinite, pulse 3s ease-in-out infinite;
-}
-
-.home__chip--q1 { top: 25%; left: 25%;  animation-delay: 0.8s; }
-.home__chip--q2 { top: 55%; right: 15%; animation-delay: 2.2s; }
-.home__chip--q3 { bottom: 20%; right: 30%; animation-delay: 3.8s; }
-.home__chip--q4 { top: 75%; left: 10%;  animation-delay: 1.5s; }
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.2; transform: scale(1); }
-  50%      { opacity: 0.35; transform: scale(1.15); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25%      { transform: translateY(-30px) rotate(8deg); }
-  50%      { transform: translateY(-12px) rotate(-5deg); }
-  75%      { transform: translateY(-35px) rotate(6deg); }
-}
-
 /* ===== Contenido central ===== */
 .home__content {
   position: relative;

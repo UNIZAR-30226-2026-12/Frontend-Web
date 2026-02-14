@@ -1,3 +1,4 @@
+import '../Background.css'
 import './MainMenu.css'
 
 function MainMenu() {

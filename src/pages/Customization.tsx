@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import '../Background.css'
 import './Customization.css'
 
 /* Pares de colores para fichas (cara A y cara B) */
