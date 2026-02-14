@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import '../Background.css'
 import './Friends.css'
 
@@ -13,6 +13,12 @@ interface Friend {
     avatar: string
 }
 
+interface Toast {
+    message: string
+    type: 'success' | 'info' | 'error'
+    visible: boolean
+}
+
 const MOCK_FRIENDS: Friend[] = [
     { id: 1, name: 'CyberNinja', status: 'online', avatar: '🥷' },
     { id: 2, name: 'ReversiMaster', status: 'playing', avatar: '🦊' },
@@ -25,19 +31,50 @@ const MOCK_REQUESTS: Friend[] = [
     { id: 102, name: 'PixelArtist', status: 'offline', avatar: '🎨' },
 ]
 
+const MOCK_GAME_REQUESTS: Friend[] = [
+    { id: 201, name: 'ProPlayer_01', status: 'online', avatar: '🕹️' },
+]
+
 function Friends({ onNavigate }: FriendsProps) {
     const [friends, setFriends] = useState<Friend[]>(MOCK_FRIENDS)
     const [requests, setRequests] = useState<Friend[]>(MOCK_REQUESTS)
+    const [gameRequests, setGameRequests] = useState<Friend[]>(MOCK_GAME_REQUESTS)
     const [newFriendName, setNewFriendName] = useState('')
+    const [toast, setToast] = useState<Toast>({ message: '', type: 'info', visible: false })
+    const toastTimer = useRef<number | null>(null)
+
+    const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
+        if (toastTimer.current) window.clearTimeout(toastTimer.current)
+
+        setToast({ message, type, visible: true })
+
+        toastTimer.current = window.setTimeout(() => {
+            setToast(prev => ({ ...prev, visible: false }))
+            toastTimer.current = null
+        }, 3000)
+    }
 
     const handleAcceptRequest = (request: Friend) => {
         setRequests(requests.filter(r => r.id !== request.id))
         setFriends([...friends, { ...request, status: 'online' }])
-        alert(`Has aceptado la solicitud de ${request.name}`)
+        showToast(`¡Ahora eres amigo de ${request.name}!`, 'success')
     }
 
     const handleRejectRequest = (id: number) => {
+        const request = requests.find(r => r.id === id)
         setRequests(requests.filter(r => r.id !== id))
+        if (request) showToast(`Solicitud de ${request.name} rechazada`, 'error')
+    }
+
+    const handleAcceptGame = (request: Friend) => {
+        setGameRequests(gameRequests.filter(r => r.id !== request.id))
+        showToast(`¡Aceptando partida de ${request.name}! Preparando tablero...`, 'success')
+    }
+
+    const handleRejectGame = (id: number) => {
+        const request = gameRequests.find(r => r.id === id)
+        setGameRequests(gameRequests.filter(r => r.id !== id))
+        if (request) showToast(`Invitación de ${request.name} rechazada`, 'info')
     }
 
     const handleAddFriend = (e: React.FormEvent) => {
@@ -52,18 +89,18 @@ function Friends({ onNavigate }: FriendsProps) {
         }
 
         setFriends([...friends, newFriend])
+        showToast(`Solicitud enviada a ${newFriendName}`, 'info')
         setNewFriendName('')
-        alert(`Solicitud de amistad enviada a ${newFriendName}`)
     }
 
     const handleInvite = (friendName: string) => {
-        alert(`Invitación enviada a ${friendName}`)
+        showToast(`Invitación enviada a ${friendName}`, 'info')
     }
 
     const handleRemove = (id: number) => {
-        if (confirm('¿Estás seguro de que quieres eliminar a este amigo?')) {
-            setFriends(friends.filter(f => f.id !== id))
-        }
+        const friend = friends.find(f => f.id === id)
+        setFriends(friends.filter(f => f.id !== id))
+        if (friend) showToast(`${friend.name} eliminado de tus amigos`, 'error')
     }
 
     return (
@@ -98,7 +135,7 @@ function Friends({ onNavigate }: FriendsProps) {
                         <h2 className="friends__section-title">Tus Amigos ({friends.length})</h2>
                         <div className="friends__list">
                             {friends.length === 0 ? (
-                                <p className="friends__empty">No tienes amigos agregados aún.</p>
+                                <p className="friends__empty">No tienes amigos agregados todavía.</p>
                             ) : (
                                 friends.map(friend => (
                                     <div key={friend.id} className="friend-card">
@@ -154,11 +191,13 @@ function Friends({ onNavigate }: FriendsProps) {
                     </div>
 
                     {/* Sección: Solicitudes de Amistad */}
-                    {requests.length > 0 && (
-                        <div className="friends__section friends__requests-section">
-                            <h2 className="friends__section-title">Pendientes ({requests.length})</h2>
-                            <div className="friends__requests-list">
-                                {requests.map(request => (
+                    <div className="friends__section friends__requests-section">
+                        <h2 className="friends__section-title">Solicitudes de Amistad ({requests.length})</h2>
+                        <div className="friends__requests-list">
+                            {requests.length === 0 ? (
+                                <p className="friends__empty">Sin solicitudes de amistad</p>
+                            ) : (
+                                requests.map(request => (
                                     <div key={request.id} className="friend-card friend-card--request">
                                         <div className="friend-card__info">
                                             <span className="friend-card__avatar">{request.avatar}</span>
@@ -181,15 +220,60 @@ function Friends({ onNavigate }: FriendsProps) {
                                             </button>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                ))
+                            )}
                         </div>
-                    )}
+                    </div>
+
+                    {/* Sección: Solicitudes de Juego */}
+                    <div className="friends__section friends__game-requests-section">
+                        <h2 className="friends__section-title">Solicitudes de Juego ({gameRequests.length})</h2>
+                        <div className="friends__requests-list">
+                            {gameRequests.length === 0 ? (
+                                <p className="friends__empty">Sin solicitudes de juego</p>
+                            ) : (
+                                gameRequests.map(request => (
+                                    <div key={request.id} className="friend-card friend-card--request">
+                                        <div className="friend-card__info">
+                                            <span className="friend-card__avatar">{request.avatar}</span>
+                                            <span className="friend-card__name">{request.name}</span>
+                                        </div>
+                                        <div className="friend-card__actions">
+                                            <button
+                                                className="friend-btn friend-btn--accept"
+                                                onClick={() => handleAcceptGame(request)}
+                                                title="Aceptar Duelo"
+                                            >
+                                                ✅
+                                            </button>
+                                            <button
+                                                className="friend-btn friend-btn--reject"
+                                                onClick={() => handleRejectGame(request.id)}
+                                                title="Rechazar"
+                                            >
+                                                ❌
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <button className="friends__back-btn" onClick={() => onNavigate('menu')}>
                     Volver al menú
                 </button>
+            </div>
+
+            {/* Sistema de Notificaciones (Toasts) */}
+            <div className={`toast toast--${toast.type} ${toast.visible ? 'toast--visible' : ''}`}>
+                <span className="toast__icon">
+                    {toast.type === 'success' && '✅'}
+                    {toast.type === 'info' && '🔔'}
+                    {toast.type === 'error' && '❌'}
+                </span>
+                <span className="toast__message">{toast.message}</span>
             </div>
         </div>
     )
