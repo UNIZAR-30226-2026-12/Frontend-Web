@@ -4,16 +4,20 @@ import './AuthForms.css'
 interface LoginModalProps {
   isOpen: boolean
   onClose: () => void
+  onNavigate: (screen: string) => void
 }
 
-function LoginModal({ isOpen, onClose }: LoginModalProps) {
+function LoginModal({ isOpen, onClose, onNavigate }: LoginModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="auth-form">
         <h2 className="auth-form__title">Iniciar Sesión</h2>
         <p className="auth-form__subtitle">Bienvenido de vuelta a Random Reversi</p>
 
-        <form className="auth-form__fields" onSubmit={(e) => e.preventDefault()}>
+        <form className="auth-form__fields" onSubmit={(e) => {
+          e.preventDefault()
+          onNavigate('menu')
+        }}>
           <label className="auth-form__label">
             Correo electrónico
             <input

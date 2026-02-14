@@ -22,11 +22,75 @@
 }
 
 /* ===== Título ===== */
+/* ===== Barra de usuario ===== */
+.menu__user-bar {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  padding: 0.5rem 1rem;
+  border-radius: 3rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.menu__user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-right: 1.2rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu__user-icon {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+.menu__user-name {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+}
+
+.menu__logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 2rem;
+  color: #f87171;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.menu__logout-btn:hover {
+  background: rgba(248, 113, 113, 0.25);
+  border-color: rgba(248, 113, 113, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(248, 113, 113, 0.2);
+}
+
+.menu__logout-icon {
+  font-size: 1.1rem;
+}
+
 .menu__header {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  width: 100%;
 }
 
 .menu__title {

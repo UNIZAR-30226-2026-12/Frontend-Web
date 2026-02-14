@@ -4,7 +4,11 @@ import RegisterModal from '../components/RegisterModal'
 import '../Background.css'
 import './Home.css'
 
-function Home() {
+interface HomeProps {
+  onNavigate: (screen: string) => void
+}
+
+function Home({ onNavigate }: HomeProps) {
   const [showLogin, setShowLogin] = useState(false)
   const [showRegister, setShowRegister] = useState(false)
 
@@ -58,7 +62,7 @@ function Home() {
       </main>
 
       {/* Modales */}
-      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
+      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onNavigate={onNavigate} />
       <RegisterModal isOpen={showRegister} onClose={() => setShowRegister(false)} />
     </div>
   )

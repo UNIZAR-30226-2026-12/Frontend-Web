@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import Home from './pages/Home'
 import MainMenu from './pages/MainMenu'
 import Customization from './pages/Customization'
 import Friends from './pages/Friends'
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState('menu')
+  const [currentScreen, setCurrentScreen] = useState('home')
 
   const navigateTo = (screen: string) => {
     setCurrentScreen(screen)
@@ -12,6 +13,7 @@ function App() {
 
   return (
     <>
+      {currentScreen === 'home' && <Home onNavigate={navigateTo} />}
       {currentScreen === 'menu' && <MainMenu onNavigate={navigateTo} />}
       {currentScreen === 'customization' && <Customization onNavigate={navigateTo} />}
       {currentScreen === 'friends' && <Friends onNavigate={navigateTo} />}

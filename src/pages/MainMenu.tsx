@@ -8,6 +8,18 @@ interface MainMenuProps {
 function MainMenu({ onNavigate }: MainMenuProps) {
     return (
         <div className="menu">
+            {/* Barra de usuario y cierre de sesión */}
+            <div className="menu__user-bar">
+                <div className="menu__user-info">
+                    <span className="menu__user-icon">👤</span>
+                    <span className="menu__user-name">Alejo</span>
+                </div>
+                <button className="menu__logout-btn" onClick={() => onNavigate('home')} title="Cerrar Sesión">
+                    <span className="menu__logout-icon">🚪</span>
+                    <span className="menu__logout-text">Cerrar Sesión</span>
+                </button>
+            </div>
+
             {/* Fondo animado con fichas flotantes */}
             <div className="home__bg">
                 <span className="home__chip home__chip--1">⚫</span>
