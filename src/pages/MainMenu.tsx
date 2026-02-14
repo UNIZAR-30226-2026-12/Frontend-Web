@@ -4,7 +4,7 @@ import '../Background.css'
 import './MainMenu.css'
 
 interface MainMenuProps {
-    onNavigate: (screen: string) => void
+    onNavigate: (screen: string, data?: any) => void
 }
 
 function MainMenu({ onNavigate }: MainMenuProps) {

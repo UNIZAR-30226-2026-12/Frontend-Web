@@ -24,7 +24,7 @@ const BOARD_COLORS = [
 const AVATARS = ['🥷', '🦊', '🤖', '👻', '🎮', '🎨', '⭐', '🚀']
 
 interface CustomizationProps {
-    onNavigate: (screen: string) => void
+    onNavigate: (screen: string, data?: any) => void
 }
 
 function Customization({ onNavigate }: CustomizationProps) {

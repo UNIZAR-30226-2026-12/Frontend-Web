@@ -5,7 +5,7 @@ import '../Background.css'
 import './Home.css'
 
 interface HomeProps {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: string, data?: any) => void
 }
 
 function Home({ onNavigate }: HomeProps) {

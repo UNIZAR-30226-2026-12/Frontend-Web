@@ -4,7 +4,7 @@ import '../Background.css'
 import './Friends.css'
 
 interface FriendsProps {
-    onNavigate: (screen: string) => void
+    onNavigate: (screen: string, data?: any) => void
 }
 
 interface Friend {
@@ -76,12 +76,13 @@ function Friends({ onNavigate }: FriendsProps) {
     const handleAcceptGame = (request: Friend) => {
         setGameRequests(gameRequests.filter(r => r.id !== request.id))
         showToast(`¡Aceptando partida de ${request.name}! Preparando tablero...`, 'success')
+        onNavigate('waiting-room', { mode: request.gameMode })
     }
 
     const handleRejectGame = (id: number) => {
         const request = gameRequests.find(r => r.id === id)
         setGameRequests(gameRequests.filter(r => r.id !== id))
-        if (request) showToast(`Invitación de ${request.name} rechazada`, 'info')
+        if (request) showToast(`Invitación de ${request.name} rechazada`, 'error')
     }
 
     const handleAddFriend = (e: React.FormEvent) => {
@@ -106,9 +107,10 @@ function Friends({ onNavigate }: FriendsProps) {
         setIsGameModalOpen(true)
     }
 
-    const handleConfirmInvite = () => {
+    const handleConfirmInvite = (mode: string) => {
         setIsGameModalOpen(false)
         showToast(`Invitación enviada a ${selectedFriend}`, 'info')
+        onNavigate('waiting-room', { mode })
     }
 
     const handleRemove = (id: number) => {

@@ -4,7 +4,7 @@ import '../Background.css'
 import './OnlineGame.css'
 
 interface OnlineGameProps {
-    onNavigate: (screen: string) => void
+    onNavigate: (screen: string, data?: any) => void
 }
 
 interface GameSession {
@@ -84,7 +84,7 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
         }
         setPublicGames([newGame, ...publicGames])
         setShowCreateModal(false)
-        showToast('Partida creada con éxito', 'success')
+        onNavigate('waiting-room', { mode })
     }
 
     return (
@@ -156,6 +156,7 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                                         <button
                                             className="game-card__join-btn"
                                             disabled={game.status === 'full'}
+                                            onClick={() => onNavigate('waiting-room', { mode: game.mode })}
                                         >
                                             {game.status === 'full' ? 'Llena' : 'Unirse'}
                                         </button>
