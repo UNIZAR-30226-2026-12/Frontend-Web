@@ -266,25 +266,29 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 </div>
                                                 <div className="friend-card__game-info">
                                                     <span className="friend-card__mode-tag">{request.gameMode}</span>
-                                                    <span className="friend-card__players-count">👥 {request.playersCount}/4</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="friend-card__actions">
-                                            <button
-                                                className="friend-btn friend-btn--accept"
-                                                onClick={() => handleAcceptGame(request)}
-                                                title="Aceptar Duelo"
-                                            >
-                                                ✅
-                                            </button>
-                                            <button
-                                                className="friend-btn friend-btn--reject"
-                                                onClick={() => handleRejectGame(request.id)}
-                                                title="Rechazar"
-                                            >
-                                                ❌
-                                            </button>
+                                        <div className="friend-card__actions friend-card__actions--game-request">
+                                            {request.playersCount !== undefined && (
+                                                <span className="friend-card__players-count">👥 {request.playersCount}/4</span>
+                                            )}
+                                            <div className="friend-card__buttons-group">
+                                                <button
+                                                    className="friend-btn friend-btn--accept"
+                                                    onClick={() => handleAcceptGame(request)}
+                                                    title="Aceptar Duelo"
+                                                >
+                                                    ✅
+                                                </button>
+                                                <button
+                                                    className="friend-btn friend-btn--reject"
+                                                    onClick={() => handleRejectGame(request.id)}
+                                                    title="Rechazar"
+                                                >
+                                                    ❌
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))

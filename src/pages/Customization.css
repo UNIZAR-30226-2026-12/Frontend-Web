@@ -225,21 +225,26 @@
 }
 
 .custom__field-edit {
-    background: none;
-    border: none;
-    font-size: 0.9rem;
-    padding: 0.3rem;
+    background: rgba(108, 99, 255, 0.08);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    padding: 0.35rem 0.6rem;
     cursor: pointer;
-    opacity: 0.6;
     transition: all var(--transition);
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.35rem;
+    white-space: nowrap;
 }
 
 .custom__field-edit:hover {
-    opacity: 1;
-    transform: scale(1.1);
+    border-color: var(--color-primary);
+    background: rgba(108, 99, 255, 0.18);
+    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.25);
+    transform: translateY(-1px);
 }
 
 /* ===== Vista previa del tablero ===== */

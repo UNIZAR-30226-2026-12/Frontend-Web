@@ -184,9 +184,9 @@ function Customization({ onNavigate }: CustomizationProps) {
                                         <button
                                             className="custom__field-edit"
                                             onClick={toggleEditName}
-                                            title={isEditingName ? "Guardar" : "Editar nombre"}
+                                            title={isEditingName ? "Modifica tu nombre de jugador" : "Cambia tu nombre de jugador"}
                                         >
-                                            {isEditingName ? '✅' : '✏️'}
+                                            {isEditingName ? 'Confirmar cambios ✅' : 'Editar nombre ✏️'}
                                         </button>
                                     </div>
                                 </div>
