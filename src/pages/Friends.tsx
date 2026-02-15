@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import GameModal from '../components/GameModal'
 import '../Background.css'
 import './Friends.css'
+import { getAvatarFromSeed } from '../assets/avatarUtils'
 
 interface FriendsProps {
     onNavigate: (screen: string, data?: any) => void
@@ -11,7 +12,6 @@ interface Friend {
     id: number
     name: string
     status: 'online' | 'offline' | 'playing'
-    avatar: string
     rr: number
     gameMode?: '1vs1' | '1vs1vs1vs1'
     playersCount?: number
@@ -24,20 +24,20 @@ interface Toast {
 }
 
 const MOCK_FRIENDS: Friend[] = [
-    { id: 1, name: 'CyberNinja', status: 'online', avatar: '🥷', rr: 1420 },
-    { id: 2, name: 'ReversiMaster', status: 'playing', avatar: '🦊', rr: 2150 },
-    { id: 3, name: 'StarPlayer99', status: 'offline', avatar: '⭐', rr: 1100 },
-    { id: 4, name: 'RoboTactics', status: 'online', avatar: '🤖', rr: 1575 },
+    { id: 1, name: 'CyberNinja', status: 'online', rr: 1420 },
+    { id: 2, name: 'ReversiMaster', status: 'playing', rr: 2150 },
+    { id: 3, name: 'StarPlayer99', status: 'offline', rr: 1100 },
+    { id: 4, name: 'RoboTactics', status: 'online', rr: 1575 },
 ]
 
 const MOCK_REQUESTS: Friend[] = [
-    { id: 101, name: 'GamerX', status: 'offline', avatar: '🎮', rr: 845 },
-    { id: 102, name: 'PixelArtist', status: 'offline', avatar: '🎨', rr: 1320 },
+    { id: 101, name: 'GamerX', status: 'offline', rr: 845 },
+    { id: 102, name: 'PixelArtist', status: 'offline', rr: 1320 },
 ]
 
 const MOCK_GAME_REQUESTS: Friend[] = [
-    { id: 201, name: 'ProPlayer_01', status: 'online', avatar: '🕹️', gameMode: '1vs1', playersCount: 1, rr: 1720 },
-    { id: 202, name: 'UltraStrategist', status: 'online', avatar: '🧠', gameMode: '1vs1vs1vs1', playersCount: 3, rr: 1950 },
+    { id: 201, name: 'ProPlayer_01', status: 'online', gameMode: '1vs1', playersCount: 1, rr: 1720 },
+    { id: 202, name: 'UltraStrategist', status: 'online', gameMode: '1vs1vs1vs1', playersCount: 3, rr: 1950 },
 ]
 
 function Friends({ onNavigate }: FriendsProps) {
@@ -93,7 +93,6 @@ function Friends({ onNavigate }: FriendsProps) {
             id: Date.now(),
             name: newFriendName,
             status: 'offline',
-            avatar: '👤',
             rr: 1000
         }
 
@@ -156,7 +155,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                 friends.map(friend => (
                                     <div key={friend.id} className="friend-card">
                                         <div className="friend-card__info">
-                                            <span className="friend-card__avatar">{friend.avatar}</span>
+                                            <img className="friend-card__avatar" src={getAvatarFromSeed(friend.name)} alt={`Avatar de ${friend.name}`} />
                                             <div className="friend-card__details">
                                                 <div className="friend-card__name-row">
                                                     <span className="friend-card__name">{friend.name}</span>
@@ -219,7 +218,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                 requests.map(request => (
                                     <div key={request.id} className="friend-card friend-card--request">
                                         <div className="friend-card__info">
-                                            <span className="friend-card__avatar">{request.avatar}</span>
+                                            <img className="friend-card__avatar" src={getAvatarFromSeed(request.name)} alt={`Avatar de ${request.name}`} />
                                             <div className="friend-card__details">
                                                 <div className="friend-card__name-row">
                                                     <span className="friend-card__name">{request.name}</span>
@@ -259,7 +258,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                 gameRequests.map(request => (
                                     <div key={request.id} className="friend-card friend-card--game-request">
                                         <div className="friend-card__info">
-                                            <span className="friend-card__avatar">{request.avatar}</span>
+                                            <img className="friend-card__avatar" src={getAvatarFromSeed(request.name)} alt={`Avatar de ${request.name}`} />
                                             <div className="friend-card__details">
                                                 <div className="friend-card__name-row">
                                                     <span className="friend-card__name">{request.name}</span>

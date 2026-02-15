@@ -2,6 +2,11 @@ import { useState, useRef } from 'react'
 import '../Background.css'
 import './Customization.css'
 
+import blackice from '../assets/avatars/blackice.jpeg'
+import bluefire from '../assets/avatars/bluefire.png'
+import purplesun from '../assets/avatars/purplesun.png'
+import whitegrass from '../assets/avatars/whitegrass.png'
+
 /* Pares de colores para fichas (cara A y cara B) */
 const PIECE_STYLES = [
     { sideA: '#222', sideB: '#eee', label: 'Clásico' },
@@ -20,8 +25,13 @@ const BOARD_COLORS = [
     { color: '#5b2d8e', label: 'Púrpura' },
 ]
 
-/* Avatares predefinidos (Emojis) */
-const AVATARS = ['🥷', '🦊', '🤖', '👻', '🎮', '🎨', '⭐', '🚀']
+/* Avatares predefinidos */
+const AVATARS = [
+    { id: 'blackice', src: blackice, label: 'Black Ice' },
+    { id: 'bluefire', src: bluefire, label: 'Blue Fire' },
+    { id: 'whitegrass', src: whitegrass, label: 'White Grass' },
+    { id: 'purplesun', src: purplesun, label: 'Purple Sun' },
+]
 
 interface CustomizationProps {
     onNavigate: (screen: string, data?: any) => void
@@ -104,7 +114,9 @@ function Customization({ onNavigate }: CustomizationProps) {
                                     {selectedAvatar === 'custom' && customAvatar ? (
                                         <img src={customAvatar} alt="Avatar" className="custom__avatar-img" />
                                     ) : (
-                                        typeof selectedAvatar === 'number' && AVATARS[selectedAvatar]
+                                        typeof selectedAvatar === 'number' && (
+                                            <img src={AVATARS[selectedAvatar].src} alt={AVATARS[selectedAvatar].label} className="custom__avatar-img" />
+                                        )
                                     )}
                                 </div>
 
@@ -113,11 +125,12 @@ function Customization({ onNavigate }: CustomizationProps) {
                                     <div className="custom__avatar-selector">
                                         {AVATARS.map((avatar, i) => (
                                             <button
-                                                key={i}
+                                                key={avatar.id}
                                                 className={`custom__avatar-option ${selectedAvatar === i ? 'custom__avatar-option--selected' : ''}`}
                                                 onClick={() => setSelectedAvatar(i)}
+                                                title={avatar.label}
                                             >
-                                                {avatar}
+                                                <img src={avatar.src} alt={avatar.label} className="custom__avatar-img" />
                                             </button>
                                         ))}
 

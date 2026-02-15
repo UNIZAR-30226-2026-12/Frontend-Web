@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import GameModal from '../components/GameModal'
+import { getAvatarFromSeed } from '../assets/avatarUtils'
 import '../Background.css'
 import './MainMenu.css'
 
@@ -14,7 +15,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
             {/* Barra de usuario y cierre de sesión */}
             <div className="menu__user-bar">
                 <div className="menu__user-info">
-                    <span className="menu__user-icon">👤</span>
+                    <img className="menu__user-icon" src={getAvatarFromSeed('Jugador')} alt="Avatar de Jugador" />
                     <span className="menu__user-name">Jugador</span>
                 </div>
                 <button className="menu__logout-btn" onClick={() => onNavigate('home')} title="Cerrar Sesión">

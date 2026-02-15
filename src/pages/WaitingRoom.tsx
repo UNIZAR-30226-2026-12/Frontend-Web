@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
+import { getAvatarFromSeed } from '../assets/avatarUtils'
 import '../Background.css'
 import './WaitingRoom.css'
 
 interface Player {
     id: number
     name: string
-    avatar: string
     rr: number
     isReady: boolean
 }
@@ -18,7 +18,7 @@ interface WaitingRoomProps {
 function WaitingRoom({ gameMode, onNavigate }: WaitingRoomProps) {
     const maxPlayers = gameMode === '1vs1' ? 2 : 4
     const [players, setPlayers] = useState<Player[]>([
-        { id: 1, name: 'Tú', avatar: '👤', rr: 1250, isReady: false }
+        { id: 1, name: 'Tú', rr: 1250, isReady: false }
     ])
 
     useEffect(() => {
@@ -26,7 +26,7 @@ function WaitingRoom({ gameMode, onNavigate }: WaitingRoomProps) {
             if (players.length < maxPlayers) {
                 setPlayers(prev => [
                     ...prev,
-                    { id: 2, name: 'Gamer_Pro', avatar: '🦊', rr: 1420, isReady: true }
+                    { id: 2, name: 'Gamer_Pro', rr: 1420, isReady: true }
                 ])
             }
         }, 3000)
@@ -73,7 +73,13 @@ function WaitingRoom({ gameMode, onNavigate }: WaitingRoomProps) {
                                 className={`player-slot ${player ? 'player-slot--active' : 'player-slot--empty'} ${player?.isReady ? 'player-slot--ready' : ''}`}
                             >
                                 <div className="player-slot__avatar">
-                                    {player ? player.avatar : '?'}
+                                    {player ? (
+                                        <img
+                                            className="player-slot__avatar-img"
+                                            src={getAvatarFromSeed(player.name)}
+                                            alt={`Avatar de ${player.name}`}
+                                        />
+                                    ) : '?'}
                                     {player?.isReady && (
                                         <div className="player-slot__ready-badge">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">

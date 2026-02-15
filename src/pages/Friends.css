@@ -192,13 +192,11 @@
 .friend-card__avatar {
     width: 2.2rem;
     height: 2.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 50%;
     flex-shrink: 0;
-    font-size: 1.4rem;
+    object-fit: cover;
 }
 
 .friend-card__name-row {
@@ -428,7 +426,7 @@
     .friend-card__avatar {
         width: 2.2rem;
         height: 2.2rem;
-        font-size: 1.4rem;
+        object-fit: cover;
     }
 }
 

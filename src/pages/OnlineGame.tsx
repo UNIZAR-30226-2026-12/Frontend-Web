@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import GameModal from '../components/GameModal'
+import { getAvatarFromSeed } from '../assets/avatarUtils'
 import '../Background.css'
 import './OnlineGame.css'
 
@@ -92,7 +93,7 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
             {/* Barra de usuario superior */}
             <div className="online__user-bar">
                 <div className="online__user-info">
-                    <span className="online__user-avatar">👤</span>
+                    <img className="online__user-avatar" src={getAvatarFromSeed('Jugador')} alt="Avatar de Jugador" />
                     <span className="online__user-name">Jugador</span>
                 </div>
             </div>
@@ -142,7 +143,11 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                                     <div key={game.id} className={`game-card game-card--${game.status}`}>
                                         <div className="game-card__info">
                                             <div className="game-card__creator-info">
-                                                <span className="game-card__creator-avatar">👤</span>
+                                                <img
+                                                    className="game-card__creator-avatar"
+                                                    src={getAvatarFromSeed(game.creator)}
+                                                    alt={`Avatar de ${game.creator}`}
+                                                />
                                                 <div className="game-card__creator-details">
                                                     <span className="game-card__creator-name">{game.creator}</span>
                                                     <span className="game-card__mode-tag">{game.mode}</span>

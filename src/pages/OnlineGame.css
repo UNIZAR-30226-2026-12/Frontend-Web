@@ -49,7 +49,12 @@
 }
 
 .online__user-avatar {
-    font-size: 1.2rem;
+    width: 2rem;
+    height: 2rem;
+    display: block;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .online__user-name {
@@ -244,15 +249,14 @@
 }
 
 .game-card__creator-avatar {
-    font-size: 1.5rem;
-    background: rgba(0, 0, 0, 0.3);
     width: 44px;
     height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     border-radius: 12px;
     flex-shrink: 0;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .game-card__creator-details {
