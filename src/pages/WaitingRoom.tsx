@@ -12,17 +12,18 @@ interface Player {
 
 interface WaitingRoomProps {
     gameMode: '1vs1' | '1vs1vs1vs1'
-    onNavigate: (screen: string) => void
+    returnScreen: string
+    onNavigate: (screen: string, data?: any) => void
 }
 
-function WaitingRoom({ gameMode, onNavigate }: WaitingRoomProps) {
+function WaitingRoom({ gameMode, returnScreen, onNavigate }: WaitingRoomProps) {
     const maxPlayers = gameMode === '1vs1' ? 2 : 4
     const [players, setPlayers] = useState<Player[]>([
-        { id: 1, name: 'Tú', rr: 1250, isReady: false }
+        { id: 1, name: 'Tu', rr: 1250, isReady: false }
     ])
 
     useEffect(() => {
-        const timer = setTimeout(() => {
+        const timer = window.setTimeout(() => {
             if (players.length < maxPlayers) {
                 setPlayers(prev => [
                     ...prev,
@@ -30,24 +31,48 @@ function WaitingRoom({ gameMode, onNavigate }: WaitingRoomProps) {
                 ])
             }
         }, 3000)
-        return () => clearTimeout(timer)
+
+        return () => window.clearTimeout(timer)
     }, [maxPlayers, players.length])
 
     const handleReady = () => {
-        setPlayers(prev => prev.map(p => p.name === 'Tú' ? { ...p, isReady: !p.isReady } : p))
+        setPlayers(prev => prev.map(player => (
+            player.name === 'Tu' ? { ...player, isReady: !player.isReady } : player
+        )))
     }
 
     const isFull = players.length === maxPlayers
+    const allReady = isFull && players.every(player => player.isReady)
+
+    useEffect(() => {
+        if (!allReady) return
+
+        const timer = window.setTimeout(() => {
+            if (gameMode === '1vs1') {
+                onNavigate('game-1vs1')
+            }
+        }, 900)
+
+        return () => window.clearTimeout(timer)
+    }, [allReady, gameMode, onNavigate])
 
     return (
         <div className="waiting-room">
-            {/* Fondo animado compartido */}
             <div className="home__bg">
                 <span className="home__chip home__chip--1">⚫</span>
                 <span className="home__chip home__chip--2">⚪</span>
                 <span className="home__chip home__chip--3">🔴</span>
                 <span className="home__chip home__chip--4">🔵</span>
+                <span className="home__chip home__chip--5">🟢</span>
+                <span className="home__chip home__chip--6">🟡</span>
+                <span className="home__chip home__chip--7">🟣</span>
+                <span className="home__chip home__chip--8">🟠</span>
+                <span className="home__chip home__chip--9">⚫</span>
+                <span className="home__chip home__chip--10">⚪</span>
                 <span className="home__chip home__chip--q1 home__chip--question">❓</span>
+                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
+                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
+                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
             </div>
 
             <div className="waiting-room__container">
@@ -61,12 +86,13 @@ function WaitingRoom({ gameMode, onNavigate }: WaitingRoomProps) {
                 </div>
 
                 <p className="waiting-room__loading-text">
-                    {isFull ? '¡SALA LLENA!' : 'ESPERANDO JUGADORES...'}
+                    {allReady ? 'INICIANDO PARTIDA...' : isFull ? 'SALA LLENA' : 'ESPERANDO JUGADORES...'}
                 </p>
 
                 <div className="waiting-room__players">
                     {Array.from({ length: maxPlayers }).map((_, index) => {
                         const player = players[index]
+
                         return (
                             <div
                                 key={index}
@@ -80,6 +106,7 @@ function WaitingRoom({ gameMode, onNavigate }: WaitingRoomProps) {
                                             alt={`Avatar de ${player.name}`}
                                         />
                                     ) : '?'}
+
                                     {player?.isReady && (
                                         <div className="player-slot__ready-badge">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
@@ -88,6 +115,7 @@ function WaitingRoom({ gameMode, onNavigate }: WaitingRoomProps) {
                                         </div>
                                     )}
                                 </div>
+
                                 <div className="player-slot__details">
                                     <span className="player-slot__name">
                                         {player ? player.name : 'Esperando...'}
@@ -104,16 +132,16 @@ function WaitingRoom({ gameMode, onNavigate }: WaitingRoomProps) {
                 <div className="waiting-room__actions">
                     <button
                         className="waiting-room__btn waiting-room__btn--leave"
-                        onClick={() => onNavigate('online-game')}
+                        onClick={() => onNavigate(returnScreen)}
                     >
                         Abandonar Sala
                     </button>
                     <button
-                        className={`waiting-room__btn waiting-room__btn--ready ${players.find(p => p.name === 'Tú')?.isReady ? 'waiting-room__btn--is-ready' : ''}`}
+                        className={`waiting-room__btn waiting-room__btn--ready ${players.find(player => player.name === 'Tu')?.isReady ? 'waiting-room__btn--is-ready' : ''}`}
                         disabled={!isFull}
                         onClick={handleReady}
                     >
-                        {players.find(p => p.name === 'Tú')?.isReady ? '¡Listo!' : 'Estoy Listo'}
+                        {players.find(player => player.name === 'Tu')?.isReady ? 'Listo' : 'Estoy Listo'}
                     </button>
                 </div>
             </div>
