@@ -3,9 +3,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    height: 100vh;
     overflow: hidden;
-    padding: 2rem;
+    padding: 1rem;
 }
 
 .friends::before {
@@ -22,23 +22,25 @@
 
 .friends__container {
     width: min(1400px, 100%);
+    max-height: 100%;
     background: linear-gradient(150deg, rgba(26, 26, 46, 0.92), rgba(13, 14, 26, 0.88));
     backdrop-filter: blur(18px);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 24px;
-    padding: 1.6rem;
+    padding: 1.2rem;
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
+    gap: 0.8rem;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.48);
     position: relative;
     z-index: 10;
+    overflow-y: auto;
 }
 
 .friends__header {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.6rem;
     padding: 0.2rem 0.1rem;
 }
 
@@ -50,16 +52,16 @@
 }
 
 .friends__title {
-    font-size: clamp(2rem, 2.8vw, 2.6rem);
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
     color: #fff;
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.1rem;
     letter-spacing: -0.8px;
     line-height: 1.05;
 }
 
 .friends__subtitle {
     color: rgba(226, 232, 240, 0.72);
-    font-size: 0.98rem;
+    font-size: 0.85rem;
 }
 
 .friends__primary-btn {
@@ -84,14 +86,14 @@
 .friends__stats {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.75rem;
+    gap: 0.6rem;
 }
 
 .friends__stat-card {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 14px;
-    padding: 0.65rem 0.85rem;
+    padding: 0.5rem 0.65rem;
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
@@ -122,8 +124,9 @@
 .friends__content {
     display: grid;
     grid-template-columns: 1.45fr 1.05fr 1.2fr;
-    gap: 1rem;
-    min-height: 450px;
+    gap: 0.8rem;
+    min-height: 380px;
+    max-height: 60vh;
 }
 
 .friends__section {
@@ -132,16 +135,16 @@
     background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.09);
-    padding: 0.95rem;
+    padding: 0.8rem;
     display: flex;
     flex-direction: column;
 }
 
 .friends__section-title {
     font-size: 0.92rem;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.6rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    padding-bottom: 0.45rem;
+    padding-bottom: 0.35rem;
     flex-shrink: 0;
     color: rgba(245, 245, 255, 0.96);
     letter-spacing: 0.2px;
@@ -154,7 +157,7 @@
     padding-right: 0.3rem;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
+    gap: 0.5rem;
 }
 
 .friends__list::-webkit-scrollbar,
@@ -184,11 +187,11 @@
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.035));
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    padding: 0.65rem 0.72rem;
+    padding: 0.5rem 0.6rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.6rem;
+    gap: 0.5rem;
     transition: transform var(--transition), border-color var(--transition), background var(--transition);
 }
 
@@ -209,14 +212,14 @@
 .friend-card__info {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 0.5rem;
     min-width: 0;
     flex: 1;
 }
 
 .friend-card__avatar {
-    width: 2.35rem;
-    height: 2.35rem;
+    width: 2.1rem;
+    height: 2.1rem;
     display: block;
     border-radius: 50%;
     flex-shrink: 0;
@@ -232,13 +235,13 @@
 .friend-card__name-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.3rem;
     min-width: 0;
 }
 
 .friend-card__name {
     font-weight: 700;
-    font-size: 0.96rem;
+    font-size: 0.9rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -409,23 +412,24 @@
 }
 
 .friends__back-btn {
-    align-self: center;
-    margin-top: 0.2rem;
-    padding: 0.72rem 2rem;
-    background: rgba(255, 255, 255, 0.08);
+    padding: 0.85rem 2.2rem;
+    background: linear-gradient(120deg, #6d5dff, #8b5cf6 55%, #ec4899);
     color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 999px;
-    font-size: 0.92rem;
-    font-weight: 700;
-    letter-spacing: 0.25px;
-    transition: transform var(--transition), background var(--transition), border-color var(--transition);
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+    align-self: center;
+    margin-top: 1rem;
+    flex-shrink: 0;
 }
 
 .friends__back-btn:hover {
     transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.32);
+    filter: brightness(1.08);
+    box-shadow: 0 6px 20px rgba(108, 99, 255, 0.35);
 }
 
 .friends-modal {

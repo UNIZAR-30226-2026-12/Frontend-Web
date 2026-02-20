@@ -17,6 +17,10 @@ interface WaitingRoomProps {
     playerRR?: number
     opponentName?: string
     opponentRR?: number
+    opponentName2?: string
+    opponentRR2?: number
+    opponentName3?: string
+    opponentRR3?: number
     onNavigate: (screen: string, data?: any) => void
 }
 
@@ -35,6 +39,10 @@ function WaitingRoom({
     playerRR,
     opponentName,
     opponentRR,
+    opponentName2,
+    opponentRR2,
+    opponentName3,
+    opponentRR3,
     onNavigate,
 }: WaitingRoomProps) {
     const maxPlayers = gameMode === '1vs1' ? 2 : 4
@@ -42,6 +50,10 @@ function WaitingRoom({
     const localPlayerRR = playerRR ?? 2250
     const simulatedOpponentName = opponentName ?? 'Gamer_Pro'
     const simulatedOpponentRR = opponentRR ?? 1420
+    const simulatedOpponentName2 = opponentName2 ?? 'Gamer_Pro2'
+    const simulatedOpponentRR2 = opponentRR2 ?? 1680
+    const simulatedOpponentName3 = opponentName3 ?? 'Gamer_Pro3'
+    const simulatedOpponentRR3 = opponentRR3 ?? 1550
 
     const [players, setPlayers] = useState<Player[]>([
         { id: 1, name: localPlayerName, rr: localPlayerRR, isReady: false }
@@ -50,15 +62,25 @@ function WaitingRoom({
     useEffect(() => {
         const timer = window.setTimeout(() => {
             if (players.length < maxPlayers) {
-                setPlayers(prev => [
-                    ...prev,
-                    { id: 2, name: simulatedOpponentName, rr: simulatedOpponentRR, isReady: true }
-                ])
+                if (gameMode === '1vs1') {
+                    setPlayers(prev => [
+                        ...prev,
+                        { id: 2, name: simulatedOpponentName, rr: simulatedOpponentRR, isReady: true }
+                    ])
+                } else {
+                    // Modo 1vs1vs1vs1: necesario añadir a los 3 jugadores necesarios 
+                    setPlayers(prev => [
+                        ...prev,
+                        { id: 2, name: simulatedOpponentName, rr: simulatedOpponentRR, isReady: true },
+                        { id: 3, name: simulatedOpponentName2, rr: simulatedOpponentRR2, isReady: true },
+                        { id: 4, name: simulatedOpponentName3, rr: simulatedOpponentRR3, isReady: true }
+                    ])
+                }
             }
         }, 3000)
 
         return () => window.clearTimeout(timer)
-    }, [maxPlayers, players.length])
+    }, [maxPlayers, players.length, gameMode, simulatedOpponentName, simulatedOpponentRR, simulatedOpponentName2, simulatedOpponentRR2, simulatedOpponentName3, simulatedOpponentRR3])
 
     const handleReady = () => {
         setPlayers(prev => prev.map(player => (
@@ -88,6 +110,13 @@ function WaitingRoom({
                         opponentName: rival?.name ?? simulatedOpponentName,
                         opponentRR: rival?.rr ?? simulatedOpponentRR,
                     },
+                })
+            } else {
+                // Modo 1vs1vs1vs1: navegar a game-1v1v1v1
+                onNavigate('game-1v1v1v1', {
+                    matchData: {
+                        players: players.map(p => ({ name: p.name, rr: p.rr }))
+                    }
                 })
             }
         }, 900)

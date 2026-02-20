@@ -179,7 +179,7 @@ function Friends({ onNavigate }: FriendsProps) {
                             <p className="friends__subtitle">Conecta y juega con tu squad competitivo</p>
                         </div>
                         <button className="friends__primary-btn" onClick={handleOpenAddModal}>
-                            Anadir amigo
+                         Añadir amigo
                         </button>
                     </div>
                     <div className="friends__stats">
@@ -267,7 +267,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 onClick={() => handleAcceptRequest(request)}
                                                 title="Aceptar"
                                             >
-                                                Ok
+                                                ✓
                                             </button>
                                             <button
                                                 className="friend-btn friend-btn--reject"
@@ -312,7 +312,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 onClick={() => handleAcceptGame(request)}
                                                 title="Aceptar duelo"
                                             >
-                                                Play
+                                                ✓
                                             </button>
                                             <button
                                                 className="friend-btn friend-btn--reject"
@@ -345,7 +345,7 @@ function Friends({ onNavigate }: FriendsProps) {
 
             <Modal isOpen={isAddFriendModalOpen} onClose={handleCloseAddModal} maxWidth="460px">
                 <div className="friends-modal">
-                    <h3 className="friends-modal__title">Anadir nuevo amigo</h3>
+                    <h3 className="friends-modal__title">Añadir nuevo amigo</h3>
                     <p className="friends-modal__subtitle">Escribe su nombre de usuario para enviar una solicitud.</p>
                     <form className="friends-modal__form" onSubmit={handleAddFriend}>
                         <input

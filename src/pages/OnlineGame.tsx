@@ -211,11 +211,11 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                         </div>
                     </div>
                 </div>
-
-                <button className="online__back-btn" onClick={() => onNavigate('menu')}>
-                    Volver al menú
-                </button>
             </div>
+
+            <button className="online__back-btn" onClick={() => onNavigate('menu')}>
+                Volver al menú
+            </button>
 
             {/* Notificación crear partida */}
             <div className={`toast toast--${toast.type} ${toast.visible ? 'toast--visible' : ''}`}>
