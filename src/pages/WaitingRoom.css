@@ -17,11 +17,11 @@
     backdrop-filter: blur(15px);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    padding: 3rem;
+    padding: 2.4rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2.5rem;
+    gap: 1.8rem;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     z-index: 10;
 }
@@ -54,16 +54,16 @@
 /* Animación de carga central */
 .waiting-room__animation {
     position: relative;
-    width: 200px;
-    height: 200px;
+    width: 150px;
+    height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .waiting-room__chip-3d {
-    width: 120px;
-    height: 120px;
+    width: 84px;
+    height: 84px;
     border-radius: 50%;
     position: relative;
     transform-style: preserve-3d;
@@ -251,6 +251,21 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.player-slot__streak {
+    display: flex;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.player-slot__streak-item--win {
+    color: #4ade80;
+}
+
+.player-slot__streak-item--loss {
+    color: #f87171;
 }
 
 .player-slot__rr {

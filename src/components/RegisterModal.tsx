@@ -4,16 +4,25 @@ import './AuthForms.css'
 interface RegisterModalProps {
   isOpen: boolean
   onClose: () => void
+  onNavigate: (screen: string) => void
+  onRegisterSuccess: () => void
 }
 
-function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
+function RegisterModal({ isOpen, onClose, onNavigate, onRegisterSuccess }: RegisterModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="auth-form">
         <h2 className="auth-form__title">Crear Cuenta</h2>
         <p className="auth-form__subtitle">Únete a Random Reversi</p>
 
-        <form className="auth-form__fields" onSubmit={(e) => e.preventDefault()}>
+        <form
+          className="auth-form__fields"
+          onSubmit={(e) => {
+            e.preventDefault()
+            onNavigate('home')
+            onRegisterSuccess()
+          }}
+        >
           <label className="auth-form__label">
             Nombre de usuario
             <input

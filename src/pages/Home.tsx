@@ -63,7 +63,15 @@ function Home({ onNavigate }: HomeProps) {
 
       {/* Modales */}
       <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onNavigate={onNavigate} />
-      <RegisterModal isOpen={showRegister} onClose={() => setShowRegister(false)} />
+      <RegisterModal
+        isOpen={showRegister}
+        onClose={() => setShowRegister(false)}
+        onNavigate={onNavigate}
+        onRegisterSuccess={() => {
+          setShowRegister(false)
+          setShowLogin(true)
+        }}
+      />
     </div>
   )
 }

@@ -143,6 +143,19 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 0.55rem 0.6rem;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.duel__skill-card:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.duel__skill-card--active {
+    border-color: rgba(251, 191, 36, 0.8);
+    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.55) inset;
 }
 
 .duel__skill-icon {
@@ -178,6 +191,11 @@
     font-weight: 800;
 }
 
+.duel__empty-skills {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.86rem;
+}
+
 .duel__board-area {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -188,12 +206,17 @@
     align-items: center;
     justify-content: center;
     gap: 0.8rem;
+    background-image: var(--duel-board-area-bg);
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .duel__board {
-    width: min(70vh, 100%);
+    width: min(70vh, 80%);
     max-width: 640px;
     aspect-ratio: 1 / 1;
+    position: relative;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
@@ -201,22 +224,39 @@
     overflow: hidden;
     border: 3px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.2);
+    background-color: transparent;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.duel__board-skin {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+    pointer-events: none;
 }
 
 .duel__cell {
     position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid rgba(0, 0, 0, 0.2);
+    padding: 0;
+    cursor: default;
+    appearance: none;
 }
 
 .duel__cell--dark {
-    background: #1e8449;
+    background: transparent;
 }
 
 .duel__cell--light {
-    background: #229954;
+    background: transparent;
 }
 
 .duel__question {
@@ -231,6 +271,24 @@
     justify-content: center;
     z-index: 0;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.duel__cell--playable {
+    cursor: pointer;
+}
+
+.duel__cell--playable::after {
+    content: '';
+    position: absolute;
+    width: 30%;
+    aspect-ratio: 1 / 1;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.38);
+    z-index: 1;
+}
+
+.duel__cell--playable:hover::after {
+    background: rgba(251, 191, 36, 0.78);
 }
 
 .duel-piece {
@@ -249,6 +307,31 @@
 
 .duel-piece--white {
     background: radial-gradient(circle at 35% 30%, #ffffff 0%, #d6d6d6 72%);
+}
+
+.duel-piece--fixed {
+    box-shadow: 0 0 0 2px #fbbf24, inset 0 4px 6px rgba(255, 255, 255, 0.22), inset 0 -6px 8px rgba(0, 0, 0, 0.33), 0 3px 8px rgba(0, 0, 0, 0.45);
+}
+
+.duel__scoreboard {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    color: #fff;
+    font-weight: 700;
+}
+
+.duel__status {
+    min-height: 1.4rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.88rem;
+    text-align: center;
+}
+
+.duel__status--end {
+    color: #fbbf24;
+    font-weight: 700;
 }
 
 .duel__legend {

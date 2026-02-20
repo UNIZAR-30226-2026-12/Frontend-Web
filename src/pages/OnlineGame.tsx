@@ -53,7 +53,7 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
     const [publicGames, setPublicGames] = useState<GameSession[]>(MOCK_PUBLIC_GAMES)
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [showCreateModal, setShowCreateModal] = useState(false)
-    const [rrValue] = useState(1250)
+    const [rrValue] = useState(2250)
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error'; visible: boolean }>({
         message: '',
         type: 'info',
@@ -85,7 +85,13 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
         }
         setPublicGames([newGame, ...publicGames])
         setShowCreateModal(false)
-        onNavigate('waiting-room', { mode })
+        onNavigate('waiting-room', {
+            mode,
+            playerName: 'Jugador',
+            playerRR: rrValue,
+            opponentName: 'Gamer_Pro',
+            opponentRR: 1420,
+        })
     }
 
     return (
@@ -161,7 +167,15 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                                         <button
                                             className="game-card__join-btn"
                                             disabled={game.status === 'full'}
-                                            onClick={() => onNavigate('waiting-room', { mode: game.mode })}
+                                            onClick={() =>
+                                                onNavigate('waiting-room', {
+                                                    mode: game.mode,
+                                                    playerName: 'Jugador',
+                                                    playerRR: rrValue,
+                                                    opponentName: game.creator,
+                                                    opponentRR: game.creatorRR,
+                                                })
+                                            }
                                         >
                                             {game.status === 'full' ? 'Llena' : 'Unirse'}
                                         </button>

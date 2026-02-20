@@ -13,13 +13,38 @@ interface Player {
 interface WaitingRoomProps {
     gameMode: '1vs1' | '1vs1vs1vs1'
     returnScreen: string
+    playerName?: string
+    playerRR?: number
+    opponentName?: string
+    opponentRR?: number
     onNavigate: (screen: string, data?: any) => void
 }
 
-function WaitingRoom({ gameMode, returnScreen, onNavigate }: WaitingRoomProps) {
+type MatchResult = 'W' | 'L'
+
+const SIMULATED_STREAKS: Record<string, MatchResult[]> = {
+    Tu: ['W', 'L', 'W', 'W', 'L'],
+    Gamer_Pro: ['L', 'W', 'L', 'L', 'W'],
+    Rival: ['W', 'W', 'L', 'W', 'L']
+}
+
+function WaitingRoom({
+    gameMode,
+    returnScreen,
+    playerName,
+    playerRR,
+    opponentName,
+    opponentRR,
+    onNavigate,
+}: WaitingRoomProps) {
     const maxPlayers = gameMode === '1vs1' ? 2 : 4
+    const localPlayerName = playerName ?? 'Tu'
+    const localPlayerRR = playerRR ?? 2250
+    const simulatedOpponentName = opponentName ?? 'Gamer_Pro'
+    const simulatedOpponentRR = opponentRR ?? 1420
+
     const [players, setPlayers] = useState<Player[]>([
-        { id: 1, name: 'Tu', rr: 1250, isReady: false }
+        { id: 1, name: localPlayerName, rr: localPlayerRR, isReady: false }
     ])
 
     useEffect(() => {
@@ -27,7 +52,7 @@ function WaitingRoom({ gameMode, returnScreen, onNavigate }: WaitingRoomProps) {
             if (players.length < maxPlayers) {
                 setPlayers(prev => [
                     ...prev,
-                    { id: 2, name: 'Gamer_Pro', rr: 1420, isReady: true }
+                    { id: 2, name: simulatedOpponentName, rr: simulatedOpponentRR, isReady: true }
                 ])
             }
         }, 3000)
@@ -37,24 +62,38 @@ function WaitingRoom({ gameMode, returnScreen, onNavigate }: WaitingRoomProps) {
 
     const handleReady = () => {
         setPlayers(prev => prev.map(player => (
-            player.name === 'Tu' ? { ...player, isReady: !player.isReady } : player
+            player.name === localPlayerName ? { ...player, isReady: !player.isReady } : player
         )))
     }
 
     const isFull = players.length === maxPlayers
     const allReady = isFull && players.every(player => player.isReady)
 
+    const getSimulatedStreak = (playerName?: string): MatchResult[] => {
+        if (!playerName) return SIMULATED_STREAKS.Rival
+        return SIMULATED_STREAKS[playerName] ?? SIMULATED_STREAKS.Rival
+    }
+
     useEffect(() => {
         if (!allReady) return
 
         const timer = window.setTimeout(() => {
             if (gameMode === '1vs1') {
-                onNavigate('game-1vs1')
+                const localPlayer = players.find(player => player.name === localPlayerName)
+                const rival = players.find(player => player.name !== localPlayerName)
+                onNavigate('game-1vs1', {
+                    matchData: {
+                        playerName: localPlayer?.name ?? localPlayerName,
+                        playerRR: localPlayer?.rr ?? localPlayerRR,
+                        opponentName: rival?.name ?? simulatedOpponentName,
+                        opponentRR: rival?.rr ?? simulatedOpponentRR,
+                    },
+                })
             }
         }, 900)
 
         return () => window.clearTimeout(timer)
-    }, [allReady, gameMode, onNavigate])
+    }, [allReady, gameMode, localPlayerName, localPlayerRR, onNavigate, players, simulatedOpponentName, simulatedOpponentRR])
 
     return (
         <div className="waiting-room">
@@ -120,6 +159,18 @@ function WaitingRoom({ gameMode, returnScreen, onNavigate }: WaitingRoomProps) {
                                     <span className="player-slot__name">
                                         {player ? player.name : 'Esperando...'}
                                     </span>
+                                    {player && gameMode === '1vs1' && (
+                                        <span className="player-slot__streak" aria-label="Racha últimas 5 partidas">
+                                            {getSimulatedStreak(player.name).map((result, resultIndex) => (
+                                                <span
+                                                    key={`${player.id}-streak-${resultIndex}`}
+                                                    className={`player-slot__streak-item ${result === 'W' ? 'player-slot__streak-item--win' : 'player-slot__streak-item--loss'}`}
+                                                >
+                                                    {result === 'W' ? 'V' : 'D'}
+                                                </span>
+                                            ))}
+                                        </span>
+                                    )}
                                     {player && (
                                         <span className="player-slot__rr">{player.rr} RR</span>
                                     )}
@@ -137,11 +188,11 @@ function WaitingRoom({ gameMode, returnScreen, onNavigate }: WaitingRoomProps) {
                         Abandonar Sala
                     </button>
                     <button
-                        className={`waiting-room__btn waiting-room__btn--ready ${players.find(player => player.name === 'Tu')?.isReady ? 'waiting-room__btn--is-ready' : ''}`}
+                        className={`waiting-room__btn waiting-room__btn--ready ${players.find(player => player.name === localPlayerName)?.isReady ? 'waiting-room__btn--is-ready' : ''}`}
                         disabled={!isFull}
                         onClick={handleReady}
                     >
-                        {players.find(player => player.name === 'Tu')?.isReady ? 'Listo' : 'Estoy Listo'}
+                        {players.find(player => player.name === localPlayerName)?.isReady ? 'Listo' : 'Estoy Listo'}
                     </button>
                 </div>
             </div>

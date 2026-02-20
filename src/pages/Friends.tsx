@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import GameModal from '../components/GameModal'
+import Modal from '../components/Modal'
 import '../Background.css'
 import './Friends.css'
 import { getAvatarFromSeed } from '../assets/avatarUtils'
@@ -47,8 +48,17 @@ function Friends({ onNavigate }: FriendsProps) {
     const [newFriendName, setNewFriendName] = useState('')
     const [toast, setToast] = useState<Toast>({ message: '', type: 'info', visible: false })
     const [isGameModalOpen, setIsGameModalOpen] = useState(false)
+    const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false)
     const [selectedFriend, setSelectedFriend] = useState('')
     const toastTimer = useRef<number | null>(null)
+
+    useEffect(() => {
+        return () => {
+            if (toastTimer.current) {
+                window.clearTimeout(toastTimer.current)
+            }
+        }
+    }, [])
 
     const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
         if (toastTimer.current) window.clearTimeout(toastTimer.current)
@@ -64,7 +74,7 @@ function Friends({ onNavigate }: FriendsProps) {
     const handleAcceptRequest = (request: Friend) => {
         setRequests(requests.filter(r => r.id !== request.id))
         setFriends([...friends, { ...request, status: 'online' }])
-        showToast(`¡Ahora eres amigo de ${request.name}!`, 'success')
+        showToast(`Ahora eres amigo de ${request.name}!`, 'success')
     }
 
     const handleRejectRequest = (id: number) => {
@@ -75,30 +85,42 @@ function Friends({ onNavigate }: FriendsProps) {
 
     const handleAcceptGame = (request: Friend) => {
         setGameRequests(gameRequests.filter(r => r.id !== request.id))
-        showToast(`¡Aceptando partida de ${request.name}! Preparando tablero...`, 'success')
+        showToast(`Aceptando partida de ${request.name}. Preparando tablero...`, 'success')
         onNavigate('waiting-room', { mode: request.gameMode })
     }
 
     const handleRejectGame = (id: number) => {
         const request = gameRequests.find(r => r.id === id)
         setGameRequests(gameRequests.filter(r => r.id !== id))
-        if (request) showToast(`Invitación de ${request.name} rechazada`, 'error')
+        if (request) showToast(`Invitacion de ${request.name} rechazada`, 'error')
     }
 
-    const handleAddFriend = (e: React.FormEvent) => {
+    const handleAddFriend = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        if (!newFriendName.trim()) return
+        const trimmedName = newFriendName.trim()
+
+        if (!trimmedName) {
+            showToast('Escribe un nombre de usuario', 'error')
+            return
+        }
+
+        const alreadyFriend = friends.some(friend => friend.name.toLowerCase() === trimmedName.toLowerCase())
+        if (alreadyFriend) {
+            showToast(`${trimmedName} ya esta en tu lista`, 'error')
+            return
+        }
 
         const newFriend: Friend = {
             id: Date.now(),
-            name: newFriendName,
+            name: trimmedName,
             status: 'offline',
-            rr: 1000
+            rr: 1000,
         }
 
         setFriends([...friends, newFriend])
-        showToast(`Solicitud enviada a ${newFriendName}`, 'info')
+        showToast(`Solicitud enviada a ${trimmedName}`, 'info')
         setNewFriendName('')
+        setIsAddFriendModalOpen(false)
     }
 
     const handleInvite = (friendName: string) => {
@@ -108,7 +130,7 @@ function Friends({ onNavigate }: FriendsProps) {
 
     const handleConfirmInvite = (mode: string) => {
         setIsGameModalOpen(false)
-        showToast(`Invitación enviada a ${selectedFriend}`, 'info')
+        showToast(`Invitacion enviada a ${selectedFriend}`, 'info')
         onNavigate('waiting-room', { mode })
     }
 
@@ -118,39 +140,70 @@ function Friends({ onNavigate }: FriendsProps) {
         if (friend) showToast(`${friend.name} eliminado de tus amigos`, 'error')
     }
 
+    const handleOpenAddModal = () => {
+        setIsAddFriendModalOpen(true)
+    }
+
+    const handleCloseAddModal = () => {
+        setIsAddFriendModalOpen(false)
+        setNewFriendName('')
+    }
+
+    const onlineCount = friends.filter(friend => friend.status === 'online').length
+    const playingCount = friends.filter(friend => friend.status === 'playing').length
+
     return (
         <div className="friends">
-            {/* Fondo animado compartido */}
             <div className="home__bg">
-                <span className="home__chip home__chip--1">⚫</span>
-                <span className="home__chip home__chip--2">⚪</span>
-                <span className="home__chip home__chip--3">🔴</span>
-                <span className="home__chip home__chip--4">🔵</span>
-                <span className="home__chip home__chip--5">🟢</span>
-                <span className="home__chip home__chip--6">🟡</span>
-                <span className="home__chip home__chip--7">🟣</span>
-                <span className="home__chip home__chip--8">🟠</span>
-                <span className="home__chip home__chip--9">⚫</span>
-                <span className="home__chip home__chip--10">⚪</span>
-                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
+                <span className="home__chip home__chip--1">o</span>
+                <span className="home__chip home__chip--2">o</span>
+                <span className="home__chip home__chip--3">o</span>
+                <span className="home__chip home__chip--4">o</span>
+                <span className="home__chip home__chip--5">o</span>
+                <span className="home__chip home__chip--6">o</span>
+                <span className="home__chip home__chip--7">o</span>
+                <span className="home__chip home__chip--8">o</span>
+                <span className="home__chip home__chip--9">o</span>
+                <span className="home__chip home__chip--10">o</span>
+                <span className="home__chip home__chip--q1 home__chip--question">?</span>
+                <span className="home__chip home__chip--q2 home__chip--question">?</span>
+                <span className="home__chip home__chip--q3 home__chip--question">?</span>
+                <span className="home__chip home__chip--q4 home__chip--question">?</span>
             </div>
 
             <div className="friends__container">
                 <header className="friends__header">
-                    <h1 className="friends__title">Amigos</h1>
-                    <p className="friends__subtitle">Conecta y juega con tus compañeros</p>
+                    <div className="friends__headline">
+                        <div>
+                            <h1 className="friends__title">Friends</h1>
+                            <p className="friends__subtitle">Conecta y juega con tu squad competitivo</p>
+                        </div>
+                        <button className="friends__primary-btn" onClick={handleOpenAddModal}>
+                            Anadir amigo
+                        </button>
+                    </div>
+                    <div className="friends__stats">
+                        <div className="friends__stat-card">
+                            <span className="friends__stat-label">Total</span>
+                            <strong className="friends__stat-value">{friends.length}</strong>
+                        </div>
+                        <div className="friends__stat-card">
+                            <span className="friends__stat-label">En linea</span>
+                            <strong className="friends__stat-value friends__stat-value--online">{onlineCount}</strong>
+                        </div>
+                        <div className="friends__stat-card">
+                            <span className="friends__stat-label">Jugando</span>
+                            <strong className="friends__stat-value friends__stat-value--playing">{playingCount}</strong>
+                        </div>
+                    </div>
                 </header>
 
                 <div className="friends__content">
-                    {/* Sección: Lista de Amigos */}
-                    <div className="friends__section friends__list-section">
-                        <h2 className="friends__section-title">Tus Amigos ({friends.length})</h2>
+                    <section className="friends__section friends__list-section">
+                        <h2 className="friends__section-title">Tus amigos ({friends.length})</h2>
                         <div className="friends__list">
                             {friends.length === 0 ? (
-                                <p className="friends__empty">No tienes amigos agregados todavía.</p>
+                                <p className="friends__empty">No tienes amigos agregados todavia.</p>
                             ) : (
                                 friends.map(friend => (
                                     <div key={friend.id} className="friend-card">
@@ -162,7 +215,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                                     <span className="friend-card__rr">{friend.rr} RR</span>
                                                 </div>
                                                 <span className={`friend-card__status friend-card__status--${friend.status}`}>
-                                                    {friend.status === 'online' && 'En línea'}
+                                                    {friend.status === 'online' && 'En linea'}
                                                     {friend.status === 'offline' && 'Desconectado'}
                                                     {friend.status === 'playing' && 'Jugando'}
                                                 </span>
@@ -175,42 +228,24 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 disabled={friend.status === 'offline'}
                                                 title="Invitar a jugar"
                                             >
-                                                ⚔️
+                                                Duel
                                             </button>
                                             <button
                                                 className="friend-btn friend-btn--remove"
                                                 onClick={() => handleRemove(friend.id)}
                                                 title="Eliminar amigo"
                                             >
-                                                🗑️
+                                                X
                                             </button>
                                         </div>
                                     </div>
                                 ))
                             )}
                         </div>
-                    </div>
+                    </section>
 
-                    {/* Sección: Añadir Amigo */}
-                    <div className="friends__section friends__add-section">
-                        <h2 className="friends__section-title">Añadir Amigo</h2>
-                        <form className="friends__add-form" onSubmit={handleAddFriend}>
-                            <input
-                                type="text"
-                                className="friends__input"
-                                placeholder="Nombre de usuario..."
-                                value={newFriendName}
-                                onChange={(e) => setNewFriendName(e.target.value)}
-                            />
-                            <button type="submit" className="friends__add-btn">
-                                Enviar Solicitud
-                            </button>
-                        </form>
-                    </div>
-
-                    {/* Sección: Solicitudes de Amistad */}
-                    <div className="friends__section friends__requests-section">
-                        <h2 className="friends__section-title">Solicitudes de Amistad ({requests.length})</h2>
+                    <section className="friends__section friends__requests-section">
+                        <h2 className="friends__section-title">Solicitudes de amistad ({requests.length})</h2>
                         <div className="friends__requests-list">
                             {requests.length === 0 ? (
                                 <p className="friends__empty">Sin solicitudes de amistad</p>
@@ -226,31 +261,30 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="friend-card__actions">
+                                        <div className="friend-card__actions friend-card__actions--inline">
                                             <button
                                                 className="friend-btn friend-btn--accept"
                                                 onClick={() => handleAcceptRequest(request)}
                                                 title="Aceptar"
                                             >
-                                                ✅
+                                                Ok
                                             </button>
                                             <button
                                                 className="friend-btn friend-btn--reject"
                                                 onClick={() => handleRejectRequest(request.id)}
                                                 title="Rechazar"
                                             >
-                                                ❌
+                                                X
                                             </button>
                                         </div>
                                     </div>
                                 ))
                             )}
                         </div>
-                    </div>
+                    </section>
 
-                    {/* Sección: Solicitudes de Juego */}
-                    <div className="friends__section friends__game-requests-section">
-                        <h2 className="friends__section-title">Solicitudes de Juego ({gameRequests.length})</h2>
+                    <section className="friends__section friends__game-requests-section">
+                        <h2 className="friends__section-title">Solicitudes de juego ({gameRequests.length})</h2>
                         <div className="friends__requests-list">
                             {gameRequests.length === 0 ? (
                                 <p className="friends__empty">Sin solicitudes de juego</p>
@@ -266,58 +300,74 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 </div>
                                                 <div className="friend-card__game-info">
                                                     <span className="friend-card__mode-tag">{request.gameMode}</span>
+                                                    {request.playersCount !== undefined && (
+                                                        <span className="friend-card__players-count">{request.playersCount}/4</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="friend-card__actions friend-card__actions--game-request">
-                                            {request.playersCount !== undefined && (
-                                                <span className="friend-card__players-count">👥 {request.playersCount}/4</span>
-                                            )}
-                                            <div className="friend-card__buttons-group">
-                                                <button
-                                                    className="friend-btn friend-btn--accept"
-                                                    onClick={() => handleAcceptGame(request)}
-                                                    title="Aceptar Duelo"
-                                                >
-                                                    ✅
-                                                </button>
-                                                <button
-                                                    className="friend-btn friend-btn--reject"
-                                                    onClick={() => handleRejectGame(request.id)}
-                                                    title="Rechazar"
-                                                >
-                                                    ❌
-                                                </button>
-                                            </div>
+                                        <div className="friend-card__actions friend-card__actions--inline">
+                                            <button
+                                                className="friend-btn friend-btn--accept"
+                                                onClick={() => handleAcceptGame(request)}
+                                                title="Aceptar duelo"
+                                            >
+                                                Play
+                                            </button>
+                                            <button
+                                                className="friend-btn friend-btn--reject"
+                                                onClick={() => handleRejectGame(request.id)}
+                                                title="Rechazar"
+                                            >
+                                                X
+                                            </button>
                                         </div>
                                     </div>
                                 ))
                             )}
                         </div>
-                    </div>
+                    </section>
                 </div>
 
                 <button className="friends__back-btn" onClick={() => onNavigate('menu')}>
-                    Volver al menú
+                    Volver al menu
                 </button>
             </div>
 
-            {/* Sistema de Notificaciones (Toasts) */}
             <div className={`toast toast--${toast.type} ${toast.visible ? 'toast--visible' : ''}`}>
                 <span className="toast__icon">
-                    {toast.type === 'success' && '✅'}
-                    {toast.type === 'info' && '🔔'}
-                    {toast.type === 'error' && '❌'}
+                    {toast.type === 'success' && 'OK'}
+                    {toast.type === 'info' && 'i'}
+                    {toast.type === 'error' && 'X'}
                 </span>
                 <span className="toast__message">{toast.message}</span>
             </div>
 
-            {/* Modal de selección de modo de juego */}
+            <Modal isOpen={isAddFriendModalOpen} onClose={handleCloseAddModal} maxWidth="460px">
+                <div className="friends-modal">
+                    <h3 className="friends-modal__title">Anadir nuevo amigo</h3>
+                    <p className="friends-modal__subtitle">Escribe su nombre de usuario para enviar una solicitud.</p>
+                    <form className="friends-modal__form" onSubmit={handleAddFriend}>
+                        <input
+                            type="text"
+                            className="friends__input"
+                            placeholder="Nombre de usuario"
+                            value={newFriendName}
+                            onChange={(e) => setNewFriendName(e.target.value)}
+                            autoFocus
+                        />
+                        <button type="submit" className="friends__add-btn">
+                            Enviar solicitud
+                        </button>
+                    </form>
+                </div>
+            </Modal>
+
             <GameModal
                 isOpen={isGameModalOpen}
                 onClose={() => setIsGameModalOpen(false)}
                 title="Retar a un duelo"
-                subtitle={`¿Qué modo de juego quieres jugar contra ${selectedFriend}?`}
+                subtitle={`Que modo de juego quieres jugar contra ${selectedFriend}?`}
                 onSelectMode={handleConfirmInvite}
             />
         </div>
