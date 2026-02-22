@@ -1,6 +1,6 @@
 .duel-quad {
     position: relative;
-    min-height: 100vh;
+    height: 100vh;
     padding: 1.5rem;
     display: flex;
     align-items: center;
@@ -12,7 +12,7 @@
     position: relative;
     z-index: 2;
     width: min(1460px, 100%);
-    min-height: 90vh;
+    height: calc(100vh - 3rem);
     border-radius: 22px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(14, 17, 28, 0.88);
@@ -22,43 +22,93 @@
     flex-direction: column;
     gap: 1rem;
     box-shadow: 0 20px 55px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
 }
 
 .duel-quad__header {
     display: flex;
+    justify-content: center;
     align-items: center;
-    justify-content: space-between;
     gap: 1rem;
 }
 
-.duel-quad__title-block {
+.duel-quad__center-info {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    align-items: center;
+    gap: 0.15rem;
 }
 
-.duel-quad__mode {
+.duel-quad__turn-label {
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: rgba(255, 255, 255, 0.6);
 }
 
-.duel-quad__title {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #fff;
+.duel-quad__turn-value {
+    font-weight: 700;
+    color: #d9d6ff;
 }
 
-.duel-quad__turn {
-    min-width: 160px;
+.duel-quad__timer {
+    margin-top: 0.2rem;
+    min-width: 92px;
     text-align: center;
     font-weight: 800;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
     color: #111;
     background: linear-gradient(135deg, #facc15 0%, #fb923c 100%);
     border-radius: 10px;
-    padding: 0.45rem 0.8rem;
+    padding: 0.25rem 0.7rem;
+}
+
+.duel-quad__main {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr) 280px;
+    gap: 1rem;
+    flex: 1;
+    min-height: 0;
+}
+
+.duel-quad__side {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 0.9rem;
+    min-height: 0;
+}
+
+.duel-quad__panel {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.duel-quad__panel--active {
+    border-color: rgba(250, 204, 21, 0.6);
+    background: linear-gradient(160deg, rgba(250, 204, 21, 0.14), rgba(255, 255, 255, 0.04));
+    box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.2);
+    animation: duel-quad-panel-pulse 2s ease-in-out infinite;
+}
+
+.duel-quad__panel--active .duel-quad__player-card {
+    border-color: rgba(250, 204, 21, 0.55);
+    box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.22) inset;
+}
+
+.duel-quad__panel--active .duel-quad__panel-title {
+    color: #fef3c7;
+}
+
+.duel-quad__panel--active .duel-quad__skills {
+    border-color: rgba(250, 204, 21, 0.35);
 }
 
 .duel-quad__player-card {
@@ -72,8 +122,8 @@
 }
 
 .duel-quad__avatar {
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid rgba(255, 255, 255, 0.25);
@@ -109,36 +159,11 @@
     color: rgba(255, 255, 255, 0.65);
 }
 
-.duel-quad__main {
-    display: grid;
-    grid-template-columns: 270px minmax(0, 1fr) 270px;
-    gap: 1rem;
-    flex: 1;
-    min-height: 0;
-}
-
-.duel-quad__side {
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    gap: 0.9rem;
-    min-height: 0;
-}
-
-.duel-quad__panel {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 0.8rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.7rem;
-    min-height: 0;
-}
-
 .duel-quad__panel-title {
     margin: 0;
-    font-size: 0.92rem;
-    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .duel-quad__skills {
@@ -155,6 +180,7 @@
 .duel-quad__empty-skills {
     color: rgba(255, 255, 255, 0.7);
     font-size: 0.86rem;
+    text-align: center;
 }
 
 .duel-quad__board-area {
@@ -171,10 +197,11 @@
     background-size: 100% 100%;
     background-position: center;
     background-repeat: no-repeat;
+    min-height: 0;
 }
 
 .duel-quad__board {
-    width: min(78vh, 100%);
+    width: min(70vh, 100%);
     max-width: 860px;
     aspect-ratio: 1 / 1;
     display: grid;
@@ -191,31 +218,97 @@
 }
 
 .duel-quad__cell {
+    position: relative;
     border: 1px solid rgba(0, 0, 0, 0.25);
     padding: 0;
     appearance: none;
     background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
 .duel-quad__cell--dark {
-    background: rgba(0, 0, 0, 0.08);
+    background: transparent;
 }
 
 .duel-quad__cell--light {
-    background: rgba(255, 255, 255, 0.04);
+    background: transparent;
 }
 
-.duel-quad__status {
-    min-height: 1.4rem;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.88rem;
-    text-align: center;
+.duel-quad__cell--question {
+    border-color: transparent;
 }
 
-.duel-quad__footer {
+.duel-quad__question {
+    position: absolute;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fbbf24;
+    background: linear-gradient(135deg, #6d5dff 0%, #8b5cf6 45%, #ec4899 100%);
+    background-size: 220% 220%;
+    inset: -2px -3px -2px -2px;
     display: flex;
+    align-items: center;
     justify-content: center;
-    padding-top: 0.25rem;
+    z-index: 2;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    animation: duel-quad-question-bg 2.8s ease-in-out infinite;
+}
+
+.duel-quad__question::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 2px;
+    background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.35), transparent 55%);
+    animation: duel-quad-question-glow 1.8s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.duel-quad__cell--playable {
+    cursor: pointer;
+}
+
+.duel-quad__cell--playable::after {
+    content: '';
+    position: absolute;
+    width: 30%;
+    aspect-ratio: 1 / 1;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.38);
+    z-index: 4;
+}
+
+.duel-quad__cell--playable:hover::after {
+    background: rgba(251, 191, 36, 0.78);
+}
+
+.duel-quad-piece {
+    width: 70%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    display: block;
+    position: relative;
+    z-index: 1;
+    box-shadow: inset 0 4px 6px rgba(255, 255, 255, 0.22), inset 0 -6px 8px rgba(0, 0, 0, 0.33), 0 3px 8px rgba(0, 0, 0, 0.45);
+}
+
+.duel-quad-piece--black {
+    background: radial-gradient(circle at 35% 30%, #525252 0%, #101010 68%);
+}
+
+.duel-quad-piece--white {
+    background: radial-gradient(circle at 35% 30%, #ffffff 0%, #d6d6d6 72%);
+}
+
+.duel-quad-piece--red {
+    background: radial-gradient(circle at 35% 30%, #fca5a5 0%, #dc2626 72%);
+}
+
+.duel-quad-piece--blue {
+    background: radial-gradient(circle at 35% 30%, #93c5fd 0%, #2563eb 72%);
 }
 
 .duel-quad__leave-btn {
@@ -228,13 +321,179 @@
     transition: all 0.2s ease;
 }
 
+.duel-quad__leave-btn--top {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 50;
+}
+
 .duel-quad__leave-btn:hover {
     background: rgba(248, 113, 113, 0.3);
     color: #fff;
     transform: translateY(-1px);
 }
 
-@media (max-width: 980px) {
+.duel-quad-result {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding-top: 0.2rem;
+}
+
+.duel-quad-result__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.duel-quad-result__title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.5rem;
+}
+
+.duel-quad-result__status {
+    margin: 0;
+    color: #facc15;
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+
+.duel-quad-result__winner {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 600;
+}
+
+.duel-quad-result__scores {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.24);
+    width: 100%;
+}
+
+.duel-quad-result__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.duel-quad-result__note {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.duel-quad-result__rr {
+    margin: 0;
+    font-weight: 700;
+}
+
+.duel-quad-result__rr--badge {
+    flex-shrink: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.3px;
+}
+
+.duel-quad-result__rr--up {
+    color: #4ade80;
+}
+
+.duel-quad-result__rr--down {
+    color: #f87171;
+}
+
+.duel-quad-result__rr--neutral {
+    color: #facc15;
+}
+
+.duel-quad-result__back-btn {
+    margin-top: 0.2rem;
+    width: 100%;
+    border: 1px solid rgba(139, 92, 246, 0.55);
+    background: linear-gradient(120deg, #6d5dff, #8b5cf6 55%, #ec4899);
+    color: #fff;
+    border-radius: 10px;
+    font-weight: 700;
+    padding: 0.7rem 1rem;
+}
+
+@keyframes duel-quad-question-bg {
+    0% {
+        background-position: 0% 50%;
+        filter: saturate(0.95);
+    }
+
+    50% {
+        background-position: 100% 50%;
+        filter: saturate(1.2);
+    }
+
+    100% {
+        background-position: 0% 50%;
+        filter: saturate(0.95);
+    }
+}
+
+@keyframes duel-quad-question-glow {
+    0% {
+        opacity: 0.3;
+        transform: scale(0.96);
+    }
+
+    50% {
+        opacity: 0.65;
+        transform: scale(1.03);
+    }
+
+    100% {
+        opacity: 0.3;
+        transform: scale(0.96);
+    }
+}
+
+@keyframes duel-quad-panel-pulse {
+    0% {
+        box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.2), 0 0 10px rgba(250, 204, 21, 0.12);
+    }
+
+    50% {
+        box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.38), 0 0 28px rgba(250, 204, 21, 0.34);
+    }
+
+    100% {
+        box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.2), 0 0 10px rgba(250, 204, 21, 0.12);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .duel-quad__panel--active {
+        animation: none;
+    }
+
+    .duel-quad__question,
+    .duel-quad__question::after {
+        animation: none;
+    }
+}
+
+@media (max-width: 1320px) {
+    .duel-quad__main {
+        grid-template-columns: 250px minmax(0, 1fr) 250px;
+    }
+}
+
+@media (max-width: 1100px) {
     .duel-quad__main {
         grid-template-columns: 1fr;
     }
@@ -245,23 +504,22 @@
     }
 
     .duel-quad__board {
-        width: min(82vw, 680px);
+        width: min(78vw, 760px);
     }
 }
 
-@media (max-width: 640px) {
-    .duel-quad__header {
-        flex-direction: column;
-        align-items: flex-start;
+@media (max-width: 760px) {
+    .duel-quad__leave-btn--top {
+        top: 0.75rem;
+        right: 0.75rem;
     }
 
-    .duel-quad__turn {
-        width: 100%;
+    .duel-quad__container {
+        padding: 0.95rem;
     }
 
     .duel-quad__side {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
     }
-
 }

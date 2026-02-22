@@ -19,7 +19,6 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                     <span className="menu__user-name">Jugador</span>
                 </div>
                 <button className="menu__logout-btn" onClick={() => onNavigate('home')} title="Cerrar Sesión">
-                    <span className="menu__logout-icon">🚪</span>
                     <span className="menu__logout-text">Cerrar Sesión</span>
                 </button>
             </div>

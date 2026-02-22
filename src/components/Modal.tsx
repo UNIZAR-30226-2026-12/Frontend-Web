@@ -5,9 +5,10 @@ interface ModalProps {
   onClose: () => void
   children: React.ReactNode
   maxWidth?: string
+  showCloseButton?: boolean
 }
 
-function Modal({ isOpen, onClose, children, maxWidth }: ModalProps) {
+function Modal({ isOpen, onClose, children, maxWidth, showCloseButton = true }: ModalProps) {
   if (!isOpen) return null
 
   return (
@@ -17,7 +18,11 @@ function Modal({ isOpen, onClose, children, maxWidth }: ModalProps) {
         onClick={(e) => e.stopPropagation()}
         style={maxWidth ? { maxWidth } : undefined}
       >
-        <button className="modal-close" onClick={onClose}>✕</button>
+        {showCloseButton && (
+          <button className="modal-close" onClick={onClose}>
+            x
+          </button>
+        )}
         {children}
       </div>
     </div>

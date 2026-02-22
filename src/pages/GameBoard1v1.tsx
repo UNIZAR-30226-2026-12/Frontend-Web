@@ -1,15 +1,16 @@
 import '../Background.css'
 import './GameBoard1v1.css'
 import { type CSSProperties, useEffect, useMemo, useState } from 'react'
+import Modal from '../components/Modal'
 import { getAvatarFromSeed } from '../assets/avatarUtils'
-import arenaFuego from '../assets/arenas/tableroFuego.png'
-import arenaHielo from '../assets/arenas/tableroHielo.png'
-import arenaMadera from '../assets/arenas/tableroMadera.png'
-import arenaMarmol from '../assets/arenas/tableroCuarzo.png'
-import fondoFuego from '../assets/arenas/fondoFuego.png'
-import fondoHielo from '../assets/arenas/fondoHielo.png'
-import fondoMadera from '../assets/arenas/fondoMadera.png'
-import fondoMarmol from '../assets/arenas/fondoCuarzo.png'
+import fireBoard from '../assets/arenas/fireboard.png'
+import iceBoard from '../assets/arenas/iceboard.png'
+import woodBoard from '../assets/arenas/woodboard.png'
+import quartzBoard from '../assets/arenas/quartzboard.png'
+import fireBackground from '../assets/arenas/firebackground.png'
+import iceBackground from '../assets/arenas/icebackground.png'
+import woodBackground from '../assets/arenas/woodbackground.png'
+import quartzBackground from '../assets/arenas/quartzbackground.png'
 
 interface GameBoard1v1Props {
     onNavigate: (screen: string, data?: any) => void
@@ -60,7 +61,6 @@ const PLAYER = {
     rr: 2250,
     color: 'Negras',
     piece: 'black' as Piece,
-    pieceClass: 'duel-piece--black',
 }
 
 const OPPONENT = {
@@ -68,7 +68,6 @@ const OPPONENT = {
     rr: 1420,
     color: 'Blancas',
     piece: 'white' as Piece,
-    pieceClass: 'duel-piece--white',
 }
 
 const ABILITY_META: Record<AbilityId, { name: string; icon: string; needsTarget: boolean }> = {
@@ -110,10 +109,10 @@ interface ArenaTheme {
 }
 
 const getArenaFromElo = (elo: number): ArenaTheme => {
-    if (elo < 1000) return { board: arenaMadera, background: fondoMadera }
-    if (elo < 1500) return { board: arenaHielo, background: fondoHielo }
-    if (elo < 2000) return { board: arenaFuego, background: fondoFuego }
-    return { board: arenaMarmol, background: fondoMarmol }
+    if (elo < 1000) return { board: woodBoard, background: woodBackground }
+    if (elo < 1500) return { board: quartzBoard, background: quartzBackground }
+    if (elo < 2000) return { board: fireBoard, background: fireBackground }
+    return { board: iceBoard, background: iceBackground }
 }
 
 function createInitialBoard(): BoardCell[][] {
@@ -316,25 +315,45 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [skipTurns, setSkipTurns] = useState<Record<Piece, number>>({ black: 0, white: 0 })
     const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
     const [gameOver, setGameOver] = useState(false)
-    const [systemMessage, setSystemMessage] = useState('Haz una jugada o usa una habilidad.')
+    const [, setSystemMessage] = useState('Haz una jugada o usa una habilidad.')
 
     const validMoves = useMemo(() => getValidMoves(board, currentTurn), [board, currentTurn])
 
     const rawScore = useMemo(() => countPieces(board), [board])
-    const finalScore = useMemo(
+    const penaltyScore = useMemo(
         () => ({
-            black: rawScore.black - inventories.black.length * ABILITY_PENALTY,
-            white: rawScore.white - inventories.white.length * ABILITY_PENALTY,
+            black: inventories.black.length * ABILITY_PENALTY,
+            white: inventories.white.length * ABILITY_PENALTY,
         }),
-        [inventories, rawScore],
+        [inventories.black.length, inventories.white.length],
     )
 
-    const winner =
-        finalScore.black === finalScore.white
-            ? 'Empate'
-            : finalScore.black > finalScore.white
-                ? `${playerProfile.name} gana`
-                : `${opponentProfile.name} gana`
+    const finalScore = useMemo(
+        () => ({
+            black: rawScore.black - penaltyScore.black,
+            white: rawScore.white - penaltyScore.white,
+        }),
+        [penaltyScore.black, penaltyScore.white, rawScore.black, rawScore.white],
+    )
+
+    const winnerInfo = useMemo(() => {
+        if (finalScore.black === finalScore.white) {
+            return {
+                winnerName: 'Empate',
+                playerWon: false,
+                isDraw: true,
+            }
+        }
+
+        const blackWins = finalScore.black > finalScore.white
+        return {
+            winnerName: blackWins ? playerProfile.name : opponentProfile.name,
+            playerWon: blackWins,
+            isDraw: false,
+        }
+    }, [finalScore.black, finalScore.white, opponentProfile.name, playerProfile.name])
+
+    const rrDelta = winnerInfo.isDraw ? 0 : winnerInfo.playerWon ? 30 : -30
 
     useEffect(() => {
         if (gameOver) {
@@ -349,9 +368,9 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             return
         }
 
-        const currentHasActions = getValidMoves(board, currentTurn).size > 0 || inventories[currentTurn].length > 0
+        const currentHasActions = getValidMoves(board, currentTurn).size > 0
         const opponent = getOpponent(currentTurn)
-        const opponentHasActions = getValidMoves(board, opponent).size > 0 || inventories[opponent].length > 0
+        const opponentHasActions = getValidMoves(board, opponent).size > 0
 
         if (!currentHasActions && !opponentHasActions) {
             setGameOver(true)
@@ -697,33 +716,30 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             </div>
 
             <div className="duel__container">
+                <button className="duel__leave-btn duel__leave-btn--top" onClick={() => onNavigate('online-game')}>
+                    Abandonar partida
+                </button>
                 <header className="duel__header">
-                    <div className="duel__player duel__player--you">
-                        <img className="duel__avatar" src={getAvatarFromSeed(playerProfile.name)} alt={`Avatar de ${playerProfile.name}`} />
-                        <div className="duel__player-data">
-                            <span className="duel__name">{playerProfile.name}</span>
-                            <span className="duel__meta">{playerProfile.rr} RR | {playerProfile.color}</span>
-                        </div>
-                    </div>
-
                     <div className="duel__center-info">
                         <span className="duel__turn-label">Turno actual</span>
                         <span className="duel__turn-value">{turnLabel}</span>
                         <div className="duel__timer">1 accion por turno</div>
                     </div>
-
-                    <div className="duel__player duel__player--rival">
-                        <img className="duel__avatar" src={getAvatarFromSeed(opponentProfile.name)} alt={`Avatar de ${opponentProfile.name}`} />
-                        <div className="duel__player-data">
-                            <span className="duel__name">{opponentProfile.name}</span>
-                            <span className="duel__meta">{opponentProfile.rr} RR | {opponentProfile.color}</span>
-                        </div>
-                    </div>
                 </header>
 
                 <main className="duel__main">
-                    <aside className="duel__panel">
-                        <h2 className="duel__panel-title">Habilidades {playerProfile.name}</h2>
+                    <aside className={`duel__panel ${currentTurn === 'black' && !gameOver ? 'duel__panel--active' : ''}`}>
+                        <div className="duel__player-card">
+                            <img className="duel__avatar" src={getAvatarFromSeed(playerProfile.name)} alt={`Avatar de ${playerProfile.name}`} />
+                            <div className="duel__player-data">
+                                <span className="duel__player-row">
+                                    <span className="duel__name">{playerProfile.name}</span>
+                                    <span className="duel__player-score">{rawScore.black} pts</span>
+                                </span>
+                                <span className="duel__meta">{playerProfile.color}</span>
+                            </div>
+                        </div>
+                        <h2 className="duel__panel-title">Habilidades</h2>
                         <div className="duel__skills">
                             {inventories.black.length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
                             {inventories.black.map((ability, index) => (
@@ -748,10 +764,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         className="duel__board-area"
                         style={{ '--duel-board-area-bg': `url(${arenaTheme.background})` } as CSSProperties}
                     >
-                        <div className="duel__scoreboard">
-                            <span>Negras: {rawScore.black} ({finalScore.black})</span>
-                            <span>Blancas: {rawScore.white} ({finalScore.white})</span>
-                        </div>
                         <div
                             className="duel__board"
                             style={{ backgroundImage: `url(${arenaTheme.board})` }}
@@ -767,7 +779,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                 return (
                                     <button
                                         key={key}
-                                        className={`duel__cell ${(row + col) % 2 === 0 ? 'duel__cell--dark' : 'duel__cell--light'} ${isPlayable ? 'duel__cell--playable' : ''}`}
+                                        className={`duel__cell ${(row + col) % 2 === 0 ? 'duel__cell--dark' : 'duel__cell--light'} ${isPlayable ? 'duel__cell--playable' : ''} ${hasQuestion ? 'duel__cell--question' : ''}`}
                                         onClick={() => handleCellClick(row, col)}
                                         disabled={gameOver}
                                         type="button"
@@ -780,18 +792,20 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                 )
                             })}
                         </div>
-                        <div className={`duel__status ${gameOver ? 'duel__status--end' : ''}`}>
-                            {gameOver ? `${winner}. Penalizacion: -${ABILITY_PENALTY} por habilidad sobrante.` : systemMessage}
-                        </div>
-                        <div className="duel__legend">
-                            <span><span className={`duel-piece ${playerProfile.pieceClass}`} /> Tu color</span>
-                            <span><span className={`duel-piece ${opponentProfile.pieceClass}`} /> Color rival</span>
-                            <span><span className="duel-piece duel-piece--black duel-piece--fixed" /> Ficha fija</span>
-                        </div>
                     </section>
 
-                    <aside className="duel__panel">
-                        <h2 className="duel__panel-title">Habilidades {opponentProfile.name}</h2>
+                    <aside className={`duel__panel ${currentTurn === 'white' && !gameOver ? 'duel__panel--active' : ''}`}>
+                        <div className="duel__player-card">
+                            <img className="duel__avatar" src={getAvatarFromSeed(opponentProfile.name)} alt={`Avatar de ${opponentProfile.name}`} />
+                            <div className="duel__player-data">
+                                <span className="duel__player-row">
+                                    <span className="duel__name">{opponentProfile.name}</span>
+                                    <span className="duel__player-score">{rawScore.white} pts</span>
+                                </span>
+                                <span className="duel__meta">{opponentProfile.color}</span>
+                            </div>
+                        </div>
+                        <h2 className="duel__panel-title">Habilidades</h2>
                         <div className="duel__skills">
                             {inventories.white.length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
                             {inventories.white.map((ability, index) => (
@@ -812,13 +826,40 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         </div>
                     </aside>
                 </main>
-
-                <footer className="duel__footer">
-                    <button className="duel__leave-btn" onClick={() => onNavigate('online-game')}>
-                        Abandonar partida
-                    </button>
-                </footer>
             </div>
+
+            <Modal isOpen={gameOver} onClose={() => onNavigate('online-game')} maxWidth="560px" showCloseButton={false}>
+                <div className="duel-result">
+                    <div className="duel-result__top">
+                        <h2 className="duel-result__title">Partida finalizada</h2>
+                        <p className={`duel-result__rr duel-result__rr--badge ${rrDelta > 0 ? 'duel-result__rr--up' : rrDelta < 0 ? 'duel-result__rr--down' : 'duel-result__rr--neutral'}`}>
+                            {`${rrDelta >= 0 ? '+' : ''}${rrDelta} RR`}
+                        </p>
+                    </div>
+                    <p className={`duel-result__status ${winnerInfo.playerWon ? 'duel-result__status--win' : winnerInfo.isDraw ? 'duel-result__status--draw' : 'duel-result__status--lose'}`}>
+                        {winnerInfo.isDraw ? 'Empate' : winnerInfo.playerWon ? 'Has ganado' : 'Has perdido'}
+                    </p>
+
+                    <div className="duel-result__scores">
+                        <div className="duel-result__row">
+                            <span>{playerProfile.name}</span>
+                            <span>{rawScore.black} - {penaltyScore.black} = {finalScore.black} pts</span>
+                        </div>
+                        <div className="duel-result__row">
+                            <span>{opponentProfile.name}</span>
+                            <span>{rawScore.white} - {penaltyScore.white} = {finalScore.white} pts</span>
+                        </div>
+                    </div>
+
+                    <p className="duel-result__note">
+                        Penalización aplicada: -{ABILITY_PENALTY} pts por cada habilidad sin gastar.
+                    </p>
+
+                    <button className="duel-result__back-btn" onClick={() => onNavigate('online-game')}>
+                        Volver al menú
+                    </button>
+                </div>
+            </Modal>
         </div>
     )
 }
