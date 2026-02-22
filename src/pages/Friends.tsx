@@ -155,28 +155,28 @@ function Friends({ onNavigate }: FriendsProps) {
     return (
         <div className="friends">
             <div className="home__bg">
-                <span className="home__chip home__chip--1">o</span>
-                <span className="home__chip home__chip--2">o</span>
-                <span className="home__chip home__chip--3">o</span>
-                <span className="home__chip home__chip--4">o</span>
-                <span className="home__chip home__chip--5">o</span>
-                <span className="home__chip home__chip--6">o</span>
-                <span className="home__chip home__chip--7">o</span>
-                <span className="home__chip home__chip--8">o</span>
-                <span className="home__chip home__chip--9">o</span>
-                <span className="home__chip home__chip--10">o</span>
-                <span className="home__chip home__chip--q1 home__chip--question">?</span>
-                <span className="home__chip home__chip--q2 home__chip--question">?</span>
-                <span className="home__chip home__chip--q3 home__chip--question">?</span>
-                <span className="home__chip home__chip--q4 home__chip--question">?</span>
+                <span className="home__chip home__chip--1">⚫</span>
+                <span className="home__chip home__chip--2">⚪</span>
+                <span className="home__chip home__chip--3">🔴</span>
+                <span className="home__chip home__chip--4">🔵</span>
+                <span className="home__chip home__chip--5">🟢</span>
+                <span className="home__chip home__chip--6">🟡</span>
+                <span className="home__chip home__chip--7">🟣</span>
+                <span className="home__chip home__chip--8">🟠</span>
+                <span className="home__chip home__chip--9">⚫</span>
+                <span className="home__chip home__chip--10">⚪</span>
+                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
+                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
+                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
+                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
             </div>
 
             <div className="friends__container">
                 <header className="friends__header">
                     <div className="friends__headline">
                         <div>
-                            <h1 className="friends__title">Friends</h1>
-                            <p className="friends__subtitle">Conecta y juega con tu squad competitivo</p>
+                            <h1 className="friends__title">Amigos</h1>
+                            <p className="friends__subtitle">Conecta y juega con tus amigos</p>
                         </div>
                         <button className="friends__primary-btn" onClick={handleOpenAddModal}>
                          Añadir amigo
@@ -228,14 +228,14 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 disabled={friend.status === 'offline'}
                                                 title="Invitar a jugar"
                                             >
-                                                Duel
+                                                Duelo
                                             </button>
                                             <button
                                                 className="friend-btn friend-btn--remove"
                                                 onClick={() => handleRemove(friend.id)}
                                                 title="Eliminar amigo"
                                             >
-                                                X
+                                                Eliminar
                                             </button>
                                         </div>
                                     </div>
@@ -343,10 +343,10 @@ function Friends({ onNavigate }: FriendsProps) {
                 <span className="toast__message">{toast.message}</span>
             </div>
 
-            <Modal isOpen={isAddFriendModalOpen} onClose={handleCloseAddModal} maxWidth="460px">
+            <Modal isOpen={isAddFriendModalOpen} onClose={handleCloseAddModal} maxWidth="500px">
                 <div className="friends-modal">
                     <h3 className="friends-modal__title">Añadir nuevo amigo</h3>
-                    <p className="friends-modal__subtitle">Escribe su nombre de usuario para enviar una solicitud.</p>
+                    <p className="friends-modal__subtitle">Escribe su nombre de usuario para enviarle una solicitud de amistad</p>
                     <form className="friends-modal__form" onSubmit={handleAddFriend}>
                         <input
                             type="text"
