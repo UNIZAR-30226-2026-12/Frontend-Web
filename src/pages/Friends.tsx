@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import Modal from '../components/Modal'
 import '../Background.css'
@@ -24,35 +25,31 @@ interface Toast {
     visible: boolean
 }
 
-const MOCK_FRIENDS: Friend[] = [
-    { id: 1, name: 'CyberNinja', status: 'online', rr: 1420 },
-    { id: 2, name: 'ReversiMaster', status: 'playing', rr: 2150 },
-    { id: 3, name: 'StarPlayer99', status: 'offline', rr: 1100 },
-    { id: 4, name: 'RoboTactics', status: 'online', rr: 1575 },
-]
-
-const MOCK_REQUESTS: Friend[] = [
-    { id: 101, name: 'GamerX', status: 'offline', rr: 845 },
-    { id: 102, name: 'PixelArtist', status: 'offline', rr: 1320 },
-]
-
-const MOCK_GAME_REQUESTS: Friend[] = [
-    { id: 201, name: 'ProPlayer_01', status: 'online', gameMode: '1vs1', playersCount: 1, rr: 1720 },
-    { id: 202, name: 'UltraStrategist', status: 'online', gameMode: '1vs1vs1vs1', playersCount: 3, rr: 1950 },
-]
 
 function Friends({ onNavigate }: FriendsProps) {
-    const [friends, setFriends] = useState<Friend[]>(MOCK_FRIENDS)
-    const [requests, setRequests] = useState<Friend[]>(MOCK_REQUESTS)
-    const [gameRequests, setGameRequests] = useState<Friend[]>(MOCK_GAME_REQUESTS)
+    const [friends, setFriends] = useState<Friend[]>([])
+    const [requests, setRequests] = useState<Friend[]>([])
+    const [gameRequests, setGameRequests] = useState<any[]>([])
     const [newFriendName, setNewFriendName] = useState('')
     const [toast, setToast] = useState<Toast>({ message: '', type: 'info', visible: false })
     const [isGameModalOpen, setIsGameModalOpen] = useState(false)
     const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false)
-    const [selectedFriend, setSelectedFriend] = useState('')
+    const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null)
     const toastTimer = useRef<number | null>(null)
 
+    const fetchFriends = async () => {
+        try {
+            const data = await api.friends.list()
+            setFriends(data.friends || [])
+            setRequests(data.requests || [])
+            setGameRequests(data.gameRequests || [])
+        } catch (err) {
+            showToast('Error al cargar amigos', 'error')
+        }
+    }
+
     useEffect(() => {
+        fetchFriends()
         return () => {
             if (toastTimer.current) {
                 window.clearTimeout(toastTimer.current)
@@ -71,16 +68,26 @@ function Friends({ onNavigate }: FriendsProps) {
         }, 3000)
     }
 
-    const handleAcceptRequest = (request: Friend) => {
-        setRequests(requests.filter(r => r.id !== request.id))
-        setFriends([...friends, { ...request, status: 'online' }])
-        showToast(`Ahora eres amigo de ${request.name}!`, 'success')
+    const handleAcceptRequest = async (request: Friend) => {
+        try {
+            await api.friends.acceptRequest(request.id)
+            setRequests(requests.filter(r => r.id !== request.id))
+            setFriends([...friends, { ...request, status: 'online' }])
+            showToast(`Ahora eres amigo de ${request.name}!`, 'success')
+        } catch (err) {
+            showToast('No se pudo aceptar la solicitud', 'error')
+        }
     }
 
-    const handleRejectRequest = (id: number) => {
-        const request = requests.find(r => r.id === id)
-        setRequests(requests.filter(r => r.id !== id))
-        if (request) showToast(`Solicitud de ${request.name} rechazada`, 'error')
+    const handleRejectRequest = async (id: number) => {
+        try {
+            await api.friends.rejectRequest(id)
+            const request = requests.find(r => r.id === id)
+            setRequests(requests.filter(r => r.id !== id))
+            if (request) showToast(`Solicitud de ${request.name} rechazada`, 'error')
+        } catch (err) {
+            showToast('Error al rechazar solicitud', 'error')
+        }
     }
 
     const handleAcceptGame = (request: Friend) => {
@@ -95,7 +102,7 @@ function Friends({ onNavigate }: FriendsProps) {
         if (request) showToast(`Invitacion de ${request.name} rechazada`, 'error')
     }
 
-    const handleAddFriend = (e: FormEvent<HTMLFormElement>) => {
+    const handleAddFriend = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         const trimmedName = newFriendName.trim()
 
@@ -110,34 +117,42 @@ function Friends({ onNavigate }: FriendsProps) {
             return
         }
 
-        const newFriend: Friend = {
-            id: Date.now(),
-            name: trimmedName,
-            status: 'offline',
-            rr: 1000,
+        try {
+            await api.friends.sendRequest(trimmedName)
+            showToast(`Solicitud enviada a ${trimmedName}`, 'info')
+            setNewFriendName('')
+            setIsAddFriendModalOpen(false)
+        } catch (err: any) {
+            showToast(err.message || 'Error al enviar solicitud', 'error')
         }
-
-        setFriends([...friends, newFriend])
-        showToast(`Solicitud enviada a ${trimmedName}`, 'info')
-        setNewFriendName('')
-        setIsAddFriendModalOpen(false)
     }
 
-    const handleInvite = (friendName: string) => {
-        setSelectedFriend(friendName)
+    const handleInvite = (friend: Friend) => {
+        setSelectedFriend(friend)
         setIsGameModalOpen(true)
     }
 
-    const handleConfirmInvite = (mode: string) => {
-        setIsGameModalOpen(false)
-        showToast(`Invitacion enviada a ${selectedFriend}`, 'info')
-        onNavigate('waiting-room', { mode })
+    const handleConfirmInvite = async (mode: string) => {
+        if (!selectedFriend) return
+        try {
+            await api.games.invite(selectedFriend.id, mode)
+            setIsGameModalOpen(false)
+            showToast(`Invitacion enviada a ${selectedFriend.name}`, 'info')
+            onNavigate('waiting-room', { mode })
+        } catch (err) {
+            showToast('Error al invitar al amigo', 'error')
+        }
     }
 
-    const handleRemove = (id: number) => {
-        const friend = friends.find(f => f.id === id)
-        setFriends(friends.filter(f => f.id !== id))
-        if (friend) showToast(`${friend.name} eliminado de tus amigos`, 'error')
+    const handleRemove = async (id: number) => {
+        try {
+            await api.friends.remove(id)
+            const friend = friends.find(f => f.id === id)
+            setFriends(friends.filter(f => f.id !== id))
+            if (friend) showToast(`${friend.name} eliminado de tus amigos`, 'error')
+        } catch (err) {
+            showToast('Error al eliminar amigo', 'error')
+        }
     }
 
     const handleOpenAddModal = () => {
@@ -179,7 +194,7 @@ function Friends({ onNavigate }: FriendsProps) {
                             <p className="friends__subtitle">Conecta y juega con tus amigos</p>
                         </div>
                         <button className="friends__primary-btn" onClick={handleOpenAddModal}>
-                         Añadir amigo
+                            Añadir amigo
                         </button>
                     </div>
                     <div className="friends__stats">
@@ -224,7 +239,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                         <div className="friend-card__actions">
                                             <button
                                                 className="friend-btn friend-btn--invite"
-                                                onClick={() => handleInvite(friend.name)}
+                                                onClick={() => handleInvite(friend)}
                                                 disabled={friend.status === 'offline'}
                                                 title="Invitar a jugar"
                                             >
@@ -367,7 +382,7 @@ function Friends({ onNavigate }: FriendsProps) {
                 isOpen={isGameModalOpen}
                 onClose={() => setIsGameModalOpen(false)}
                 title="Retar a un duelo"
-                subtitle={`Que modo de juego quieres jugar contra ${selectedFriend}?`}
+                subtitle={`Que modo de juego quieres jugar contra ${selectedFriend?.name}?`}
                 onSelectMode={handleConfirmInvite}
             />
         </div>

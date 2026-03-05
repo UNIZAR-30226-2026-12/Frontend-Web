@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import { getAvatarFromSeed } from '../assets/avatarUtils'
 import '../Background.css'
@@ -27,21 +28,11 @@ function MainMenu({ onNavigate }: MainMenuProps) {
             }
 
             try {
-                const response = await fetch('http://localhost:8081/api/users/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-
-                if (response.ok) {
-                    const data = await response.json()
-                    setUser(data)
-                } else {
-                    localStorage.removeItem('token')
-                    onNavigate('home')
-                }
+                const data = await api.users.getMe()
+                setUser(data)
             } catch (err) {
-                console.error('Error al conectar con el servidor')
+                localStorage.removeItem('token')
+                onNavigate('home')
             }
         }
 
@@ -144,8 +135,15 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                 title="Jugar contra la IA"
                 subtitle="Elige el modo de juego"
                 onSelectMode={(mode) => {
-                    console.log(`IA Mode selected: ${mode}`)
                     setShowIAModal(false)
+                    onNavigate('waiting-room', {
+                        mode,
+                        playerName: user?.username || 'Jugador',
+                        playerRR: user?.elo || 0,
+                        opponentName: 'Bot_IA',
+                        opponentRR: 1500,
+                        returnTo: 'menu'
+                    })
                 }}
             />
         </div>

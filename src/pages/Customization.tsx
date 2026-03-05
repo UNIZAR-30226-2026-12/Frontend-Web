@@ -1,4 +1,5 @@
-import { useState, useRef, type ChangeEvent, type KeyboardEvent } from 'react'
+import { useState, useRef, useEffect, type ChangeEvent, type KeyboardEvent } from 'react'
+import { api } from '../services/api'
 import '../Background.css'
 import './Customization.css'
 
@@ -43,15 +44,77 @@ function Customization({ onNavigate }: CustomizationProps) {
     const [selectedAvatar, setSelectedAvatar] = useState<number | 'custom'>(0)
     const [customAvatar, setCustomAvatar] = useState<string | null>(null)
     const [username, setUsername] = useState('Jugador')
+    const [email, setEmail] = useState('')
     const [isEditingName, setIsEditingName] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const data = await api.users.getMe()
+                setUsername(data.username)
+                setEmail(data.email)
+
+                // Mapear colores de DB a índices locales si es necesario
+                // Por ahora asumimos que guardamos el índice o el nombre
+                const pieceIdx = PIECE_STYLES.findIndex(s => s.label === data.preferred_piece_color)
+                if (pieceIdx !== -1) setSelectedPiece(pieceIdx)
+
+                const boardIdx = BOARD_COLORS.findIndex(b => b.label === data.preferred_board_color)
+                if (boardIdx !== -1) setSelectedBoard(boardIdx)
+
+                if (data.avatar_url) {
+                    const avatarIdx = AVATARS.findIndex(a => a.id === data.avatar_url)
+                    if (avatarIdx !== -1) {
+                        setSelectedAvatar(avatarIdx)
+                    } else {
+                        setCustomAvatar(data.avatar_url)
+                        setSelectedAvatar('custom')
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching user data', err)
+            }
+        }
+        fetchUserData()
+    }, [])
+
+    const handleSaveCustomization = async (pieceIdx: number, boardIdx: number, avatarId: string | number) => {
+        try {
+            const avatar_url = typeof avatarId === 'number' ? AVATARS[avatarId].id : 'custom'
+            await api.users.updateCustomization({
+                preferred_piece_color: PIECE_STYLES[pieceIdx].label,
+                preferred_board_color: BOARD_COLORS[boardIdx].label,
+                avatar_url: avatar_url
+            })
+        } catch (err) {
+            console.error('Error saving customization', err)
+        }
+    }
+
+    const handleUpdateName = async () => {
+        try {
+            await api.users.updateMe({ username })
+            setIsEditingName(false)
+        } catch (err) {
+            console.error('Error updating username', err)
+        }
+    }
+
+    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
-            const url = URL.createObjectURL(file)
-            setCustomAvatar(url)
-            setSelectedAvatar('custom')
+            try {
+                // Simulación de subida de avatar
+                const formData = new FormData()
+                formData.append('file', file)
+                const res = await api.users.uploadAvatar(formData)
+                setCustomAvatar(res.avatar_url)
+                setSelectedAvatar('custom')
+                handleSaveCustomization(selectedPiece, selectedBoard, 'custom')
+            } catch (err) {
+                console.error('Error uploading avatar', err)
+            }
         }
     }
 
@@ -60,7 +123,11 @@ function Customization({ onNavigate }: CustomizationProps) {
     }
 
     const toggleEditName = () => {
-        setIsEditingName(!isEditingName)
+        if (isEditingName) {
+            handleUpdateName()
+        } else {
+            setIsEditingName(true)
+        }
     }
 
     const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -69,7 +136,7 @@ function Customization({ onNavigate }: CustomizationProps) {
 
     const handleNameKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
-            setIsEditingName(false)
+            handleUpdateName()
         }
     }
 
@@ -127,7 +194,10 @@ function Customization({ onNavigate }: CustomizationProps) {
                                             <button
                                                 key={avatar.id}
                                                 className={`custom__avatar-option ${selectedAvatar === i ? 'custom__avatar-option--selected' : ''}`}
-                                                onClick={() => setSelectedAvatar(i)}
+                                                onClick={() => {
+                                                    setSelectedAvatar(i)
+                                                    handleSaveCustomization(selectedPiece, selectedBoard, i)
+                                                }}
                                                 title={avatar.label}
                                             >
                                                 <img src={avatar.src} alt={avatar.label} className="custom__avatar-img" />
@@ -192,7 +262,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                                 </div>
                                 <div className="custom__field">
                                     <span className="custom__field-label">Correo electrónico</span>
-                                    <span className="custom__field-value">jugador@email.com</span>
+                                    <span className="custom__field-value">{email || 'jugador@email.com'}</span>
                                 </div>
                             </div>
                         </div>
@@ -252,7 +322,10 @@ function Customization({ onNavigate }: CustomizationProps) {
                                     <button
                                         key={i}
                                         className={`custom__option custom__option--pair ${i === selectedPiece ? 'custom__option--selected' : ''}`}
-                                        onClick={() => setSelectedPiece(i)}
+                                        onClick={() => {
+                                            setSelectedPiece(i)
+                                            handleSaveCustomization(i, selectedBoard, selectedAvatar)
+                                        }}
                                         title={style.label}
                                     >
                                         <span className="custom__option-half" style={{ background: style.sideA }} />
@@ -270,7 +343,10 @@ function Customization({ onNavigate }: CustomizationProps) {
                                     <button
                                         key={i}
                                         className={`custom__option custom__option--color ${i === selectedBoard ? 'custom__option--selected' : ''}`}
-                                        onClick={() => setSelectedBoard(i)}
+                                        onClick={() => {
+                                            setSelectedBoard(i)
+                                            handleSaveCustomization(selectedPiece, i, selectedAvatar)
+                                        }}
                                         title={board.label}
                                         style={{ background: board.color }}
                                     />

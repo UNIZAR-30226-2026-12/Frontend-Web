@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { api } from '../services/api'
 import Modal from './Modal'
 import './AuthForms.css'
 
@@ -25,26 +26,14 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
     }
 
     try {
-      const response = await fetch('http://localhost:8081/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          email,
-          password
-        }),
+      await api.auth.register({
+        username,
+        email,
+        password
       })
-
-      if (response.ok) {
-        onRegisterSuccess()
-      } else {
-        const errorData = await response.json()
-        setError(errorData.detail || 'Error al registrarse')
-      }
-    } catch (err) {
-      setError('No se pudo conectar con el servidor')
+      onRegisterSuccess()
+    } catch (err: any) {
+      setError(err.message || 'No se pudo conectar con el servidor')
     }
   }
 

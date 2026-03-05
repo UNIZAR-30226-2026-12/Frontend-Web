@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { api } from '../services/api'
 import Modal from './Modal'
 import './AuthForms.css'
 
@@ -22,25 +23,12 @@ function LoginModal({ isOpen, onClose, onNavigate }: LoginModalProps) {
       formData.append('username', username)
       formData.append('password', password)
 
-      const response = await fetch('http://localhost:8081/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData,
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        localStorage.setItem('token', data.access_token)
-        onNavigate('menu')
-        onClose()
-      } else {
-        const errorData = await response.json()
-        setError(errorData.detail || 'Error al iniciar sesión')
-      }
-    } catch (err) {
-      setError('No se pudo conectar con el servidor')
+      const data = await api.auth.login(formData)
+      localStorage.setItem('token', data.access_token)
+      onNavigate('menu')
+      onClose()
+    } catch (err: any) {
+      setError(err.message || 'No se pudo conectar con el servidor')
     }
   }
 

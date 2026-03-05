@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import { getAvatarFromSeed } from '../assets/avatarUtils'
 import '../Background.css'
@@ -40,25 +41,33 @@ const MOCK_PUBLIC_GAMES: GameSession[] = [
     { id: 10, creator: 'GreenLeaf', creatorRR: 1320, mode: '1vs1vs1vs1', players: 3, maxPlayers: 4, status: 'waiting' },
 ]
 
-const MOCK_HISTORY: GameHistory[] = [
-    { id: 101, date: 'Hoy', mode: '1vs1', result: 'Ganada', score: '42 - 22', rankChange: '+25 RR' },
-    { id: 102, date: 'Ayer', mode: '1vs1vs1vs1', result: 'Perdida', score: 'Puesto: 3º', rankChange: '-12 RR' },
-    { id: 103, date: '12 Feb', mode: '1vs1', result: 'Ganada', score: '38 - 26', rankChange: '+22 RR' },
-    { id: 104, date: '11 Feb', mode: '1vs1vs1vs1', result: 'Empate', score: 'Puesto: 2º', rankChange: '+5 RR' },
-    { id: 105, date: '10 Feb', mode: '1vs1', result: 'Perdida', score: '20 - 44', rankChange: '-15 RR' },
-    { id: 106, date: '09 Feb', mode: '1vs1', result: 'Ganada', score: '50 - 14', rankChange: '+28 RR' },
-]
 
 function OnlineGame({ onNavigate }: OnlineGameProps) {
+    const [user, setUser] = useState<any>(null)
     const [publicGames, setPublicGames] = useState<GameSession[]>(MOCK_PUBLIC_GAMES)
+    const [history, setHistory] = useState<GameHistory[]>([])
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [showCreateModal, setShowCreateModal] = useState(false)
-    const [rrValue] = useState(2250)
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error'; visible: boolean }>({
         message: '',
         type: 'info',
         visible: false
     })
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const userData = await api.users.getMe()
+                setUser(userData)
+
+                const historyData = await api.users.getHistory()
+                setHistory(historyData)
+            } catch (err) {
+                console.error('Error fetching online game data', err)
+            }
+        }
+        fetchData()
+    }, [])
 
     const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
         setToast({ message, type, visible: true })
@@ -76,8 +85,8 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
     const handleCreateGame = (mode: string) => {
         const newGame: GameSession = {
             id: Date.now(),
-            creator: 'Tú',
-            creatorRR: rrValue,
+            creator: user?.username || 'Tú',
+            creatorRR: user?.elo || 0,
             mode: mode as '1vs1' | '1vs1vs1vs1',
             players: 1,
             maxPlayers: mode === '1vs1' ? 2 : 4,
@@ -87,8 +96,8 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
         setShowCreateModal(false)
         onNavigate('waiting-room', {
             mode,
-            playerName: 'Jugador',
-            playerRR: rrValue,
+            playerName: user?.username || 'Jugador',
+            playerRR: user?.elo || 0,
             opponentName: 'Gamer_Pro',
             opponentRR: 1420,
         })
@@ -99,8 +108,8 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
             {/* Barra de usuario superior */}
             <div className="online__user-bar">
                 <div className="online__user-info">
-                    <img className="online__user-avatar" src={getAvatarFromSeed('Jugador')} alt="Avatar de Jugador" />
-                    <span className="online__user-name">Jugador</span>
+                    <img className="online__user-avatar" src={getAvatarFromSeed(user?.username || 'Jugador')} alt="Avatar de Jugador" />
+                    <span className="online__user-name">{user?.username || 'Cargando...'}</span>
                 </div>
             </div>
 
@@ -170,8 +179,8 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                                             onClick={() =>
                                                 onNavigate('waiting-room', {
                                                     mode: game.mode,
-                                                    playerName: 'Jugador',
-                                                    playerRR: rrValue,
+                                                    playerName: user?.username || 'Jugador',
+                                                    playerRR: user?.elo || 0,
                                                     opponentName: game.creator,
                                                     opponentRR: game.creatorRR,
                                                 })
@@ -188,26 +197,30 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                     <div className="online__section online__history-section">
                         <div className="online__rr-card">
                             <span className="online__rr-card-label">ELO actual:</span>
-                            <span className="online__rr-card-value">{rrValue} RR</span>
+                            <span className="online__rr-card-value">{user?.elo || 0} RR</span>
                         </div>
 
                         <h2 className="online__section-title">Tu Historial</h2>
                         <div className="online__history-list">
-                            {MOCK_HISTORY.map(item => (
-                                <div key={item.id} className={`history-card history-card--${item.result.toLowerCase()}`}>
-                                    <div className="history-card__header">
-                                        <span className={`history-card__result history-card__result--${item.result.toLowerCase()}`}>
-                                            {item.result}
-                                        </span>
-                                        <span className="history-card__date">{item.date}</span>
+                            {history.length === 0 ? (
+                                <p className="online__empty">No has jugado partidas todavia.</p>
+                            ) : (
+                                history.map(item => (
+                                    <div key={item.id} className={`history-card history-card--${item.result.toLowerCase()}`}>
+                                        <div className="history-card__header">
+                                            <span className={`history-card__result history-card__result--${item.result.toLowerCase()}`}>
+                                                {item.result}
+                                            </span>
+                                            <span className="history-card__date">{item.date}</span>
+                                        </div>
+                                        <div className="history-card__body">
+                                            <span className="history-card__mode">{item.mode}</span>
+                                            <span className="history-card__score">{item.score}</span>
+                                            <span className="history-card__rank">{item.rankChange}</span>
+                                        </div>
                                     </div>
-                                    <div className="history-card__body">
-                                        <span className="history-card__mode">{item.mode}</span>
-                                        <span className="history-card__score">{item.score}</span>
-                                        <span className="history-card__rank">{item.rankChange}</span>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
