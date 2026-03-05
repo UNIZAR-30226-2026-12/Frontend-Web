@@ -1,24 +1,69 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import GameModal from '../components/GameModal'
 import { getAvatarFromSeed } from '../assets/avatarUtils'
 import '../Background.css'
 import './MainMenu.css'
+
+interface UserData {
+    username: string
+    elo: number
+    avatar_url?: string
+}
 
 interface MainMenuProps {
     onNavigate: (screen: string, data?: any) => void
 }
 
 function MainMenu({ onNavigate }: MainMenuProps) {
+    const [user, setUser] = useState<UserData | null>(null)
     const [showIAModal, setShowIAModal] = useState(false)
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                onNavigate('home')
+                return
+            }
+
+            try {
+                const response = await fetch('http://localhost:8081/api/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+
+                if (response.ok) {
+                    const data = await response.json()
+                    setUser(data)
+                } else {
+                    localStorage.removeItem('token')
+                    onNavigate('home')
+                }
+            } catch (err) {
+                console.error('Error al conectar con el servidor')
+            }
+        }
+
+        fetchUser()
+    }, [onNavigate])
+
+    const handleLogout = () => {
+        localStorage.removeItem('token')
+        onNavigate('home')
+    }
     return (
         <div className="menu">
             {/* Barra de usuario y cierre de sesión */}
             <div className="menu__user-bar">
                 <div className="menu__user-info">
-                    <img className="menu__user-icon" src={getAvatarFromSeed('Jugador')} alt="Avatar de Jugador" />
-                    <span className="menu__user-name">Jugador</span>
+                    <img className="menu__user-icon" src={getAvatarFromSeed(user?.username || 'Jugador')} alt="Avatar" />
+                    <div className="menu__user-details">
+                        <span className="menu__user-name">{user?.username || 'Cargando...'}</span>
+                        <span className="menu__user-elo">{user ? `ELO: ${user.elo}` : ''}</span>
+                    </div>
                 </div>
-                <button className="menu__logout-btn" onClick={() => onNavigate('home')} title="Cerrar Sesión">
+                <button className="menu__logout-btn" onClick={handleLogout} title="Cerrar Sesión">
                     <span className="menu__logout-text">Cerrar Sesión</span>
                 </button>
             </div>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, type ChangeEvent, type KeyboardEvent } from 'react'
 import '../Background.css'
 import './Customization.css'
 
@@ -46,7 +46,7 @@ function Customization({ onNavigate }: CustomizationProps) {
     const [isEditingName, setIsEditingName] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
             const url = URL.createObjectURL(file)
@@ -63,11 +63,11 @@ function Customization({ onNavigate }: CustomizationProps) {
         setIsEditingName(!isEditingName)
     }
 
-    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
         setUsername(e.target.value)
     }
 
-    const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    const handleNameKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
             setIsEditingName(false)
         }

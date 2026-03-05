@@ -1,34 +1,70 @@
+import { useState, type FormEvent } from 'react'
 import Modal from './Modal'
 import './AuthForms.css'
 
 interface RegisterModalProps {
   isOpen: boolean
   onClose: () => void
-  onNavigate: (screen: string) => void
   onRegisterSuccess: () => void
 }
 
-function RegisterModal({ isOpen, onClose, onNavigate, onRegisterSuccess }: RegisterModalProps) {
+function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProps) {
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+
+  const handleRegister = async (e: FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden')
+      return
+    }
+
+    try {
+      const response = await fetch('http://localhost:8081/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password
+        }),
+      })
+
+      if (response.ok) {
+        onRegisterSuccess()
+      } else {
+        const errorData = await response.json()
+        setError(errorData.detail || 'Error al registrarse')
+      }
+    } catch (err) {
+      setError('No se pudo conectar con el servidor')
+    }
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="auth-form">
         <h2 className="auth-form__title">Crear Cuenta</h2>
         <p className="auth-form__subtitle">Únete a Random Reversi</p>
 
-        <form
-          className="auth-form__fields"
-          onSubmit={(e) => {
-            e.preventDefault()
-            onNavigate('home')
-            onRegisterSuccess()
-          }}
-        >
+        <form className="auth-form__fields" onSubmit={handleRegister}>
+          {error && <div className="auth-form__error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
           <label className="auth-form__label">
             Nombre de usuario
             <input
               type="text"
               className="auth-form__input"
               placeholder="Tu nombre de usuario"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
             />
           </label>
 
@@ -37,7 +73,10 @@ function RegisterModal({ isOpen, onClose, onNavigate, onRegisterSuccess }: Regis
             <input
               type="email"
               className="auth-form__input"
-              placeholder="tu@email.com"
+              placeholder="usuario@ejemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </label>
 
@@ -47,6 +86,9 @@ function RegisterModal({ isOpen, onClose, onNavigate, onRegisterSuccess }: Regis
               type="password"
               className="auth-form__input"
               placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </label>
 
@@ -56,6 +98,9 @@ function RegisterModal({ isOpen, onClose, onNavigate, onRegisterSuccess }: Regis
               type="password"
               className="auth-form__input"
               placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
             />
           </label>
 

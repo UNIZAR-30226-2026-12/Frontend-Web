@@ -66,7 +66,6 @@ function Home({ onNavigate }: HomeProps) {
       <RegisterModal
         isOpen={showRegister}
         onClose={() => setShowRegister(false)}
-        onNavigate={onNavigate}
         onRegisterSuccess={() => {
           setShowRegister(false)
           setShowLogin(true)
