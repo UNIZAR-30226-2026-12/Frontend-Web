@@ -4,7 +4,7 @@ import GameModal from '../components/GameModal'
 import Modal from '../components/Modal'
 import '../Background.css'
 import './Friends.css'
-import { getAvatarFromSeed } from '../assets/avatarUtils'
+import { resolveUserAvatar } from '../config/avatarOptions'
 
 interface FriendsProps {
     onNavigate: (screen: string, data?: any) => void
@@ -13,6 +13,7 @@ interface FriendsProps {
 interface Friend {
     id: number
     name: string
+    avatar_url?: string
     status: 'online' | 'offline' | 'playing'
     rr: number
     gameMode?: '1vs1' | '1vs1vs1vs1'
@@ -223,7 +224,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                 friends.map(friend => (
                                     <div key={friend.id} className="friend-card">
                                         <div className="friend-card__info">
-                                            <img className="friend-card__avatar" src={getAvatarFromSeed(friend.name)} alt={`Avatar de ${friend.name}`} />
+                                            <img className="friend-card__avatar" src={resolveUserAvatar(friend.avatar_url, friend.name)} alt={`Avatar de ${friend.name}`} />
                                             <div className="friend-card__details">
                                                 <div className="friend-card__name-row">
                                                     <span className="friend-card__name">{friend.name}</span>
@@ -268,7 +269,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                 requests.map(request => (
                                     <div key={request.id} className="friend-card friend-card--request">
                                         <div className="friend-card__info">
-                                            <img className="friend-card__avatar" src={getAvatarFromSeed(request.name)} alt={`Avatar de ${request.name}`} />
+                                            <img className="friend-card__avatar" src={resolveUserAvatar(request.avatar_url, request.name)} alt={`Avatar de ${request.name}`} />
                                             <div className="friend-card__details">
                                                 <div className="friend-card__name-row">
                                                     <span className="friend-card__name">{request.name}</span>
@@ -307,7 +308,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                 gameRequests.map(request => (
                                     <div key={request.id} className="friend-card friend-card--game-request">
                                         <div className="friend-card__info">
-                                            <img className="friend-card__avatar" src={getAvatarFromSeed(request.name)} alt={`Avatar de ${request.name}`} />
+                                            <img className="friend-card__avatar" src={resolveUserAvatar(request.avatar_url, request.name)} alt={`Avatar de ${request.name}`} />
                                             <div className="friend-card__details">
                                                 <div className="friend-card__name-row">
                                                     <span className="friend-card__name">{request.name}</span>

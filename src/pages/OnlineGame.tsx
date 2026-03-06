@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
-import { getAvatarFromSeed } from '../assets/avatarUtils'
+import { resolveUserAvatar } from '../config/avatarOptions'
 import '../Background.css'
 import './OnlineGame.css'
 
@@ -12,6 +12,7 @@ interface OnlineGameProps {
 interface GameSession {
     id: number
     creator: string
+    avatar_url?: string
     creatorRR: number
     mode: '1vs1' | '1vs1vs1vs1'
     players: number
@@ -105,13 +106,6 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
 
     return (
         <div className="online">
-            {/* Barra de usuario superior */}
-            <div className="online__user-bar">
-                <div className="online__user-info">
-                    <img className="online__user-avatar" src={getAvatarFromSeed(user?.username || 'Jugador')} alt="Avatar de Jugador" />
-                    <span className="online__user-name">{user?.username || 'Cargando...'}</span>
-                </div>
-            </div>
 
             {/* Fondo animado compartido */}
             <div className="home__bg">
@@ -160,7 +154,7 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                                             <div className="game-card__creator-info">
                                                 <img
                                                     className="game-card__creator-avatar"
-                                                    src={getAvatarFromSeed(game.creator)}
+                                                    src={resolveUserAvatar(game.avatar_url, game.creator)}
                                                     alt={`Avatar de ${game.creator}`}
                                                 />
                                                 <div className="game-card__creator-details">
@@ -252,3 +246,4 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
 }
 
 export default OnlineGame
+

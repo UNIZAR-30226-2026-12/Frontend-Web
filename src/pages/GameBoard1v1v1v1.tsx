@@ -2,7 +2,9 @@ import '../Background.css'
 import './GameBoard1v1v1v1.css'
 import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import Modal from '../components/Modal'
-import { getAvatarFromSeed } from '../assets/avatarUtils'
+import { api } from '../services/api'
+import { PIECE_STYLES_4P, decodePiecePreference } from '../config/pieceStyles'
+import { resolveUserAvatar } from '../config/avatarOptions'
 import fireBoard from '../assets/arenas/fireboard.png'
 import iceBoard from '../assets/arenas/iceboard.png'
 import woodBoard from '../assets/arenas/woodboard.png'
@@ -217,6 +219,8 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         red: [],
         blue: [],
     })
+    const [selectedPieceStyle4p, setSelectedPieceStyle4p] = useState(PIECE_STYLES_4P[0])
+    const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
 
     const validMoves = useMemo(() => getValidMoves(board, currentTurn), [board, currentTurn])
     const scoreByPiece = useMemo(() => countPieces(board), [board])
@@ -262,6 +266,29 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         if (localRank === 3) return 0
         return -25
     }, [localRank])
+
+    useEffect(() => {
+        let isMounted = true
+
+        const loadPieceStyle = async () => {
+            try {
+                const me = await api.users.getMe()
+                if (!isMounted) return
+                const { quadIndex } = decodePiecePreference(me.preferred_piece_color)
+                setSelectedPieceStyle4p(PIECE_STYLES_4P[quadIndex] ?? PIECE_STYLES_4P[0])
+                setCurrentUserAvatar(me.avatar_url)
+            } catch {
+                if (!isMounted) return
+                setSelectedPieceStyle4p(PIECE_STYLES_4P[0])
+                setCurrentUserAvatar(undefined)
+            }
+        }
+
+        loadPieceStyle()
+        return () => {
+            isMounted = false
+        }
+    }, [])
 
     useEffect(() => {
         if (gameOver) {
@@ -358,7 +385,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                 <div className="duel-quad__player-card">
                                     <img
                                         className="duel-quad__avatar"
-                                        src={getAvatarFromSeed(player.name)}
+                                        src={resolveUserAvatar(player.piece === 'black' ? currentUserAvatar : undefined, player.name)}
                                         alt={`Avatar de ${player.name}`}
                                     />
                                     <div className="duel-quad__player-data">
@@ -404,7 +431,16 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                     >
                                         {hasQuestion && <span className="duel-quad__question">?</span>}
                                         {cell && (
-                                            <span className={`duel-quad-piece duel-quad-piece--${cell}`} />
+                                            <span
+                                                className={`duel-quad-piece duel-quad-piece--${cell}`}
+                                                style={{
+                                                    background:
+                                                        cell === 'black' ? selectedPieceStyle4p.p1
+                                                            : cell === 'white' ? selectedPieceStyle4p.p2
+                                                                : cell === 'red' ? selectedPieceStyle4p.p3
+                                                                    : selectedPieceStyle4p.p4,
+                                                }}
+                                            />
                                         )}
                                     </button>
                                 )
@@ -421,7 +457,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                 <div className="duel-quad__player-card">
                                     <img
                                         className="duel-quad__avatar"
-                                        src={getAvatarFromSeed(player.name)}
+                                        src={resolveUserAvatar(player.piece === 'black' ? currentUserAvatar : undefined, player.name)}
                                         alt={`Avatar de ${player.name}`}
                                     />
                                     <div className="duel-quad__player-data">

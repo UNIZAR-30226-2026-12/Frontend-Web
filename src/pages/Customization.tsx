@@ -1,62 +1,11 @@
-﻿import { useState, useRef, useEffect, type ChangeEvent, type KeyboardEvent } from 'react'
+import { useState, useRef, useEffect, type ChangeEvent, type KeyboardEvent } from 'react'
 import { api } from '../services/api'
 import '../Background.css'
 import './Customization.css'
-
-import blackice from '../assets/avatars/blackice.jpeg'
-import bluefire from '../assets/avatars/bluefire.png'
-import purplesun from '../assets/avatars/purplesun.png'
-import whitegrass from '../assets/avatars/whitegrass.png'
-
-/* Estilos de fichas 1v1 (2 colores por estilo) */
-const PIECE_STYLES_1V1 = [
-    { sideA: '#222', sideB: '#eee', label: 'Clasico' },
-    { sideA: '#e74c3c', sideB: '#3498db', label: 'Fuego y Hielo' },
-    { sideA: '#2ecc71', sideB: '#f1c40f', label: 'Selva' },
-    { sideA: '#9b59b6', sideB: '#e67e22', label: 'Atardecer' },
-    { sideA: '#1abc9c', sideB: '#e84393', label: 'Neon' },
-]
-
-/* Estilos de fichas 1v1v1v1 (4 colores por estilo) */
-const PIECE_STYLES_4P = [
-    { p1: '#18181b', p2: '#f8fafc', p3: '#ef4444', p4: '#3b82f6', label: 'Clasico 4P' },
-    { p1: '#22c55e', p2: '#fde047', p3: '#a855f7', p4: '#f97316', label: 'Jungla Solar' },
-    { p1: '#06b6d4', p2: '#f43f5e', p3: '#84cc16', p4: '#fb7185', label: 'Cyber Pop' },
-    { p1: '#f59e0b', p2: '#14b8a6', p3: '#8b5cf6', p4: '#ef4444', label: 'Magma Frio' },
-    { p1: '#0ea5e9', p2: '#facc15', p3: '#ec4899', p4: '#10b981', label: 'Tropical RGB' },
-]
+import { PIECE_STYLES_1V1, PIECE_STYLES_4P, decodePiecePreference, encodePiecePreference } from '../config/pieceStyles'
+import { AVATAR_OPTIONS } from '../config/avatarOptions'
 
 const DEFAULT_BOARD_COLOR = '#2d6a4f'
-
-/* Avatares predefinidos */
-const AVATARS = [
-    { id: 'blackice', src: blackice, label: 'Black Ice' },
-    { id: 'bluefire', src: bluefire, label: 'Blue Fire' },
-    { id: 'whitegrass', src: whitegrass, label: 'White Grass' },
-    { id: 'purplesun', src: purplesun, label: 'Purple Sun' },
-]
-
-const encodePiecePreference = (duelIndex: number, quadIndex: number) => `d${duelIndex}-q${quadIndex}`
-const normalizeLabel = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-
-const decodePiecePreference = (value?: string | null) => {
-    if (!value) return { duelIndex: 0, quadIndex: 0 }
-
-    const compact = /^d(\d+)-q(\d+)$/.exec(value)
-    if (compact) {
-        const duelIndex = Number(compact[1])
-        const quadIndex = Number(compact[2])
-        return {
-            duelIndex: Number.isInteger(duelIndex) && duelIndex >= 0 && duelIndex < PIECE_STYLES_1V1.length ? duelIndex : 0,
-            quadIndex: Number.isInteger(quadIndex) && quadIndex >= 0 && quadIndex < PIECE_STYLES_4P.length ? quadIndex : 0,
-        }
-    }
-
-    // Compatibilidad con valores antiguos guardados solo por etiqueta 1v1
-    const normalizedValue = normalizeLabel(value)
-    const legacyDuelIndex = PIECE_STYLES_1V1.findIndex(style => normalizeLabel(style.label) === normalizedValue)
-    return { duelIndex: legacyDuelIndex !== -1 ? legacyDuelIndex : 0, quadIndex: 0 }
-}
 
 interface CustomizationProps {
     onNavigate: (screen: string, data?: any) => void
@@ -70,6 +19,7 @@ function Customization({ onNavigate }: CustomizationProps) {
     const [username, setUsername] = useState('Jugador')
     const [email, setEmail] = useState('')
     const [isEditingName, setIsEditingName] = useState(false)
+    const [profileError, setProfileError] = useState('')
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
@@ -84,7 +34,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                 setSelectedPiece4p(quadIndex)
 
                 if (data.avatar_url) {
-                    const avatarIdx = AVATARS.findIndex(a => a.id === data.avatar_url)
+                    const avatarIdx = AVATAR_OPTIONS.findIndex(a => a.id === data.avatar_url)
                     if (avatarIdx !== -1) {
                         setSelectedAvatar(avatarIdx)
                     } else {
@@ -99,9 +49,17 @@ function Customization({ onNavigate }: CustomizationProps) {
         fetchUserData()
     }, [])
 
-    const handleSaveCustomization = async (piece1v1Idx: number, piece4pIdx: number, avatarId: string | number) => {
+    const handleSaveCustomization = async (
+        piece1v1Idx: number,
+        piece4pIdx: number,
+        avatarSelection: number | 'custom',
+        customAvatarUrl?: string | null,
+    ) => {
         try {
-            const avatar_url = typeof avatarId === 'number' ? AVATARS[avatarId].id : 'custom'
+            const avatar_url =
+                typeof avatarSelection === 'number'
+                    ? AVATAR_OPTIONS[avatarSelection]?.id
+                    : customAvatarUrl ?? customAvatar ?? undefined
             await api.users.updateCustomization({
                 preferred_piece_color: encodePiecePreference(piece1v1Idx, piece4pIdx),
                 avatar_url,
@@ -111,12 +69,29 @@ function Customization({ onNavigate }: CustomizationProps) {
         }
     }
 
-    const handleUpdateName = async () => {
+    const saveProfile = async (nextUsername: string) => {
+        const normalizedUsername = nextUsername.trim()
+        if (!normalizedUsername) {
+            setProfileError('El nombre de usuario no puede estar vacio')
+            return false
+        }
+
         try {
-            await api.users.updateMe({ username })
+            const updated = await api.users.updateMe({ username: normalizedUsername })
+            setUsername(updated.username)
+            setEmail(updated.email)
+            setProfileError('')
+            return true
+        } catch (err: any) {
+            setProfileError(err?.message || 'Error al actualizar el perfil')
+            return false
+        }
+    }
+
+    const handleUpdateName = async () => {
+        const ok = await saveProfile(username)
+        if (ok) {
             setIsEditingName(false)
-        } catch (err) {
-            console.error('Error updating username', err)
         }
     }
 
@@ -129,7 +104,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                 const res = await api.users.uploadAvatar(formData)
                 setCustomAvatar(res.avatar_url)
                 setSelectedAvatar('custom')
-                handleSaveCustomization(selectedPiece1v1, selectedPiece4p, 'custom')
+                handleSaveCustomization(selectedPiece1v1, selectedPiece4p, 'custom', res.avatar_url)
             } catch (err) {
                 console.error('Error uploading avatar', err)
             }
@@ -200,7 +175,11 @@ function Customization({ onNavigate }: CustomizationProps) {
                                         <img src={customAvatar} alt="Avatar" className="custom__avatar-img" />
                                     ) : (
                                         typeof selectedAvatar === 'number' && (
-                                            <img src={AVATARS[selectedAvatar].src} alt={AVATARS[selectedAvatar].label} className="custom__avatar-img" />
+                                            <img
+                                                src={AVATAR_OPTIONS[selectedAvatar].src}
+                                                alt={AVATAR_OPTIONS[selectedAvatar].label}
+                                                className="custom__avatar-img"
+                                            />
                                         )
                                     )}
                                 </div>
@@ -208,7 +187,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                                 <div className="custom__profile-content">
                                     <span className="custom__selector-label">Foto de perfil</span>
                                     <div className="custom__avatar-selector">
-                                        {AVATARS.map((avatar, i) => (
+                                        {AVATAR_OPTIONS.map((avatar, i) => (
                                             <button
                                                 key={avatar.id}
                                                 className={`custom__avatar-option ${selectedAvatar === i ? 'custom__avatar-option--selected' : ''}`}
@@ -226,7 +205,10 @@ function Customization({ onNavigate }: CustomizationProps) {
                                         {customAvatar && (
                                             <button
                                                 className={`custom__avatar-option custom__avatar-option--custom ${selectedAvatar === 'custom' ? 'custom__avatar-option--selected' : ''}`}
-                                                onClick={() => setSelectedAvatar('custom')}
+                                                onClick={() => {
+                                                    setSelectedAvatar('custom')
+                                                    handleSaveCustomization(selectedPiece1v1, selectedPiece4p, 'custom', customAvatar)
+                                                }}
                                             >
                                                 <img src={customAvatar} alt="Custom" className="custom__avatar-img" />
                                             </button>
@@ -253,6 +235,11 @@ function Customization({ onNavigate }: CustomizationProps) {
                             </div>
 
                             <div className="custom__profile-fields">
+                                {profileError && (
+                                    <div className="custom__field">
+                                        <span className="custom__field-value" style={{ color: '#f87171' }}>{profileError}</span>
+                                    </div>
+                                )}
                                 <div className="custom__field">
                                     <span className="custom__field-label">Nombre</span>
                                     <div className="custom__field-row">
@@ -263,7 +250,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                                                 value={username}
                                                 onChange={handleNameChange}
                                                 onKeyDown={handleNameKeyDown}
-                                                onBlur={() => setIsEditingName(false)}
+                                                onBlur={handleUpdateName}
                                                 autoFocus
                                             />
                                         ) : (
@@ -318,7 +305,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                                             className={`custom__option custom__option--pair ${i === selectedPiece1v1 ? 'custom__option--selected' : ''}`}
                                             onClick={() => {
                                                 setSelectedPiece1v1(i)
-                                                handleSaveCustomization(i, selectedPiece4p, selectedAvatar)
+                                                handleSaveCustomization(i, selectedPiece4p, selectedAvatar, customAvatar)
                                             }}
                                             title={style.label}
                                         >
@@ -359,7 +346,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                                             className={`custom__option custom__option--quad ${i === selectedPiece4p ? 'custom__option--selected' : ''}`}
                                             onClick={() => {
                                                 setSelectedPiece4p(i)
-                                                handleSaveCustomization(selectedPiece1v1, i, selectedAvatar)
+                                                handleSaveCustomization(selectedPiece1v1, i, selectedAvatar, customAvatar)
                                             }}
                                             title={style.label}
                                         >

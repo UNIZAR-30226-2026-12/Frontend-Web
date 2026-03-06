@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getAvatarFromSeed } from '../assets/avatarUtils'
+import { api } from '../services/api'
+import { resolveUserAvatar } from '../config/avatarOptions'
 import '../Background.css'
 import './WaitingRoom.css'
 
@@ -58,6 +59,23 @@ function WaitingRoom({
     const [players, setPlayers] = useState<Player[]>([
         { id: 1, name: localPlayerName, rr: localPlayerRR, isReady: false }
     ])
+    const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
+
+    useEffect(() => {
+        let isMounted = true
+        const fetchMe = async () => {
+            try {
+                const me = await api.users.getMe()
+                if (!isMounted) return
+                setCurrentUserAvatar(me.avatar_url)
+            } catch {
+                if (!isMounted) return
+                setCurrentUserAvatar(undefined)
+            }
+        }
+        fetchMe()
+        return () => { isMounted = false }
+    }, [])
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
@@ -170,7 +188,7 @@ function WaitingRoom({
                                     {player ? (
                                         <img
                                             className="player-slot__avatar-img"
-                                            src={getAvatarFromSeed(player.name)}
+                                            src={resolveUserAvatar(player.name === localPlayerName ? currentUserAvatar : undefined, player.name)}
                                             alt={`Avatar de ${player.name}`}
                                         />
                                     ) : '?'}

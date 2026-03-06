@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
-import { getAvatarFromSeed } from '../assets/avatarUtils'
+import { resolveUserAvatar } from '../config/avatarOptions'
 import '../Background.css'
 import './MainMenu.css'
 
@@ -48,7 +48,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
         <div className="menu">
             <div className="menu__user-bar">
                 <div className="menu__user-info">
-                    <img className="menu__user-icon" src={getAvatarFromSeed(user?.username || 'Jugador')} alt="Avatar" />
+                    <img className="menu__user-icon" src={resolveUserAvatar(user?.avatar_url, user?.username || 'Jugador')} alt="Avatar" />
                     <div className="menu__user-details">
                         <span className="menu__user-name">{user?.username || 'Cargando...'}</span>
                     </div>

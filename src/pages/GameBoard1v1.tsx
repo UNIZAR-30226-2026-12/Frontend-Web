@@ -2,7 +2,9 @@ import '../Background.css'
 import './GameBoard1v1.css'
 import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import Modal from '../components/Modal'
-import { getAvatarFromSeed } from '../assets/avatarUtils'
+import { api } from '../services/api'
+import { PIECE_STYLES_1V1, decodePiecePreference } from '../config/pieceStyles'
+import { resolveUserAvatar } from '../config/avatarOptions'
 import fireBoard from '../assets/arenas/fireboard.png'
 import iceBoard from '../assets/arenas/iceboard.png'
 import woodBoard from '../assets/arenas/woodboard.png'
@@ -316,6 +318,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
     const [gameOver, setGameOver] = useState(false)
     const [, setSystemMessage] = useState('Haz una jugada o usa una habilidad.')
+    const [selectedPieceStyle1v1, setSelectedPieceStyle1v1] = useState(PIECE_STYLES_1V1[0])
+    const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
 
     const validMoves = useMemo(() => getValidMoves(board, currentTurn), [board, currentTurn])
 
@@ -354,6 +358,29 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }, [finalScore.black, finalScore.white, opponentProfile.name, playerProfile.name])
 
     const rrDelta = winnerInfo.isDraw ? 0 : winnerInfo.playerWon ? 30 : -30
+
+    useEffect(() => {
+        let isMounted = true
+
+        const loadPieceStyle = async () => {
+            try {
+                const me = await api.users.getMe()
+                if (!isMounted) return
+                const { duelIndex } = decodePiecePreference(me.preferred_piece_color)
+                setSelectedPieceStyle1v1(PIECE_STYLES_1V1[duelIndex] ?? PIECE_STYLES_1V1[0])
+                setCurrentUserAvatar(me.avatar_url)
+            } catch {
+                if (!isMounted) return
+                setSelectedPieceStyle1v1(PIECE_STYLES_1V1[0])
+                setCurrentUserAvatar(undefined)
+            }
+        }
+
+        loadPieceStyle()
+        return () => {
+            isMounted = false
+        }
+    }, [])
 
     useEffect(() => {
         if (gameOver) {
@@ -730,7 +757,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 <main className="duel__main">
                     <aside className={`duel__panel ${currentTurn === 'black' && !gameOver ? 'duel__panel--active' : ''}`}>
                         <div className="duel__player-card">
-                            <img className="duel__avatar" src={getAvatarFromSeed(playerProfile.name)} alt={`Avatar de ${playerProfile.name}`} />
+                            <img className="duel__avatar" src={resolveUserAvatar(currentUserAvatar, playerProfile.name)} alt={`Avatar de ${playerProfile.name}`} />
                             <div className="duel__player-data">
                                 <span className="duel__player-row">
                                     <span className="duel__name">{playerProfile.name}</span>
@@ -786,7 +813,14 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                     >
                                         {hasQuestion && <span className="duel__question">?</span>}
                                         {cell.piece && (
-                                            <span className={`duel-piece ${cell.piece === 'black' ? 'duel-piece--black' : 'duel-piece--white'} ${cell.fixed ? 'duel-piece--fixed' : ''}`} />
+                                            <span
+                                                className={`duel-piece ${cell.piece === 'black' ? 'duel-piece--black' : 'duel-piece--white'} ${cell.fixed ? 'duel-piece--fixed' : ''}`}
+                                                style={{
+                                                    background: cell.piece === 'black'
+                                                        ? selectedPieceStyle1v1.sideA
+                                                        : selectedPieceStyle1v1.sideB,
+                                                }}
+                                            />
                                         )}
                                     </button>
                                 )
@@ -796,7 +830,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
                     <aside className={`duel__panel ${currentTurn === 'white' && !gameOver ? 'duel__panel--active' : ''}`}>
                         <div className="duel__player-card">
-                            <img className="duel__avatar" src={getAvatarFromSeed(opponentProfile.name)} alt={`Avatar de ${opponentProfile.name}`} />
+                            <img className="duel__avatar" src={resolveUserAvatar(undefined, opponentProfile.name)} alt={`Avatar de ${opponentProfile.name}`} />
                             <div className="duel__player-data">
                                 <span className="duel__player-row">
                                     <span className="duel__name">{opponentProfile.name}</span>
