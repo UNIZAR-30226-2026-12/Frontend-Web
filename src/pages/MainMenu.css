@@ -1,10 +1,10 @@
-/* ===== Layout principal del menú ===== */
+﻿/* ===== Layout principal del menú ===== */
 .menu {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -14,14 +14,15 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 2.5rem;
-  padding: 3rem 2rem;
-  max-width: 520px;
+  gap: 1.8rem;
+  padding: 2rem 2rem 1.4rem;
+  max-width: 560px;
+  max-height: 100vh;
   text-align: center;
 }
 
-/* ===== Título ===== */
 /* ===== Barra de usuario ===== */
 .menu__user-bar {
   position: fixed;
@@ -85,10 +86,6 @@
   box-shadow: 0 4px 12px rgba(248, 113, 113, 0.2);
 }
 
-.menu__logout-icon {
-  font-size: 1.1rem;
-}
-
 .menu__header {
   display: flex;
   flex-direction: column;
@@ -127,7 +124,7 @@
   flex-wrap: wrap;
   gap: 1rem;
   width: 100%;
-  max-width: 600px;
+  max-width: 620px;
   justify-content: center;
 }
 
@@ -145,6 +142,10 @@
   transition: all var(--transition);
 }
 
+.menu__card--wide {
+  width: 100%;
+}
+
 .menu__card:hover {
   border-color: var(--color-primary);
   background: var(--color-surface-light);
@@ -152,13 +153,11 @@
   box-shadow: 0 6px 20px rgba(108, 99, 255, 0.15);
 }
 
-/* Icono de la tarjeta */
 .menu__card-icon {
   font-size: 1.8rem;
   flex-shrink: 0;
 }
 
-/* Texto de la tarjeta */
 .menu__card-info {
   display: flex;
   flex-direction: column;
@@ -179,7 +178,7 @@
 
 /* ===== Footer ===== */
 .menu__footer {
-  margin-top: 1rem;
+  margin-top: 0.35rem;
   color: var(--color-text-muted);
   font-size: 0.8rem;
   opacity: 0.7;
@@ -195,7 +194,9 @@
     max-width: 100%;
   }
 
-  .menu__card {
+  .menu__card,
+  .menu__card--wide {
+    width: 100%;
     padding: 1rem 1.2rem;
   }
 }

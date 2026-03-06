@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import { getAvatarFromSeed } from '../assets/avatarUtils'
@@ -43,23 +43,21 @@ function MainMenu({ onNavigate }: MainMenuProps) {
         localStorage.removeItem('token')
         onNavigate('home')
     }
+
     return (
         <div className="menu">
-            {/* Barra de usuario y cierre de sesión */}
             <div className="menu__user-bar">
                 <div className="menu__user-info">
                     <img className="menu__user-icon" src={getAvatarFromSeed(user?.username || 'Jugador')} alt="Avatar" />
                     <div className="menu__user-details">
                         <span className="menu__user-name">{user?.username || 'Cargando...'}</span>
-                        <span className="menu__user-elo">{user ? `ELO: ${user.elo}` : ''}</span>
                     </div>
                 </div>
-                <button className="menu__logout-btn" onClick={handleLogout} title="Cerrar Sesión">
-                    <span className="menu__logout-text">Cerrar Sesión</span>
+                <button className="menu__logout-btn" onClick={handleLogout} title="Cerrar sesión">
+                    <span className="menu__logout-text">Cerrar sesión</span>
                 </button>
             </div>
 
-            {/* Fondo animado con fichas flotantes */}
             <div className="home__bg">
                 <span className="home__chip home__chip--1">⚫</span>
                 <span className="home__chip home__chip--2">⚪</span>
@@ -78,7 +76,6 @@ function MainMenu({ onNavigate }: MainMenuProps) {
             </div>
 
             <main className="menu__content">
-                {/* Logo / Título */}
                 <div className="menu__header">
                     <h1 className="menu__title">
                         <span className="menu__title-random">Random</span>
@@ -87,7 +84,6 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                     <p className="menu__subtitle">¿Qué te apetece hacer hoy?</p>
                 </div>
 
-                {/* Opciones del menú */}
                 <div className="menu__options">
                     <button className="menu__card" onClick={() => onNavigate('online-game')}>
                         <span className="menu__card-icon">🌐</span>
@@ -109,7 +105,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                         <span className="menu__card-icon">🎨</span>
                         <div className="menu__card-info">
                             <span className="menu__card-title">Personalización</span>
-                            <span className="menu__card-desc">Personaliza tu perfil, fichas y tablero</span>
+                            <span className="menu__card-desc">Personaliza tu perfil y estilos de fichas</span>
                         </div>
                     </button>
 
@@ -120,15 +116,21 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                             <span className="menu__card-desc">Gestiona tu lista de amigos</span>
                         </div>
                     </button>
+
+                    <button className="menu__card menu__card--wide" onClick={() => onNavigate('rules')}>
+                        <span className="menu__card-icon">📘</span>
+                        <div className="menu__card-info">
+                            <span className="menu__card-title">Reglas del juego</span>
+                            <span className="menu__card-desc">Guía para aprender a jugar a Random Reversi</span>
+                        </div>
+                    </button>
                 </div>
 
-                {/* Footer */}
                 <footer className="menu__footer">
                     <p>HuQ Games Studio &middot; Universidad de Zaragoza</p>
                 </footer>
             </main>
 
-            {/* Modales */}
             <GameModal
                 isOpen={showIAModal}
                 onClose={() => setShowIAModal(false)}

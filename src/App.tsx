@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Home from './pages/Home'
 import MainMenu from './pages/MainMenu'
+import Rules from './pages/Rules'
 import Customization from './pages/Customization'
 import Friends from './pages/Friends'
 import OnlineGame from './pages/OnlineGame'
@@ -71,6 +72,7 @@ function App() {
     <>
       {currentScreen === 'home' && <Home onNavigate={navigateTo} />}
       {currentScreen === 'menu' && <MainMenu onNavigate={navigateTo} />}
+      {currentScreen === 'rules' && <Rules onNavigate={navigateTo} />}
       {currentScreen === 'customization' && <Customization onNavigate={navigateTo} />}
       {currentScreen === 'friends' && <Friends onNavigate={navigateTo} />}
       {currentScreen === 'online-game' && <OnlineGame onNavigate={navigateTo} />}

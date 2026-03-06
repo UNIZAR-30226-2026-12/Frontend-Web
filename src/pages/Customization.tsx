@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type ChangeEvent, type KeyboardEvent } from 'react'
+﻿import { useState, useRef, useEffect, type ChangeEvent, type KeyboardEvent } from 'react'
 import { api } from '../services/api'
 import '../Background.css'
 import './Customization.css'
@@ -8,23 +8,25 @@ import bluefire from '../assets/avatars/bluefire.png'
 import purplesun from '../assets/avatars/purplesun.png'
 import whitegrass from '../assets/avatars/whitegrass.png'
 
-/* Pares de colores para fichas (cara A y cara B) */
-const PIECE_STYLES = [
-    { sideA: '#222', sideB: '#eee', label: 'Clásico' },
+/* Estilos de fichas 1v1 (2 colores por estilo) */
+const PIECE_STYLES_1V1 = [
+    { sideA: '#222', sideB: '#eee', label: 'Clasico' },
     { sideA: '#e74c3c', sideB: '#3498db', label: 'Fuego y Hielo' },
     { sideA: '#2ecc71', sideB: '#f1c40f', label: 'Selva' },
     { sideA: '#9b59b6', sideB: '#e67e22', label: 'Atardecer' },
-    { sideA: '#1abc9c', sideB: '#e84393', label: 'Neón' },
+    { sideA: '#1abc9c', sideB: '#e84393', label: 'Neon' },
 ]
 
-/* Colores disponibles para el tablero */
-const BOARD_COLORS = [
-    { color: '#2d6a4f', label: 'Verde' },
-    { color: '#2654a1', label: 'Azul' },
-    { color: '#6b4226', label: 'Madera' },
-    { color: '#2c2c3e', label: 'Oscuro' },
-    { color: '#5b2d8e', label: 'Púrpura' },
+/* Estilos de fichas 1v1v1v1 (4 colores por estilo) */
+const PIECE_STYLES_4P = [
+    { p1: '#18181b', p2: '#f8fafc', p3: '#ef4444', p4: '#3b82f6', label: 'Clasico 4P' },
+    { p1: '#22c55e', p2: '#fde047', p3: '#a855f7', p4: '#f97316', label: 'Jungla Solar' },
+    { p1: '#06b6d4', p2: '#f43f5e', p3: '#84cc16', p4: '#fb7185', label: 'Cyber Pop' },
+    { p1: '#f59e0b', p2: '#14b8a6', p3: '#8b5cf6', p4: '#ef4444', label: 'Magma Frio' },
+    { p1: '#0ea5e9', p2: '#facc15', p3: '#ec4899', p4: '#10b981', label: 'Tropical RGB' },
 ]
+
+const DEFAULT_BOARD_COLOR = '#2d6a4f'
 
 /* Avatares predefinidos */
 const AVATARS = [
@@ -34,13 +36,35 @@ const AVATARS = [
     { id: 'purplesun', src: purplesun, label: 'Purple Sun' },
 ]
 
+const encodePiecePreference = (duelIndex: number, quadIndex: number) => `d${duelIndex}-q${quadIndex}`
+const normalizeLabel = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+const decodePiecePreference = (value?: string | null) => {
+    if (!value) return { duelIndex: 0, quadIndex: 0 }
+
+    const compact = /^d(\d+)-q(\d+)$/.exec(value)
+    if (compact) {
+        const duelIndex = Number(compact[1])
+        const quadIndex = Number(compact[2])
+        return {
+            duelIndex: Number.isInteger(duelIndex) && duelIndex >= 0 && duelIndex < PIECE_STYLES_1V1.length ? duelIndex : 0,
+            quadIndex: Number.isInteger(quadIndex) && quadIndex >= 0 && quadIndex < PIECE_STYLES_4P.length ? quadIndex : 0,
+        }
+    }
+
+    // Compatibilidad con valores antiguos guardados solo por etiqueta 1v1
+    const normalizedValue = normalizeLabel(value)
+    const legacyDuelIndex = PIECE_STYLES_1V1.findIndex(style => normalizeLabel(style.label) === normalizedValue)
+    return { duelIndex: legacyDuelIndex !== -1 ? legacyDuelIndex : 0, quadIndex: 0 }
+}
+
 interface CustomizationProps {
     onNavigate: (screen: string, data?: any) => void
 }
 
 function Customization({ onNavigate }: CustomizationProps) {
-    const [selectedPiece, setSelectedPiece] = useState(0)
-    const [selectedBoard, setSelectedBoard] = useState(0)
+    const [selectedPiece1v1, setSelectedPiece1v1] = useState(0)
+    const [selectedPiece4p, setSelectedPiece4p] = useState(0)
     const [selectedAvatar, setSelectedAvatar] = useState<number | 'custom'>(0)
     const [customAvatar, setCustomAvatar] = useState<string | null>(null)
     const [username, setUsername] = useState('Jugador')
@@ -55,13 +79,9 @@ function Customization({ onNavigate }: CustomizationProps) {
                 setUsername(data.username)
                 setEmail(data.email)
 
-                // Mapear colores de DB a índices locales si es necesario
-                // Por ahora asumimos que guardamos el índice o el nombre
-                const pieceIdx = PIECE_STYLES.findIndex(s => s.label === data.preferred_piece_color)
-                if (pieceIdx !== -1) setSelectedPiece(pieceIdx)
-
-                const boardIdx = BOARD_COLORS.findIndex(b => b.label === data.preferred_board_color)
-                if (boardIdx !== -1) setSelectedBoard(boardIdx)
+                const { duelIndex, quadIndex } = decodePiecePreference(data.preferred_piece_color)
+                setSelectedPiece1v1(duelIndex)
+                setSelectedPiece4p(quadIndex)
 
                 if (data.avatar_url) {
                     const avatarIdx = AVATARS.findIndex(a => a.id === data.avatar_url)
@@ -79,13 +99,12 @@ function Customization({ onNavigate }: CustomizationProps) {
         fetchUserData()
     }, [])
 
-    const handleSaveCustomization = async (pieceIdx: number, boardIdx: number, avatarId: string | number) => {
+    const handleSaveCustomization = async (piece1v1Idx: number, piece4pIdx: number, avatarId: string | number) => {
         try {
             const avatar_url = typeof avatarId === 'number' ? AVATARS[avatarId].id : 'custom'
             await api.users.updateCustomization({
-                preferred_piece_color: PIECE_STYLES[pieceIdx].label,
-                preferred_board_color: BOARD_COLORS[boardIdx].label,
-                avatar_url: avatar_url
+                preferred_piece_color: encodePiecePreference(piece1v1Idx, piece4pIdx),
+                avatar_url,
             })
         } catch (err) {
             console.error('Error saving customization', err)
@@ -105,13 +124,12 @@ function Customization({ onNavigate }: CustomizationProps) {
         const file = e.target.files?.[0]
         if (file) {
             try {
-                // Simulación de subida de avatar
                 const formData = new FormData()
                 formData.append('file', file)
                 const res = await api.users.uploadAvatar(formData)
                 setCustomAvatar(res.avatar_url)
                 setSelectedAvatar('custom')
-                handleSaveCustomization(selectedPiece, selectedBoard, 'custom')
+                handleSaveCustomization(selectedPiece1v1, selectedPiece4p, 'custom')
             } catch (err) {
                 console.error('Error uploading avatar', err)
             }
@@ -163,12 +181,12 @@ function Customization({ onNavigate }: CustomizationProps) {
             <main className="custom__content">
                 {/* Cabecera */}
                 <div className="custom__header">
-                    <h1 className="custom__title">Personalización</h1>
-                    <p className="custom__subtitle">Haz que tu estilo sea único</p>
+                    <h1 className="custom__title">Personalizacion</h1>
+                    <p className="custom__subtitle">Haz que tu estilo sea unico</p>
                 </div>
 
                 <div className="custom__sections">
-                    {/* Sección: Perfil */}
+                    {/* Seccion: Perfil */}
                     <div className="custom__section">
                         <div className="custom__section-header">
                             <span className="custom__section-title">Perfil</span>
@@ -196,7 +214,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                                                 className={`custom__avatar-option ${selectedAvatar === i ? 'custom__avatar-option--selected' : ''}`}
                                                 onClick={() => {
                                                     setSelectedAvatar(i)
-                                                    handleSaveCustomization(selectedPiece, selectedBoard, i)
+                                                    handleSaveCustomization(selectedPiece1v1, selectedPiece4p, i)
                                                 }}
                                                 title={avatar.label}
                                             >
@@ -214,7 +232,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                                             </button>
                                         )}
 
-                                        {/* Botón para subir imagen */}
+                                        {/* Boton para subir imagen */}
                                         <button
                                             className="custom__avatar-option custom__avatar-upload"
                                             onClick={triggerFileInput}
@@ -254,110 +272,111 @@ function Customization({ onNavigate }: CustomizationProps) {
                                         <button
                                             className="custom__field-edit"
                                             onClick={toggleEditName}
-                                            title={isEditingName ? "Modifica tu nombre de jugador" : "Cambia tu nombre de jugador"}
+                                            title={isEditingName ? 'Modifica tu nombre de jugador' : 'Cambia tu nombre de jugador'}
                                         >
-                                            {isEditingName ? 'Confirmar cambios ✅' : 'Editar nombre ✏️'}
+                                            {isEditingName ? 'Confirmar cambios' : 'Editar nombre'}
                                         </button>
                                     </div>
                                 </div>
                                 <div className="custom__field">
-                                    <span className="custom__field-label">Correo electrónico</span>
+                                    <span className="custom__field-label">Correo electronico</span>
                                     <span className="custom__field-value">{email || 'jugador@email.com'}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Sección: Fichas y Tablero con vista previa */}
+                    {/* Seccion: Fichas con vista previa */}
                     <div className="custom__section">
                         <div className="custom__section-header">
-                            <span className="custom__section-title">Fichas y Tablero</span>
+                            <span className="custom__section-title">Fichas</span>
                         </div>
+                        <div className="custom__modes-grid">
+                            <div className="custom__mode-card">
+                                <span className="custom__selector-label">Estilo de fichas (1v1)</span>
+                                <div className="custom__preview custom__preview--compact">
+                                    <div className="custom__board" style={{ background: DEFAULT_BOARD_COLOR }}>
+                                        {Array.from({ length: 16 }).map((_, i) => {
+                                            const row = Math.floor(i / 4)
+                                            const col = i % 4
+                                            const isSideA = (row === 1 && col === 1) || (row === 2 && col === 2)
+                                            const isSideB = (row === 1 && col === 2) || (row === 2 && col === 1)
 
-                        {/* Vista previa del tablero */}
-                        <div className="custom__preview">
-                            <div
-                                className="custom__board"
-                                style={{ background: BOARD_COLORS[selectedBoard].color }}
-                            >
-                                {Array.from({ length: 16 }).map((_, i) => {
-                                    const row = Math.floor(i / 4)
-                                    const col = i % 4
-                                    // Patrón inicial tipo Reversi en el centro
-                                    const isSideA =
-                                        (row === 1 && col === 1) ||
-                                        (row === 2 && col === 2)
-                                    const isSideB =
-                                        (row === 1 && col === 2) ||
-                                        (row === 2 && col === 1)
-
-                                    return (
-                                        <div
+                                            return (
+                                                <div key={`duel-${i}`} className="custom__cell">
+                                                    {isSideA && <div className="custom__piece" style={{ background: PIECE_STYLES_1V1[selectedPiece1v1].sideA }} />}
+                                                    {isSideB && <div className="custom__piece" style={{ background: PIECE_STYLES_1V1[selectedPiece1v1].sideB }} />}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                                <div className="custom__options custom__options--compact">
+                                    {PIECE_STYLES_1V1.map((style, i) => (
+                                        <button
                                             key={i}
-                                            className="custom__cell"
+                                            className={`custom__option custom__option--pair ${i === selectedPiece1v1 ? 'custom__option--selected' : ''}`}
+                                            onClick={() => {
+                                                setSelectedPiece1v1(i)
+                                                handleSaveCustomization(i, selectedPiece4p, selectedAvatar)
+                                            }}
+                                            title={style.label}
                                         >
-                                            {isSideA && (
-                                                <div
-                                                    className="custom__piece"
-                                                    style={{ background: PIECE_STYLES[selectedPiece].sideA }}
-                                                />
-                                            )}
-                                            {isSideB && (
-                                                <div
-                                                    className="custom__piece"
-                                                    style={{ background: PIECE_STYLES[selectedPiece].sideB }}
-                                                />
-                                            )}
-                                        </div>
-                                    )
-                                })}
+                                            <span className="custom__option-half" style={{ background: style.sideA }} />
+                                            <span className="custom__option-half" style={{ background: style.sideB }} />
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Selector de fichas (pares de colores) */}
-                        <div className="custom__selector">
-                            <span className="custom__selector-label">Estilo de fichas</span>
-                            <div className="custom__options">
-                                {PIECE_STYLES.map((style, i) => (
-                                    <button
-                                        key={i}
-                                        className={`custom__option custom__option--pair ${i === selectedPiece ? 'custom__option--selected' : ''}`}
-                                        onClick={() => {
-                                            setSelectedPiece(i)
-                                            handleSaveCustomization(i, selectedBoard, selectedAvatar)
-                                        }}
-                                        title={style.label}
-                                    >
-                                        <span className="custom__option-half" style={{ background: style.sideA }} />
-                                        <span className="custom__option-half" style={{ background: style.sideB }} />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                            <div className="custom__mode-card">
+                                <span className="custom__selector-label">Estilo de fichas (1v1v1v1)</span>
+                                <div className="custom__preview custom__preview--compact">
+                                    <div className="custom__board" style={{ background: DEFAULT_BOARD_COLOR }}>
+                                        {Array.from({ length: 16 }).map((_, i) => {
+                                            const row = Math.floor(i / 4)
+                                            const col = i % 4
+                                            const isP1 = row === 1 && col === 1
+                                            const isP2 = row === 1 && col === 2
+                                            const isP3 = row === 2 && col === 1
+                                            const isP4 = row === 2 && col === 2
 
-                        {/* Selector de tablero */}
-                        <div className="custom__selector">
-                            <span className="custom__selector-label">Color de tablero</span>
-                            <div className="custom__options">
-                                {BOARD_COLORS.map((board, i) => (
-                                    <button
-                                        key={i}
-                                        className={`custom__option custom__option--color ${i === selectedBoard ? 'custom__option--selected' : ''}`}
-                                        onClick={() => {
-                                            setSelectedBoard(i)
-                                            handleSaveCustomization(selectedPiece, i, selectedAvatar)
-                                        }}
-                                        title={board.label}
-                                        style={{ background: board.color }}
-                                    />
-                                ))}
+                                            return (
+                                                <div key={`quad-${i}`} className="custom__cell">
+                                                    {isP1 && <div className="custom__piece" style={{ background: PIECE_STYLES_4P[selectedPiece4p].p1 }} />}
+                                                    {isP2 && <div className="custom__piece" style={{ background: PIECE_STYLES_4P[selectedPiece4p].p2 }} />}
+                                                    {isP3 && <div className="custom__piece" style={{ background: PIECE_STYLES_4P[selectedPiece4p].p3 }} />}
+                                                    {isP4 && <div className="custom__piece" style={{ background: PIECE_STYLES_4P[selectedPiece4p].p4 }} />}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                                <div className="custom__options custom__options--compact">
+                                    {PIECE_STYLES_4P.map((style, i) => (
+                                        <button
+                                            key={i}
+                                            className={`custom__option custom__option--quad ${i === selectedPiece4p ? 'custom__option--selected' : ''}`}
+                                            onClick={() => {
+                                                setSelectedPiece4p(i)
+                                                handleSaveCustomization(selectedPiece1v1, i, selectedAvatar)
+                                            }}
+                                            title={style.label}
+                                        >
+                                            <span className="custom__option-quarter" style={{ background: style.p1 }} />
+                                            <span className="custom__option-quarter" style={{ background: style.p2 }} />
+                                            <span className="custom__option-quarter" style={{ background: style.p3 }} />
+                                            <span className="custom__option-quarter" style={{ background: style.p4 }} />
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Botón volver */}
-                <button className="custom__back" onClick={() => onNavigate('menu')}>Volver al menú</button>
+                {/* Boton volver */}
+                <button className="custom__back" onClick={() => onNavigate('menu')}>Volver al menu</button>
             </main>
         </div>
     )
