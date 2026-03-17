@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import '../Background.css'
-import './OnlineGame.css'
+import '../styles/background.css'
+import '../styles/pages/OnlineGame.css'
 
 interface OnlineGameProps {
     onNavigate: (screen: string, data?: any) => void

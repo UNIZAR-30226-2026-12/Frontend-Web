@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import Modal from '../components/Modal'
-import '../Background.css'
-import './Friends.css'
+import '../styles/background.css'
+import '../styles/pages/Friends.css'
 import { resolveUserAvatar } from '../config/avatarOptions'
 
 interface FriendsProps {

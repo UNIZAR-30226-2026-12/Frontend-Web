@@ -1,5 +1,15 @@
 const BASE_URL = 'http://localhost:8081/api';
 
+const getFallbackBaseUrl = (url: string): string | null => {
+    if (url.includes('localhost:8081')) {
+        return url.replace('localhost:8081', 'localhost:8000');
+    }
+    if (url.includes('localhost:8000')) {
+        return url.replace('localhost:8000', 'localhost:8081');
+    }
+    return null;
+};
+
 const getHeaders = () => {
     const token = localStorage.getItem('token');
     const headers: Record<string, string> = {
@@ -24,12 +34,21 @@ const interceptedFetch = async (url: string, options: RequestInit = {}): Promise
             bodyLog = options.body;
         }
     }
-    console.log(`🚀 API Request: ${options.method || 'GET'} ${url}`, bodyLog);
-    const response = await fetch(url, options);
-    console.log(`✅ API Response: ${response.status} ${url}`);
-    return response;
-};
+    console.log(`[API] Request: ${options.method || 'GET'} ${url}`, bodyLog);
+    try {
+        const response = await fetch(url, options);
+        console.log(`[API] Response: ${response.status} ${url}`);
+        return response;
+    } catch (err) {
+        const fallbackUrl = getFallbackBaseUrl(url);
+        if (!fallbackUrl) throw err;
 
+        console.warn(`[API] Request failed on ${url}. Retrying with ${fallbackUrl}`);
+        const fallbackResponse = await fetch(fallbackUrl, options);
+        console.log(`[API] Response: ${fallbackResponse.status} ${fallbackUrl}`);
+        return fallbackResponse;
+    }
+};
 export const api = {
     // Auth
     auth: {
@@ -186,3 +205,5 @@ export const api = {
         },
     }
 };
+
+

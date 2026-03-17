@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { api } from '../services/api'
 import Modal from './Modal'
-import './AuthForms.css'
+import '../styles/components/AuthForms.css'
 
 interface LoginModalProps {
   isOpen: boolean

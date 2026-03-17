@@ -1,5 +1,5 @@
 import Modal from './Modal'
-import './GameModal.css'
+import '../styles/components/GameModal.css'
 
 interface GameModalProps {
     isOpen: boolean

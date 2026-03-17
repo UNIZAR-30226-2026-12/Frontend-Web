@@ -2,8 +2,8 @@
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import '../Background.css'
-import './MainMenu.css'
+import '../styles/background.css'
+import '../styles/pages/MainMenu.css'
 
 interface UserData {
     username: string
@@ -136,17 +136,6 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                 onClose={() => setShowIAModal(false)}
                 title="Jugar contra la IA"
                 subtitle="Elige el modo de juego"
-                onSelectMode={(mode) => {
-                    setShowIAModal(false)
-                    onNavigate('waiting-room', {
-                        mode,
-                        playerName: user?.username || 'Jugador',
-                        playerRR: user?.elo || 0,
-                        opponentName: 'Bot_IA',
-                        opponentRR: 1500,
-                        returnTo: 'menu'
-                    })
-                }}
             />
         </div>
     )

@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import Home from './pages/Home'
-import MainMenu from './pages/MainMenu'
-import Rules from './pages/Rules'
-import Customization from './pages/Customization'
-import Friends from './pages/Friends'
-import OnlineGame from './pages/OnlineGame'
-import WaitingRoom from './pages/WaitingRoom'
-import GameBoard1v1 from './pages/GameBoard1v1'
-import GameBoard1v1v1v1 from './pages/GameBoard1v1v1v1'
+import Home from '../pages/Home'
+import MainMenu from '../pages/MainMenu'
+import Rules from '../pages/Rules'
+import Customization from '../pages/Customization'
+import Friends from '../pages/Friends'
+import OnlineGame from '../pages/OnlineGame'
+import WaitingRoom from '../pages/WaitingRoom'
+import GameBoard1v1 from '../pages/GameBoard1v1'
+import GameBoard1v1v1v1 from '../pages/GameBoard1v1v1v1'
 
 interface WaitingRoomData {
   playerName?: string

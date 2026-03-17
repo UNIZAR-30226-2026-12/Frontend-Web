@@ -1,5 +1,5 @@
-import '../Background.css'
-import './GameBoard1v1.css'
+import '../styles/background.css'
+import '../styles/pages/GameBoard1v1.css'
 import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import Modal from '../components/Modal'
 import { api } from '../services/api'

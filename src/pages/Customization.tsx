@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, type ChangeEvent, type KeyboardEvent } from 'react'
 import { api } from '../services/api'
-import '../Background.css'
-import './Customization.css'
+import '../styles/background.css'
+import '../styles/pages/Customization.css'
 import { PIECE_STYLES_1V1, PIECE_STYLES_4P, decodePiecePreference, encodePiecePreference } from '../config/pieceStyles'
 import { AVATAR_OPTIONS } from '../config/avatarOptions'
 

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import LoginModal from '../components/LoginModal'
 import RegisterModal from '../components/RegisterModal'
-import '../Background.css'
-import './Home.css'
+import '../styles/background.css'
+import '../styles/pages/Home.css'
 
 interface HomeProps {
   onNavigate: (screen: string, data?: any) => void

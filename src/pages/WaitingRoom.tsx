@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import '../Background.css'
-import './WaitingRoom.css'
+import '../styles/background.css'
+import '../styles/pages/WaitingRoom.css'
 
 interface Player {
     id: number
