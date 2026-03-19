@@ -11,6 +11,10 @@ export interface PieceStyle4P {
     p2: string
     p3: string
     p4: string
+    p1Name: string
+    p2Name: string
+    p3Name: string
+    p4Name: string
     label: string
 }
 
@@ -25,11 +29,11 @@ export const PIECE_STYLES_1V1: PieceStyle1v1[] = [
 
 /* Estilos de fichas 1v1v1v1 (4 colores por estilo) */
 export const PIECE_STYLES_4P: PieceStyle4P[] = [
-    { p1: '#18181b', p2: '#f8fafc', p3: '#ef4444', p4: '#3b82f6', label: 'Clasico 4P' },
-    { p1: '#22c55e', p2: '#fde047', p3: '#a855f7', p4: '#f97316', label: 'Jungla Solar' },
-    { p1: '#06b6d4', p2: '#f43f5e', p3: '#84cc16', p4: '#fb7185', label: 'Cyber Pop' },
-    { p1: '#f59e0b', p2: '#14b8a6', p3: '#8b5cf6', p4: '#ef4444', label: 'Magma Frio' },
-    { p1: '#0ea5e9', p2: '#facc15', p3: '#ec4899', p4: '#10b981', label: 'Tropical RGB' },
+    { p1: '#18181b', p2: '#f8fafc', p3: '#ef4444', p4: '#3b82f6', p1Name: 'Negras', p2Name: 'Blancas', p3Name: 'Rojas', p4Name: 'Azules', label: 'Clasico 4P' },
+    { p1: '#22c55e', p2: '#fde047', p3: '#a855f7', p4: '#f97316', p1Name: 'Verdes', p2Name: 'Amarillas', p3Name: 'Moradas', p4Name: 'Naranjas', label: 'Jungla Solar' },
+    { p1: '#06b6d4', p2: '#f43f5e', p3: '#84cc16', p4: '#fb7185', p1Name: 'Turquesas', p2Name: 'Fucsias', p3Name: 'Lima', p4Name: 'Rosas', label: 'Cyber Pop' },
+    { p1: '#f59e0b', p2: '#14b8a6', p3: '#8b5cf6', p4: '#ef4444', p1Name: 'Doradas', p2Name: 'Turquesas', p3Name: 'Violetas', p4Name: 'Rojas', label: 'Magma Frio' },
+    { p1: '#0ea5e9', p2: '#facc15', p3: '#ec4899', p4: '#10b981', p1Name: 'Celestes', p2Name: 'Amarillas', p3Name: 'Rosas', p4Name: 'Esmeraldas', label: 'Tropical RGB' },
 ]
 
 const normalizeLabel = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()

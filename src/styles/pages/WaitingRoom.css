@@ -270,6 +270,22 @@
     color: #f87171;
 }
 
+.player-slot__streak-item--first {
+    color: #4ade80;
+}
+
+.player-slot__streak-item--second {
+    color: #60a5fa;
+}
+
+.player-slot__streak-item--third {
+    color: #facc15;
+}
+
+.player-slot__streak-item--fourth {
+    color: #f87171;
+}
+
 .player-slot__streak-item--empty {
     color: rgba(255, 255, 255, 0.45);
 }

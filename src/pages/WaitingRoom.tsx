@@ -35,23 +35,54 @@ interface WaitingRoomProps {
 }
 
 type MatchResult = 'W' | 'L'
-type HistoryPreviewSymbol = 'V' | 'D' | 'E' | '-'
+type QuadPreviewSymbol = '1º' | '2º' | '3º' | '4º'
+type HistoryPreviewSymbol = 'V' | 'D' | 'E' | '-' | QuadPreviewSymbol
 
-const SIMULATED_STREAKS: Record<string, MatchResult[]> = {
+const SIMULATED_DUEL_STREAKS: Record<string, MatchResult[]> = {
     Tu: ['W', 'L', 'W', 'W', 'L'],
     Gamer_Pro: ['L', 'W', 'L', 'L', 'W'],
     Rival: ['W', 'W', 'L', 'W', 'L']
 }
 
+const SIMULATED_QUAD_STREAKS: Record<string, QuadPreviewSymbol[]> = {
+    Tu: ['2º', '1º', '4º', '2º', '3º'],
+    Gamer_Pro: ['4º', '2º', '1º', '3º', '2º'],
+    Gamer_Pro2: ['3º', '4º', '2º', '1º', '4º'],
+    Gamer_Pro3: ['1º', '3º', '3º', '4º', '1º'],
+    Rival: ['2º', '3º', '4º', '1º', '2º'],
+}
+
 const EMPTY_HISTORY_PREVIEW: HistoryPreviewSymbol[] = ['-', '-', '-', '-', '-']
 
-const buildHistoryPreview = (history: GameHistory[]): HistoryPreviewSymbol[] => {
-    const recentSymbols = history
+const getQuadPlacementSymbol = (entry: GameHistory): QuadPreviewSymbol | null => {
+    const placeMatch = entry.score.match(/([1-4])º puesto/)
+
+    if (placeMatch) {
+        return `${placeMatch[1]}º` as QuadPreviewSymbol
+    }
+
+    if (entry.result === 'Perdida') {
+        return '4º'
+    }
+
+    return null
+}
+
+const buildHistoryPreview = (history: GameHistory[], gameMode: WaitingRoomProps['gameMode']): HistoryPreviewSymbol[] => {
+    const filteredHistory = history.filter(item =>
+        gameMode === '1vs1' ? item.mode === '1vs1' : item.mode === '1vs1vs1vs1',
+    )
+
+    const recentSymbols = filteredHistory
         .slice(0, 5)
-        .map((item): HistoryPreviewSymbol => {
-            if (item.result === 'Ganada') return 'V'
-            if (item.result === 'Perdida') return 'D'
-            return 'E'
+        .map((item) => {
+            if (gameMode === '1vs1') {
+                if (item.result === 'Ganada') return 'V'
+                if (item.result === 'Perdida') return 'D'
+                return 'E'
+            }
+
+            return getQuadPlacementSymbol(item) ?? '-'
         })
 
     const symbols = [...recentSymbols].reverse()
@@ -102,7 +133,7 @@ function WaitingRoom({
                 ])
                 if (!isMounted) return
                 setCurrentUserAvatar(me.avatar_url)
-                setPlayerHistoryPreview(buildHistoryPreview(history))
+                setPlayerHistoryPreview(buildHistoryPreview(history, gameMode))
             } catch {
                 if (!isMounted) return
                 setCurrentUserAvatar(undefined)
@@ -111,7 +142,7 @@ function WaitingRoom({
         }
         fetchMe()
         return () => { isMounted = false }
-    }, [])
+    }, [gameMode])
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
@@ -145,9 +176,14 @@ function WaitingRoom({
     const isFull = players.length === maxPlayers
     const allReady = isFull && players.every(player => player.isReady)
 
-    const getSimulatedStreak = (playerName?: string): MatchResult[] => {
-        if (!playerName) return SIMULATED_STREAKS.Rival
-        return SIMULATED_STREAKS[playerName] ?? SIMULATED_STREAKS.Rival
+    const getSimulatedDuelStreak = (playerName?: string): MatchResult[] => {
+        if (!playerName) return SIMULATED_DUEL_STREAKS.Rival
+        return SIMULATED_DUEL_STREAKS[playerName] ?? SIMULATED_DUEL_STREAKS.Rival
+    }
+
+    const getSimulatedQuadStreak = (playerName?: string): QuadPreviewSymbol[] => {
+        if (!playerName) return SIMULATED_QUAD_STREAKS.Rival
+        return SIMULATED_QUAD_STREAKS[playerName] ?? SIMULATED_QUAD_STREAKS.Rival
     }
 
     const getPreviewHistory = (playerName: string): HistoryPreviewSymbol[] => {
@@ -155,7 +191,11 @@ function WaitingRoom({
             return playerHistoryPreview
         }
 
-        return [...getSimulatedStreak(playerName).map(result => (result === 'W' ? 'V' : 'D'))].reverse()
+        if (gameMode === '1vs1') {
+            return [...getSimulatedDuelStreak(playerName).map(result => (result === 'W' ? 'V' : 'D'))].reverse()
+        }
+
+        return [...getSimulatedQuadStreak(playerName)].reverse()
     }
 
     useEffect(() => {
@@ -250,12 +290,18 @@ function WaitingRoom({
                                     <span className="player-slot__name">
                                         {player ? player.name : 'Esperando...'}
                                     </span>
-                                    {player && gameMode === '1vs1' && (
+                                    {player && (
                                         <span className="player-slot__streak" aria-label="Racha últimas 5 partidas">
                                             {getPreviewHistory(player.name).map((result, resultIndex) => (
                                                 <span
                                                     key={`${player.id}-streak-${resultIndex}`}
-                                                    className={`player-slot__streak-item ${result === 'V' ? 'player-slot__streak-item--win' : result === 'D' ? 'player-slot__streak-item--loss' : 'player-slot__streak-item--empty'}`}
+                                                    className={`player-slot__streak-item ${result === 'V' ? 'player-slot__streak-item--win'
+                                                        : result === 'D' ? 'player-slot__streak-item--loss'
+                                                            : result === '1º' ? 'player-slot__streak-item--first'
+                                                                : result === '2º' ? 'player-slot__streak-item--second'
+                                                                    : result === '3º' ? 'player-slot__streak-item--third'
+                                                                        : result === '4º' ? 'player-slot__streak-item--fourth'
+                                                                            : 'player-slot__streak-item--empty'}`}
                                                 >
                                                     {result}
                                                 </span>

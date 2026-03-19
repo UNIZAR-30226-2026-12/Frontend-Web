@@ -47,8 +47,8 @@ interface QuadPlayer {
 const BOARD_SIZE = 16
 const INITIAL_QUESTION_CELLS = ['0-10', '2-4', '4-2', '10-4', '0-2', '9-13', '9-14', '14-2', '10-14', '9-12']
 const PIECE_ORDER: Piece[] = ['black', 'white', 'red', 'blue']
-const PLAYER_COLORS = ['Negras', 'Blancas', 'Rojas', 'Azules']
 const ABILITY_PENALTY = 2
+const ENABLE_SPECIAL_MECHANICS_4P = false
 
 const DIRECTIONS = [
     [-1, -1], [-1, 0], [-1, 1],
@@ -57,9 +57,9 @@ const DIRECTIONS = [
 ]
 
 const getArenaFromElo = (elo: number): ArenaTheme => {
-    if (elo < 1000) return { board: woodBoard, background: woodBackground }
-    if (elo < 1500) return { board: quartzBoard, background: quartzBackground }
-    if (elo < 2000) return { board: fireBoard, background: fireBackground }
+    if (elo < 900) return { board: woodBoard, background: woodBackground }
+    if (elo < 1100) return { board: quartzBoard, background: quartzBackground }
+    if (elo < 1300) return { board: fireBoard, background: fireBackground }
     return { board: iceBoard, background: iceBackground }
 }
 
@@ -187,15 +187,27 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         { name: 'NovaMind', rr: 1650 },
         { name: 'ShadowFox', rr: 1850 },
     ]
+    const [currentUserElo, setCurrentUserElo] = useState(players[0]?.rr ?? 1000)
+    const [hasPersistedRank, setHasPersistedRank] = useState(false)
+    const [hasPersistedHistory, setHasPersistedHistory] = useState(false)
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+    const [isAbandoning, setIsAbandoning] = useState(false)
 
     const normalizedPlayers = Array.from({ length: 4 }, (_, index) => players[index] ?? { name: `Jugador ${index + 1}`, rr: 1200 })
+    const [selectedPieceStyle4p, setSelectedPieceStyle4p] = useState(PIECE_STYLES_4P[0])
+    const playerColorNames = [
+        selectedPieceStyle4p.p1Name,
+        selectedPieceStyle4p.p2Name,
+        selectedPieceStyle4p.p3Name,
+        selectedPieceStyle4p.p4Name,
+    ]
 
     const playersWithData: QuadPlayer[] = normalizedPlayers.map((player, index) => ({
         id: index,
         name: player.name,
-        rr: player.rr,
+        rr: index === 0 ? currentUserElo : player.rr,
         score: 0,
-        color: PLAYER_COLORS[index] ?? `Color ${index + 1}`,
+        color: playerColorNames[index] ?? `Color ${index + 1}`,
         piece: PIECE_ORDER[index],
     }))
 
@@ -210,7 +222,9 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     )
 
     const [board, setBoard] = useState<BoardCell[][]>(() => createInitialBoard())
-    const [questionCells, setQuestionCells] = useState<Set<string>>(() => new Set(INITIAL_QUESTION_CELLS))
+    const [questionCells, setQuestionCells] = useState<Set<string>>(() =>
+        ENABLE_SPECIAL_MECHANICS_4P ? new Set(INITIAL_QUESTION_CELLS) : new Set<string>(),
+    )
     const [currentTurn, setCurrentTurn] = useState<Piece>('black')
     const [gameOver, setGameOver] = useState(false)
     const [inventories] = useState<Record<Piece, AbilityId[]>>({
@@ -219,21 +233,19 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         red: [],
         blue: [],
     })
-    const [selectedPieceStyle4p, setSelectedPieceStyle4p] = useState(PIECE_STYLES_4P[0])
     const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
 
     const validMoves = useMemo(() => getValidMoves(board, currentTurn), [board, currentTurn])
     const scoreByPiece = useMemo(() => countPieces(board), [board])
 
-    const highestElo = Math.max(...playersWithData.map(player => player.rr))
-    const arenaTheme = getArenaFromElo(highestElo)
+    const arenaTheme = getArenaFromElo(currentUserElo)
 
     const penaltyByPiece = useMemo(
         () => ({
-            black: inventories.black.length * ABILITY_PENALTY,
-            white: inventories.white.length * ABILITY_PENALTY,
-            red: inventories.red.length * ABILITY_PENALTY,
-            blue: inventories.blue.length * ABILITY_PENALTY,
+            black: ENABLE_SPECIAL_MECHANICS_4P ? inventories.black.length * ABILITY_PENALTY : 0,
+            white: ENABLE_SPECIAL_MECHANICS_4P ? inventories.white.length * ABILITY_PENALTY : 0,
+            red: ENABLE_SPECIAL_MECHANICS_4P ? inventories.red.length * ABILITY_PENALTY : 0,
+            blue: ENABLE_SPECIAL_MECHANICS_4P ? inventories.blue.length * ABILITY_PENALTY : 0,
         }),
         [inventories.black.length, inventories.blue.length, inventories.red.length, inventories.white.length],
     )
@@ -266,6 +278,11 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         if (localRank === 3) return 0
         return -25
     }, [localRank])
+    const abandonmentPenalty = -25
+    const localOpponentsLabel = normalizedPlayers
+        .slice(1)
+        .map(player => player.name)
+        .join(', ')
 
     useEffect(() => {
         let isMounted = true
@@ -277,10 +294,12 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 const { quadIndex } = decodePiecePreference(me.preferred_piece_color)
                 setSelectedPieceStyle4p(PIECE_STYLES_4P[quadIndex] ?? PIECE_STYLES_4P[0])
                 setCurrentUserAvatar(me.avatar_url)
+                setCurrentUserElo(me.elo ?? players[0]?.rr ?? 1000)
             } catch {
                 if (!isMounted) return
                 setSelectedPieceStyle4p(PIECE_STYLES_4P[0])
                 setCurrentUserAvatar(undefined)
+                setCurrentUserElo(players[0]?.rr ?? 1000)
             }
         }
 
@@ -289,6 +308,72 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             isMounted = false
         }
     }, [])
+
+    useEffect(() => {
+        if (!gameOver || hasPersistedRank) {
+            return
+        }
+
+        const nextElo = Math.max(0, currentUserElo + rrDelta)
+        setHasPersistedRank(true)
+
+        if (nextElo === currentUserElo) {
+            return
+        }
+
+        let cancelled = false
+
+        const persistRank = async () => {
+            try {
+                const updatedUser = await api.users.updateElo(nextElo)
+                if (!cancelled) {
+                    setCurrentUserElo(updatedUser.elo ?? nextElo)
+                }
+            } catch {
+                if (!cancelled) {
+                    setCurrentUserElo(nextElo)
+                }
+            }
+        }
+
+        persistRank()
+
+        return () => {
+            cancelled = true
+        }
+    }, [currentUserElo, gameOver, hasPersistedRank, rrDelta])
+
+    useEffect(() => {
+        if (!gameOver || hasPersistedHistory) {
+            return
+        }
+
+        setHasPersistedHistory(true)
+
+        let cancelled = false
+
+        const persistHistory = async () => {
+            try {
+                await api.users.saveHistory({
+                    opponent_name: localOpponentsLabel,
+                    mode: '1vs1vs1vs1',
+                    result: localRank === 1 ? 'Ganada' : localRank === 4 ? 'Perdida' : 'Empate',
+                    score: `${localRank}º puesto · ${localScore} pts`,
+                    rankChange: `${rrDelta >= 0 ? '+' : ''}${rrDelta} RR`,
+                })
+            } catch (error) {
+                if (!cancelled) {
+                    console.error('Error al guardar historial de partida 1v1v1v1', error)
+                }
+            }
+        }
+
+        persistHistory()
+
+        return () => {
+            cancelled = true
+        }
+    }, [gameOver, hasPersistedHistory, localOpponentsLabel, localRank, localScore, rrDelta])
 
     useEffect(() => {
         if (gameOver) {
@@ -332,7 +417,9 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             nextBoard[flipRow][flipCol] = currentTurn
         })
 
-        nextQuestions.delete(key)
+        if (ENABLE_SPECIAL_MECHANICS_4P) {
+            nextQuestions.delete(key)
+        }
 
         setBoard(nextBoard)
         setQuestionCells(nextQuestions)
@@ -342,6 +429,47 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const currentTurnPlayer = playerByPiece[currentTurn]
     const leftPlayers = playersWithScore.slice(0, 2)
     const rightPlayers = playersWithScore.slice(2, 4)
+
+    const handleAttemptLeave = () => {
+        if (gameOver) {
+            onNavigate('online-game')
+            return
+        }
+
+        setShowLeaveConfirm(true)
+    }
+
+    const handleConfirmLeave = async () => {
+        if (isAbandoning) {
+            return
+        }
+
+        setIsAbandoning(true)
+
+        const nextElo = Math.max(0, currentUserElo + abandonmentPenalty)
+
+        try {
+            const updatedUser = await api.users.updateElo(nextElo)
+            setCurrentUserElo(updatedUser.elo ?? nextElo)
+        } catch {
+            setCurrentUserElo(nextElo)
+        }
+
+        try {
+            await api.users.saveHistory({
+                opponent_name: localOpponentsLabel,
+                mode: '1vs1vs1vs1',
+                result: 'Perdida',
+                score: `4º puesto · ${scoreByPiece.black} pts`,
+                rankChange: `${abandonmentPenalty} RR`,
+            })
+        } catch (error) {
+            console.error('Error al guardar abandono de partida 1v1v1v1', error)
+        }
+
+        setShowLeaveConfirm(false)
+        onNavigate('online-game')
+    }
 
     return (
         <div className="duel-quad">
@@ -363,7 +491,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             </div>
 
             <div className="duel-quad__container">
-                <button className="duel-quad__leave-btn duel-quad__leave-btn--top" onClick={() => onNavigate('online-game')}>
+                <button className="duel-quad__leave-btn duel-quad__leave-btn--top" onClick={handleAttemptLeave}>
                     Abandonar partida
                 </button>
 
@@ -396,10 +524,14 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                         <span className="duel-quad__player-meta">{player.color}</span>
                                     </div>
                                 </div>
-                                <h2 className="duel-quad__panel-title">Habilidades</h2>
-                                <div className="duel-quad__skills">
-                                    <span className="duel-quad__empty-skills">Sin habilidades</span>
-                                </div>
+                                {ENABLE_SPECIAL_MECHANICS_4P && (
+                                    <>
+                                        <h2 className="duel-quad__panel-title">Habilidades</h2>
+                                        <div className="duel-quad__skills">
+                                            <span className="duel-quad__empty-skills">Sin habilidades</span>
+                                        </div>
+                                    </>
+                                )}
                             </article>
                         ))}
                     </aside>
@@ -417,7 +549,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                 const col = index % BOARD_SIZE
                                 const key = `${row}-${col}`
                                 const cell = board[row][col]
-                                const hasQuestion = questionCells.has(key) && cell === null
+                                const hasQuestion = ENABLE_SPECIAL_MECHANICS_4P && questionCells.has(key) && cell === null
                                 const isPlayable = validMoves.has(key) && !gameOver
 
                                 return (
@@ -468,10 +600,14 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                         <span className="duel-quad__player-meta">{player.color}</span>
                                     </div>
                                 </div>
-                                <h2 className="duel-quad__panel-title">Habilidades</h2>
-                                <div className="duel-quad__skills">
-                                    <span className="duel-quad__empty-skills">Sin habilidades</span>
-                                </div>
+                                {ENABLE_SPECIAL_MECHANICS_4P && (
+                                    <>
+                                        <h2 className="duel-quad__panel-title">Habilidades</h2>
+                                        <div className="duel-quad__skills">
+                                            <span className="duel-quad__empty-skills">Sin habilidades</span>
+                                        </div>
+                                    </>
+                                )}
                             </article>
                         ))}
                     </aside>
@@ -500,13 +636,40 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                             ))}
                     </div>
 
-                    <p className="duel-quad-result__note">
-                        Penalización aplicada: -{ABILITY_PENALTY} pts por cada habilidad sin gastar.
-                    </p>
+                    {ENABLE_SPECIAL_MECHANICS_4P && (
+                        <p className="duel-quad-result__note">
+                            Penalización aplicada: -{ABILITY_PENALTY} pts por cada habilidad sin gastar.
+                        </p>
+                    )}
 
                     <button className="duel-quad-result__back-btn" onClick={() => onNavigate('online-game')}>
                         Volver al menú
                     </button>
+                </div>
+            </Modal>
+
+            <Modal isOpen={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} maxWidth="520px">
+                <div className="duel-quad-leave-confirm">
+                    <h2 className="duel-quad-leave-confirm__title">Abandonar partida</h2>
+                    <p className="duel-quad-leave-confirm__text">
+                        Si abandonas esta partida en curso, se contará como una derrota en tu historial.
+                    </p>
+                    <div className="duel-quad-leave-confirm__actions">
+                        <button
+                            className="duel-quad-leave-confirm__btn duel-quad-leave-confirm__btn--cancel"
+                            onClick={() => setShowLeaveConfirm(false)}
+                            disabled={isAbandoning}
+                        >
+                            Seguir jugando
+                        </button>
+                        <button
+                            className="duel-quad-leave-confirm__btn duel-quad-leave-confirm__btn--confirm"
+                            onClick={handleConfirmLeave}
+                            disabled={isAbandoning}
+                        >
+                            {isAbandoning ? 'Abandonando...' : 'Abandonar partida'}
+                        </button>
+                    </div>
                 </div>
             </Modal>
         </div>
