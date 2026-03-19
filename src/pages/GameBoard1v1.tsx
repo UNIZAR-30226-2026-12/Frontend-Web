@@ -57,18 +57,17 @@ interface PendingAbility {
 const BOARD_SIZE = 8
 const QUESTION_COUNT = 8
 const ABILITY_PENALTY = 2
+const ENABLE_SPECIAL_MECHANICS_1V1 = false
 
 const PLAYER = {
     name: 'Jugador',
-    rr: 2250,
-    color: 'Negras',
+    rr: 1000,
     piece: 'black' as Piece,
 }
 
 const OPPONENT = {
     name: 'Gamer_Pro',
     rr: 1420,
-    color: 'Blancas',
     piece: 'white' as Piece,
 }
 
@@ -111,9 +110,9 @@ interface ArenaTheme {
 }
 
 const getArenaFromElo = (elo: number): ArenaTheme => {
-    if (elo < 1000) return { board: woodBoard, background: woodBackground }
-    if (elo < 1500) return { board: quartzBoard, background: quartzBackground }
-    if (elo < 2000) return { board: fireBoard, background: fireBackground }
+    if (elo < 900) return { board: woodBoard, background: woodBackground }
+    if (elo < 1100) return { board: quartzBoard, background: quartzBackground }
+    if (elo < 1300) return { board: fireBoard, background: fireBackground }
     return { board: iceBoard, background: iceBackground }
 }
 
@@ -297,37 +296,46 @@ function canApplyBombKeepingBothColors(board: BoardCell[][], row: number, col: n
 }
 
 function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
+    const [selectedPieceStyle1v1, setSelectedPieceStyle1v1] = useState(PIECE_STYLES_1V1[0])
+    const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
+    const [currentUserElo, setCurrentUserElo] = useState(PLAYER.rr)
+    const [hasPersistedRank, setHasPersistedRank] = useState(false)
+    const [hasPersistedHistory, setHasPersistedHistory] = useState(false)
+    const playerPieceColorName = selectedPieceStyle1v1.sideAName
+    const opponentPieceColorName = selectedPieceStyle1v1.sideBName
+
     const playerProfile = {
         ...PLAYER,
         name: matchData?.playerName ?? PLAYER.name,
-        rr: matchData?.playerRR ?? PLAYER.rr,
+        rr: currentUserElo,
+        color: playerPieceColorName,
     }
     const opponentProfile = {
         ...OPPONENT,
         name: matchData?.opponentName ?? OPPONENT.name,
         rr: matchData?.opponentRR ?? OPPONENT.rr,
+        color: opponentPieceColorName,
     }
     const playerNameByPiece = (piece: Piece) => (piece === 'black' ? playerProfile.name : opponentProfile.name)
     const arenaTheme = getArenaFromElo(playerProfile.rr)
 
     const [board, setBoard] = useState<BoardCell[][]>(() => createInitialBoard())
-    const [questionCells, setQuestionCells] = useState<Set<string>>(() => createQuestionCells(createInitialBoard()))
+    const [questionCells, setQuestionCells] = useState<Set<string>>(() =>
+        ENABLE_SPECIAL_MECHANICS_1V1 ? createQuestionCells(createInitialBoard()) : new Set<string>(),
+    )
     const [currentTurn, setCurrentTurn] = useState<Piece>('black')
     const [inventories, setInventories] = useState<Record<Piece, AbilityId[]>>({ black: [], white: [] })
     const [skipTurns, setSkipTurns] = useState<Record<Piece, number>>({ black: 0, white: 0 })
     const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
     const [gameOver, setGameOver] = useState(false)
     const [, setSystemMessage] = useState('Haz una jugada o usa una habilidad.')
-    const [selectedPieceStyle1v1, setSelectedPieceStyle1v1] = useState(PIECE_STYLES_1V1[0])
-    const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
-
     const validMoves = useMemo(() => getValidMoves(board, currentTurn), [board, currentTurn])
 
     const rawScore = useMemo(() => countPieces(board), [board])
     const penaltyScore = useMemo(
         () => ({
-            black: inventories.black.length * ABILITY_PENALTY,
-            white: inventories.white.length * ABILITY_PENALTY,
+            black: ENABLE_SPECIAL_MECHANICS_1V1 ? inventories.black.length * ABILITY_PENALTY : 0,
+            white: ENABLE_SPECIAL_MECHANICS_1V1 ? inventories.white.length * ABILITY_PENALTY : 0,
         }),
         [inventories.black.length, inventories.white.length],
     )
@@ -369,10 +377,12 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 const { duelIndex } = decodePiecePreference(me.preferred_piece_color)
                 setSelectedPieceStyle1v1(PIECE_STYLES_1V1[duelIndex] ?? PIECE_STYLES_1V1[0])
                 setCurrentUserAvatar(me.avatar_url)
+                setCurrentUserElo(me.elo ?? PLAYER.rr)
             } catch {
                 if (!isMounted) return
                 setSelectedPieceStyle1v1(PIECE_STYLES_1V1[0])
                 setCurrentUserAvatar(undefined)
+                setCurrentUserElo(PLAYER.rr)
             }
         }
 
@@ -413,6 +423,81 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
     }, [board, currentTurn, gameOver, inventories, skipTurns])
 
+    useEffect(() => {
+        if (!gameOver || hasPersistedRank) {
+            return
+        }
+
+        const nextElo = Math.max(0, currentUserElo + rrDelta)
+        setHasPersistedRank(true)
+
+        if (nextElo === currentUserElo) {
+            return
+        }
+
+        let cancelled = false
+
+        const persistRank = async () => {
+            try {
+                const updatedUser = await api.users.updateElo(nextElo)
+                if (!cancelled) {
+                    setCurrentUserElo(updatedUser.elo ?? nextElo)
+                }
+            } catch {
+                if (!cancelled) {
+                    setCurrentUserElo(nextElo)
+                }
+            }
+        }
+
+        persistRank()
+
+        return () => {
+            cancelled = true
+        }
+    }, [currentUserElo, gameOver, hasPersistedRank, rrDelta])
+
+    useEffect(() => {
+        if (!gameOver || hasPersistedHistory) {
+            return
+        }
+
+        setHasPersistedHistory(true)
+
+        let cancelled = false
+
+        const persistHistory = async () => {
+            try {
+                await api.users.saveHistory({
+                    opponent_name: opponentProfile.name,
+                    mode: '1vs1',
+                    result: winnerInfo.isDraw ? 'Empate' : winnerInfo.playerWon ? 'Ganada' : 'Perdida',
+                    score: `${finalScore.black}-${finalScore.white} pts`,
+                    rankChange: `${rrDelta >= 0 ? '+' : ''}${rrDelta} RR`,
+                })
+            } catch (error) {
+                if (!cancelled) {
+                    console.error('Error al guardar historial de partida', error)
+                }
+            }
+        }
+
+        persistHistory()
+
+        return () => {
+            cancelled = true
+        }
+    }, [
+        finalScore.black,
+        finalScore.white,
+        gameOver,
+        hasPersistedHistory,
+        opponentProfile.name,
+        rrDelta,
+        winnerInfo.isDraw,
+        winnerInfo.playerWon,
+    ])
+
     const applyQuestionReward = (
         row: number,
         col: number,
@@ -421,7 +506,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         nextInventories: Record<Piece, AbilityId[]>,
     ) => {
         const key = `${row}-${col}`
-        if (!nextQuestions.has(key)) {
+        if (!ENABLE_SPECIAL_MECHANICS_1V1 || !nextQuestions.has(key)) {
             return ''
         }
 
@@ -640,7 +725,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }
 
     const handleUseAbility = (ability: AbilityId, inventoryIndex: number) => {
-        if (gameOver || currentTurn !== playerProfile.piece) {
+        if (!ENABLE_SPECIAL_MECHANICS_1V1 || gameOver || currentTurn !== playerProfile.piece) {
             return
         }
 
@@ -659,7 +744,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }
 
     const handleOpponentUseAbility = (ability: AbilityId, inventoryIndex: number) => {
-        if (gameOver || currentTurn !== opponentProfile.piece) {
+        if (!ENABLE_SPECIAL_MECHANICS_1V1 || gameOver || currentTurn !== opponentProfile.piece) {
             return
         }
 
@@ -766,25 +851,29 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                 <span className="duel__meta">{playerProfile.color}</span>
                             </div>
                         </div>
-                        <h2 className="duel__panel-title">Habilidades</h2>
-                        <div className="duel__skills">
-                            {inventories.black.length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
-                            {inventories.black.map((ability, index) => (
-                                <button
-                                    key={`${ability}-${index}-black`}
-                                    className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === 'black' ? 'duel__skill-card--active' : ''}`}
-                                    onClick={() => handleUseAbility(ability, index)}
-                                    type="button"
-                                    disabled={gameOver || currentTurn !== 'black'}
-                                >
-                                    <span className="duel__skill-icon">{ABILITY_META[ability].icon}</span>
-                                    <div className="duel__skill-text">
-                                        <span className="duel__skill-name">{ABILITY_META[ability].name}</span>
-                                        <span className="duel__skill-uses">1 uso</span>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
+                        {ENABLE_SPECIAL_MECHANICS_1V1 && (
+                            <>
+                                <h2 className="duel__panel-title">Habilidades</h2>
+                                <div className="duel__skills">
+                                    {inventories.black.length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
+                                    {inventories.black.map((ability, index) => (
+                                        <button
+                                            key={`${ability}-${index}-black`}
+                                            className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === 'black' ? 'duel__skill-card--active' : ''}`}
+                                            onClick={() => handleUseAbility(ability, index)}
+                                            type="button"
+                                            disabled={gameOver || currentTurn !== 'black'}
+                                        >
+                                            <span className="duel__skill-icon">{ABILITY_META[ability].icon}</span>
+                                            <div className="duel__skill-text">
+                                                <span className="duel__skill-name">{ABILITY_META[ability].name}</span>
+                                                <span className="duel__skill-uses">1 uso</span>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </aside>
 
                     <section
@@ -800,7 +889,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                 const col = index % BOARD_SIZE
                                 const key = `${row}-${col}`
                                 const cell = board[row][col]
-                                const hasQuestion = questionCells.has(key)
+                                const hasQuestion = ENABLE_SPECIAL_MECHANICS_1V1 && questionCells.has(key)
                                 const isPlayable = !pendingAbility && validMoves.has(key) && !gameOver
 
                                 return (
@@ -839,25 +928,29 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                 <span className="duel__meta">{opponentProfile.color}</span>
                             </div>
                         </div>
-                        <h2 className="duel__panel-title">Habilidades</h2>
-                        <div className="duel__skills">
-                            {inventories.white.length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
-                            {inventories.white.map((ability, index) => (
-                                <button
-                                    key={`${ability}-${index}-white`}
-                                    className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === 'white' ? 'duel__skill-card--active' : ''}`}
-                                    onClick={() => handleOpponentUseAbility(ability, index)}
-                                    type="button"
-                                    disabled={gameOver || currentTurn !== 'white'}
-                                >
-                                    <span className="duel__skill-icon">{ABILITY_META[ability].icon}</span>
-                                    <div className="duel__skill-text">
-                                        <span className="duel__skill-name">{ABILITY_META[ability].name}</span>
-                                        <span className="duel__skill-uses">1 uso</span>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
+                        {ENABLE_SPECIAL_MECHANICS_1V1 && (
+                            <>
+                                <h2 className="duel__panel-title">Habilidades</h2>
+                                <div className="duel__skills">
+                                    {inventories.white.length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
+                                    {inventories.white.map((ability, index) => (
+                                        <button
+                                            key={`${ability}-${index}-white`}
+                                            className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === 'white' ? 'duel__skill-card--active' : ''}`}
+                                            onClick={() => handleOpponentUseAbility(ability, index)}
+                                            type="button"
+                                            disabled={gameOver || currentTurn !== 'white'}
+                                        >
+                                            <span className="duel__skill-icon">{ABILITY_META[ability].icon}</span>
+                                            <div className="duel__skill-text">
+                                                <span className="duel__skill-name">{ABILITY_META[ability].name}</span>
+                                                <span className="duel__skill-uses">1 uso</span>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </aside>
                 </main>
             </div>
@@ -885,9 +978,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         </div>
                     </div>
 
-                    <p className="duel-result__note">
-                        Penalización aplicada: -{ABILITY_PENALTY} pts por cada habilidad sin gastar.
-                    </p>
+                    {ENABLE_SPECIAL_MECHANICS_1V1 && (
+                        <p className="duel-result__note">
+                            Penalización aplicada: -{ABILITY_PENALTY} pts por cada habilidad sin gastar.
+                        </p>
+                    )}
 
                     <button className="duel-result__back-btn" onClick={() => onNavigate('online-game')}>
                         Volver al menú

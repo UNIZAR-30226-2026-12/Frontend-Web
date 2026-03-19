@@ -1,6 +1,8 @@
 export interface PieceStyle1v1 {
     sideA: string
     sideB: string
+    sideAName: string
+    sideBName: string
     label: string
 }
 
@@ -14,11 +16,11 @@ export interface PieceStyle4P {
 
 /* Estilos de fichas 1v1 (2 colores por estilo) */
 export const PIECE_STYLES_1V1: PieceStyle1v1[] = [
-    { sideA: '#222', sideB: '#eee', label: 'Clasico' },
-    { sideA: '#e74c3c', sideB: '#3498db', label: 'Fuego y Hielo' },
-    { sideA: '#2ecc71', sideB: '#f1c40f', label: 'Selva' },
-    { sideA: '#9b59b6', sideB: '#e67e22', label: 'Atardecer' },
-    { sideA: '#1abc9c', sideB: '#e84393', label: 'Neon' },
+    { sideA: '#222', sideB: '#eee', sideAName: 'Negras', sideBName: 'Blancas', label: 'Clasico' },
+    { sideA: '#e74c3c', sideB: '#3498db', sideAName: 'Rojas', sideBName: 'Azules', label: 'Fuego y Hielo' },
+    { sideA: '#2ecc71', sideB: '#f1c40f', sideAName: 'Verdes', sideBName: 'Amarillas', label: 'Selva' },
+    { sideA: '#9b59b6', sideB: '#e67e22', sideAName: 'Moradas', sideBName: 'Naranjas', label: 'Atardecer' },
+    { sideA: '#1abc9c', sideB: '#e84393', sideAName: 'Turquesas', sideBName: 'Rosas', label: 'Neon' },
 ]
 
 /* Estilos de fichas 1v1v1v1 (4 colores por estilo) */

@@ -123,11 +123,35 @@ export const api = {
             if (!response.ok) throw new Error('Error al actualizar personalización');
             return response.json();
         },
+        updateElo: async (elo: number) => {
+            const response = await interceptedFetch(`${BASE_URL}/users/me/elo`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify({ elo }),
+            });
+            if (!response.ok) throw new Error('Error al actualizar RR');
+            return response.json();
+        },
         getHistory: async () => {
             const response = await interceptedFetch(`${BASE_URL}/users/me/history`, {
                 headers: getHeaders(),
             });
             if (!response.ok) throw new Error('Error al obtener historial');
+            return response.json();
+        },
+        saveHistory: async (entry: {
+            opponent_name: string;
+            mode: string;
+            result: 'Ganada' | 'Perdida' | 'Empate';
+            score: string;
+            rankChange: string;
+        }) => {
+            const response = await interceptedFetch(`${BASE_URL}/users/me/history`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify(entry),
+            });
+            if (!response.ok) throw new Error('Error al guardar historial');
             return response.json();
         },
         uploadAvatar: async (formData: FormData) => {
