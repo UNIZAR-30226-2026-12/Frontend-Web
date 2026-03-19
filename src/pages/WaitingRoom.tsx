@@ -11,6 +11,15 @@ interface Player {
     isReady: boolean
 }
 
+interface GameHistory {
+    id: number
+    date: string
+    mode: string
+    result: 'Ganada' | 'Perdida' | 'Empate'
+    score: string
+    rankChange: string
+}
+
 interface WaitingRoomProps {
     gameMode: '1vs1' | '1vs1vs1vs1'
     returnScreen: string
@@ -26,11 +35,32 @@ interface WaitingRoomProps {
 }
 
 type MatchResult = 'W' | 'L'
+type HistoryPreviewSymbol = 'V' | 'D' | 'E' | '-'
 
 const SIMULATED_STREAKS: Record<string, MatchResult[]> = {
     Tu: ['W', 'L', 'W', 'W', 'L'],
     Gamer_Pro: ['L', 'W', 'L', 'L', 'W'],
     Rival: ['W', 'W', 'L', 'W', 'L']
+}
+
+const EMPTY_HISTORY_PREVIEW: HistoryPreviewSymbol[] = ['-', '-', '-', '-', '-']
+
+const buildHistoryPreview = (history: GameHistory[]): HistoryPreviewSymbol[] => {
+    const recentSymbols = history
+        .slice(0, 5)
+        .map((item): HistoryPreviewSymbol => {
+            if (item.result === 'Ganada') return 'V'
+            if (item.result === 'Perdida') return 'D'
+            return 'E'
+        })
+
+    const symbols = [...recentSymbols].reverse()
+
+    while (symbols.length < 5) {
+        symbols.unshift('-')
+    }
+
+    return symbols
 }
 
 function WaitingRoom({
@@ -60,17 +90,23 @@ function WaitingRoom({
         { id: 1, name: localPlayerName, rr: localPlayerRR, isReady: false }
     ])
     const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
+    const [playerHistoryPreview, setPlayerHistoryPreview] = useState<HistoryPreviewSymbol[]>(EMPTY_HISTORY_PREVIEW)
 
     useEffect(() => {
         let isMounted = true
         const fetchMe = async () => {
             try {
-                const me = await api.users.getMe()
+                const [me, history] = await Promise.all([
+                    api.users.getMe(),
+                    api.users.getHistory(),
+                ])
                 if (!isMounted) return
                 setCurrentUserAvatar(me.avatar_url)
+                setPlayerHistoryPreview(buildHistoryPreview(history))
             } catch {
                 if (!isMounted) return
                 setCurrentUserAvatar(undefined)
+                setPlayerHistoryPreview(EMPTY_HISTORY_PREVIEW)
             }
         }
         fetchMe()
@@ -112,6 +148,14 @@ function WaitingRoom({
     const getSimulatedStreak = (playerName?: string): MatchResult[] => {
         if (!playerName) return SIMULATED_STREAKS.Rival
         return SIMULATED_STREAKS[playerName] ?? SIMULATED_STREAKS.Rival
+    }
+
+    const getPreviewHistory = (playerName: string): HistoryPreviewSymbol[] => {
+        if (playerName === localPlayerName) {
+            return playerHistoryPreview
+        }
+
+        return [...getSimulatedStreak(playerName).map(result => (result === 'W' ? 'V' : 'D'))].reverse()
     }
 
     useEffect(() => {
@@ -208,12 +252,12 @@ function WaitingRoom({
                                     </span>
                                     {player && gameMode === '1vs1' && (
                                         <span className="player-slot__streak" aria-label="Racha últimas 5 partidas">
-                                            {getSimulatedStreak(player.name).map((result, resultIndex) => (
+                                            {getPreviewHistory(player.name).map((result, resultIndex) => (
                                                 <span
                                                     key={`${player.id}-streak-${resultIndex}`}
-                                                    className={`player-slot__streak-item ${result === 'W' ? 'player-slot__streak-item--win' : 'player-slot__streak-item--loss'}`}
+                                                    className={`player-slot__streak-item ${result === 'V' ? 'player-slot__streak-item--win' : result === 'D' ? 'player-slot__streak-item--loss' : 'player-slot__streak-item--empty'}`}
                                                 >
-                                                    {result === 'W' ? 'V' : 'D'}
+                                                    {result}
                                                 </span>
                                             ))}
                                         </span>

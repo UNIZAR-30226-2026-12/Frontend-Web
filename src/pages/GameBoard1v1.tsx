@@ -301,6 +301,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [currentUserElo, setCurrentUserElo] = useState(PLAYER.rr)
     const [hasPersistedRank, setHasPersistedRank] = useState(false)
     const [hasPersistedHistory, setHasPersistedHistory] = useState(false)
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+    const [isAbandoning, setIsAbandoning] = useState(false)
     const playerPieceColorName = selectedPieceStyle1v1.sideAName
     const opponentPieceColorName = selectedPieceStyle1v1.sideBName
 
@@ -366,6 +368,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }, [finalScore.black, finalScore.white, opponentProfile.name, playerProfile.name])
 
     const rrDelta = winnerInfo.isDraw ? 0 : winnerInfo.playerWon ? 30 : -30
+    const abandonmentPenalty = -30
 
     useEffect(() => {
         let isMounted = true
@@ -803,6 +806,47 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         finishAction(nextBoard, nextQuestions, nextInventories, nextSkipTurns, actionMessage)
     }
 
+    const handleAttemptLeave = () => {
+        if (gameOver) {
+            onNavigate('online-game')
+            return
+        }
+
+        setShowLeaveConfirm(true)
+    }
+
+    const handleConfirmLeave = async () => {
+        if (isAbandoning) {
+            return
+        }
+
+        setIsAbandoning(true)
+
+        const nextElo = Math.max(0, currentUserElo + abandonmentPenalty)
+
+        try {
+            const updatedUser = await api.users.updateElo(nextElo)
+            setCurrentUserElo(updatedUser.elo ?? nextElo)
+        } catch {
+            setCurrentUserElo(nextElo)
+        }
+
+        try {
+            await api.users.saveHistory({
+                opponent_name: opponentProfile.name,
+                mode: '1vs1',
+                result: 'Perdida',
+                score: `${rawScore.black}-${rawScore.white} pts`,
+                rankChange: `${abandonmentPenalty} RR`,
+            })
+        } catch (error) {
+            console.error('Error al guardar abandono de partida', error)
+        }
+
+        setShowLeaveConfirm(false)
+        onNavigate('online-game')
+    }
+
     const turnLabel =
         gameOver
             ? 'Partida finalizada'
@@ -828,7 +872,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             </div>
 
             <div className="duel__container">
-                <button className="duel__leave-btn duel__leave-btn--top" onClick={() => onNavigate('online-game')}>
+                <button className="duel__leave-btn duel__leave-btn--top" onClick={handleAttemptLeave}>
                     Abandonar partida
                 </button>
                 <header className="duel__header">
@@ -987,6 +1031,31 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     <button className="duel-result__back-btn" onClick={() => onNavigate('online-game')}>
                         Volver al menú
                     </button>
+                </div>
+            </Modal>
+
+            <Modal isOpen={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} maxWidth="520px">
+                <div className="duel-leave-confirm">
+                    <h2 className="duel-leave-confirm__title">Abandonar partida</h2>
+                    <p className="duel-leave-confirm__text">
+                        Si abandonas esta partida en curso, se contará como una derrota en tu historial y perderás puntos RR.
+                    </p>
+                    <div className="duel-leave-confirm__actions">
+                        <button
+                            className="duel-leave-confirm__btn duel-leave-confirm__btn--cancel"
+                            onClick={() => setShowLeaveConfirm(false)}
+                            disabled={isAbandoning}
+                        >
+                            Seguir jugando
+                        </button>
+                        <button
+                            className="duel-leave-confirm__btn duel-leave-confirm__btn--confirm"
+                            onClick={handleConfirmLeave}
+                            disabled={isAbandoning}
+                        >
+                            {isAbandoning ? 'Abandonando...' : 'Abandonar partida'}
+                        </button>
+                    </div>
                 </div>
             </Modal>
         </div>

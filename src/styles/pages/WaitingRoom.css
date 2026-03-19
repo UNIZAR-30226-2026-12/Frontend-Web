@@ -270,6 +270,10 @@
     color: #f87171;
 }
 
+.player-slot__streak-item--empty {
+    color: rgba(255, 255, 255, 0.45);
+}
+
 .player-slot__rr {
     font-size: 0.75rem;
     font-weight: 800;
