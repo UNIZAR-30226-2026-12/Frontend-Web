@@ -54,6 +54,41 @@
   border-color: var(--color-primary);
 }
 
+.auth-form__password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-form__input--password {
+  width: 100%;
+  padding-right: 3rem;
+}
+
+.auth-form__password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.auth-form__password-toggle:hover,
+.auth-form__password-toggle:focus-visible {
+  color: var(--color-text);
+}
+
+.auth-form__password-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
 /* ===== Botón submit ===== */
 .auth-form__btn {
   margin-top: 0.5rem;

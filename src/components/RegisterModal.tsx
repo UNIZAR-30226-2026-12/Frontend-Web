@@ -9,11 +9,45 @@ interface RegisterModalProps {
   onRegisterSuccess: () => void
 }
 
+function PasswordEyeIcon({ hidden }: { hidden: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="auth-form__password-icon">
+      <path
+        d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      {hidden && (
+        <path
+          d="M4 4l16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
+  )
+}
+
 function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProps) {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
 
   const handleRegister = async (e: FormEvent) => {
@@ -21,7 +55,7 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
     setError('')
 
     if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden')
+      setError('Las contraseÃ±as no coinciden')
       return
     }
 
@@ -41,7 +75,7 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="auth-form">
         <h2 className="auth-form__title">Crear Cuenta</h2>
-        <p className="auth-form__subtitle">Únete a Random Reversi</p>
+        <p className="auth-form__subtitle">Ãšnete a Random Reversi</p>
 
         <form className="auth-form__fields" onSubmit={handleRegister}>
           {error && <div className="auth-form__error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
@@ -71,26 +105,48 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
 
           <label className="auth-form__label">
             Contraseña
-            <input
-              type="password"
-              className="auth-form__input"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="auth-form__password-field">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="auth-form__input auth-form__input--password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="auth-form__password-toggle"
+                onClick={() => setShowPassword((current) => !current)}
+                aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                aria-pressed={showPassword}
+              >
+                <PasswordEyeIcon hidden={!showPassword} />
+              </button>
+            </div>
           </label>
 
           <label className="auth-form__label">
             Confirmar contraseña
-            <input
-              type="password"
-              className="auth-form__input"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
+            <div className="auth-form__password-field">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                className="auth-form__input auth-form__input--password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="auth-form__password-toggle"
+                onClick={() => setShowConfirmPassword((current) => !current)}
+                aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-pressed={showConfirmPassword}
+              >
+                <PasswordEyeIcon hidden={!showConfirmPassword} />
+              </button>
+            </div>
           </label>
 
           <button type="submit" className="auth-form__btn">

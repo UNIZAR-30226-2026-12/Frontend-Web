@@ -9,9 +9,42 @@ interface LoginModalProps {
   onNavigate: (screen: string) => void
 }
 
+function PasswordEyeIcon({ hidden }: { hidden: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="auth-form__password-icon">
+      <path
+        d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      {hidden && (
+        <path
+          d="M4 4l16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
+  )
+}
+
 function LoginModal({ isOpen, onClose, onNavigate }: LoginModalProps) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
 
   const handleLogin = async (e: FormEvent) => {
@@ -41,11 +74,11 @@ function LoginModal({ isOpen, onClose, onNavigate }: LoginModalProps) {
         <form className="auth-form__fields" onSubmit={handleLogin}>
           {error && <div className="auth-form__error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
           <label className="auth-form__label">
-            Usuario
+            Correo Electrónico
             <input
               type="text"
               className="auth-form__input"
-              placeholder="Tu nombre de usuario"
+              placeholder="Tu Correo Electrónico"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -54,14 +87,25 @@ function LoginModal({ isOpen, onClose, onNavigate }: LoginModalProps) {
 
           <label className="auth-form__label">
             Contraseña
-            <input
-              type="password"
-              className="auth-form__input"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="auth-form__password-field">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="auth-form__input auth-form__input--password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="auth-form__password-toggle"
+                onClick={() => setShowPassword((current) => !current)}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-pressed={showPassword}
+              >
+                <PasswordEyeIcon hidden={!showPassword} />
+              </button>
+            </div>
           </label>
 
           <button type="submit" className="auth-form__btn">
