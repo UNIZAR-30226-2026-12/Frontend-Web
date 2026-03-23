@@ -227,7 +227,13 @@ function Friends({ onNavigate }: FriendsProps) {
                                             <img className="friend-card__avatar" src={resolveUserAvatar(friend.avatar_url, friend.name)} alt={`Avatar de ${friend.name}`} />
                                             <div className="friend-card__details">
                                                 <div className="friend-card__name-row">
-                                                    <span className="friend-card__name">{friend.name}</span>
+                                                    <span
+                                                        className="friend-card__name"
+                                                        style={{ cursor: 'pointer' }}
+                                                        onClick={() => onNavigate('profile', { id: friend.id, name: friend.name })}
+                                                    >
+                                                        {friend.name}
+                                                    </span>
                                                     <span className="friend-card__rr">{friend.rr} RR</span>
                                                 </div>
                                                 <span className={`friend-card__status friend-card__status--${friend.status}`}>
@@ -272,7 +278,13 @@ function Friends({ onNavigate }: FriendsProps) {
                                             <img className="friend-card__avatar" src={resolveUserAvatar(request.avatar_url, request.name)} alt={`Avatar de ${request.name}`} />
                                             <div className="friend-card__details">
                                                 <div className="friend-card__name-row">
-                                                    <span className="friend-card__name">{request.name}</span>
+                                                    <span
+                                                        className="friend-card__name"
+                                                        style={{ cursor: 'pointer' }}
+                                                        onClick={() => onNavigate('profile', { id: request.id, name: request.name })}
+                                                    >
+                                                        {request.name}
+                                                    </span>
                                                     <span className="friend-card__rr">{request.rr} RR</span>
                                                 </div>
                                             </div>
@@ -311,7 +323,13 @@ function Friends({ onNavigate }: FriendsProps) {
                                             <img className="friend-card__avatar" src={resolveUserAvatar(request.avatar_url, request.name)} alt={`Avatar de ${request.name}`} />
                                             <div className="friend-card__details">
                                                 <div className="friend-card__name-row">
-                                                    <span className="friend-card__name">{request.name}</span>
+                                                    <span
+                                                        className="friend-card__name"
+                                                        style={{ cursor: 'pointer' }}
+                                                        onClick={() => onNavigate('profile', { id: request.id, name: request.name })}
+                                                    >
+                                                        {request.name}
+                                                    </span>
                                                     <span className="friend-card__rr">{request.rr} RR</span>
                                                 </div>
                                                 <div className="friend-card__game-info">

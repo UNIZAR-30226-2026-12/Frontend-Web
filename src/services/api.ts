@@ -28,7 +28,7 @@ const interceptedFetch = async (url: string, options: RequestInit = {}): Promise
             if (options.body.trim().startsWith('{') || options.body.trim().startsWith('[')) {
                 bodyLog = JSON.parse(options.body);
             } else {
-                bodyLog = options.body; // URLSearchParams or other string
+                bodyLog = options.body;
             }
         } catch (e) {
             bodyLog = options.body;
@@ -49,6 +49,7 @@ const interceptedFetch = async (url: string, options: RequestInit = {}): Promise
         return fallbackResponse;
     }
 };
+
 export const api = {
     // Auth
     auth: {
@@ -91,11 +92,18 @@ export const api = {
             if (!response.ok) throw new Error('Error al obtener perfil');
             return response.json();
         },
-        getStats: async (userId: number) => {
+        getStats: async (userId: number | 'me') => {
             const response = await interceptedFetch(`${BASE_URL}/users/${userId}/stats`, {
                 headers: getHeaders(),
             });
             if (!response.ok) throw new Error('Error al obtener estadísticas');
+            return response.json();
+        },
+        getH2H: async (userId: number) => {
+            const response = await interceptedFetch(`${BASE_URL}/users/${userId}/h2h`, {
+                headers: getHeaders(),
+            });
+            if (!response.ok) throw new Error('Error al obtener H2H');
             return response.json();
         },
         updateMe: async (updates: { username?: string; email?: string }) => {
@@ -132,8 +140,9 @@ export const api = {
             if (!response.ok) throw new Error('Error al actualizar RR');
             return response.json();
         },
-        getHistory: async () => {
-            const response = await interceptedFetch(`${BASE_URL}/users/me/history`, {
+        getHistory: async (userId: number | 'me' = 'me') => {
+            const endpoint = userId === 'me' ? '/users/me/history' : `/users/${userId}/history`;
+            const response = await interceptedFetch(`${BASE_URL}${endpoint}`, {
                 headers: getHeaders(),
             });
             if (!response.ok) throw new Error('Error al obtener historial');
@@ -229,5 +238,3 @@ export const api = {
         },
     }
 };
-
-

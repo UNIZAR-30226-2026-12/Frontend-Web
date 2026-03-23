@@ -55,7 +55,7 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
     setError('')
 
     if (password !== confirmPassword) {
-      setError('Las contraseÃ±as no coinciden')
+      setError('Las contraseñas no coinciden')
       return
     }
 
@@ -75,7 +75,7 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="auth-form">
         <h2 className="auth-form__title">Crear Cuenta</h2>
-        <p className="auth-form__subtitle">Ãšnete a Random Reversi</p>
+        <p className="auth-form__subtitle">Únete a Random Reversi</p>
 
         <form className="auth-form__fields" onSubmit={handleRegister}>
           {error && <div className="auth-form__error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
@@ -118,7 +118,7 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
                 type="button"
                 className="auth-form__password-toggle"
                 onClick={() => setShowPassword((current) => !current)}
-                aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 aria-pressed={showPassword}
               >
                 <PasswordEyeIcon hidden={!showPassword} />

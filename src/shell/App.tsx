@@ -4,6 +4,7 @@ import MainMenu from '../pages/MainMenu'
 import Rules from '../pages/Rules'
 import Customization from '../pages/Customization'
 import Friends from '../pages/Friends'
+import Profile from '../pages/Profile'
 import OnlineGame from '../pages/OnlineGame'
 import WaitingRoom from '../pages/WaitingRoom'
 import GameBoard1v1 from '../pages/GameBoard1v1'
@@ -41,6 +42,7 @@ function App() {
   const [waitingRoomData, setWaitingRoomData] = useState<WaitingRoomData>({})
   const [activeMatchData, setActiveMatchData] = useState<MatchData | null>(null)
   const [activeMatchData4Players, setActiveMatchData4Players] = useState<MatchData4Players | null>(null)
+  const [profileData, setProfileData] = useState<{ userId?: number, username?: string }>({})
 
   const navigateTo = (screen: string, data?: any) => {
     if (screen === 'waiting-room') {
@@ -65,6 +67,9 @@ function App() {
     if (screen === 'game-1v1v1v1' && data?.matchData) {
       setActiveMatchData4Players(data.matchData)
     }
+    if (screen === 'profile') {
+      setProfileData({ userId: data?.id, username: data?.name })
+    }
     setCurrentScreen(screen)
   }
 
@@ -75,6 +80,7 @@ function App() {
       {currentScreen === 'rules' && <Rules onNavigate={navigateTo} />}
       {currentScreen === 'customization' && <Customization onNavigate={navigateTo} />}
       {currentScreen === 'friends' && <Friends onNavigate={navigateTo} />}
+      {currentScreen === 'profile' && <Profile onNavigate={navigateTo} userId={profileData.userId} username={profileData.username} />}
       {currentScreen === 'online-game' && <OnlineGame onNavigate={navigateTo} />}
       {currentScreen === 'waiting-room' && (
         <WaitingRoom
