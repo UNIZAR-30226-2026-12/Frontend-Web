@@ -1,4 +1,4 @@
-﻿/* ===== Layout principal del menú ===== */
+/* ===== Layout principal del menú ===== */
 .menu {
   position: relative;
   display: flex;
@@ -46,6 +46,29 @@
   gap: 0.6rem;
   padding-right: 1.2rem;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background: none;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  cursor: default;
+}
+
+.menu__user-info--clickable {
+  cursor: pointer;
+  border-radius: 2rem;
+  padding: 0.35rem 1.2rem 0.35rem 0.35rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.menu__user-info--clickable:hover {
+  background: rgba(108, 99, 255, 0.15);
+  box-shadow: 0 0 0 1px rgba(108, 99, 255, 0.35);
+}
+
+.menu__user-info--clickable:hover .menu__user-icon {
+  border-color: rgba(108, 99, 255, 0.7);
+  box-shadow: 0 0 8px rgba(108, 99, 255, 0.4);
 }
 
 .menu__user-icon {
@@ -55,6 +78,7 @@
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .menu__user-name {
@@ -63,6 +87,16 @@
   font-size: 0.95rem;
   letter-spacing: 0.3px;
 }
+
+.menu__user-elo {
+  display: block;
+  font-size: 0.72rem;
+  color: #f4c542;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  line-height: 1;
+}
+
 
 .menu__logout-btn {
   display: flex;

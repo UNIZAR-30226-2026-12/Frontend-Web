@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import { resolveUserAvatar } from '../config/avatarOptions'
@@ -47,12 +47,19 @@ function MainMenu({ onNavigate }: MainMenuProps) {
     return (
         <div className="menu">
             <div className="menu__user-bar">
-                <div className="menu__user-info">
+                <button
+                    className="menu__user-info menu__user-info--clickable"
+                    onClick={() => onNavigate('profile')}
+                    title="Ver mi perfil"
+                >
                     <img className="menu__user-icon" src={resolveUserAvatar(user?.avatar_url, user?.username || 'Jugador')} alt="Avatar" />
                     <div className="menu__user-details">
                         <span className="menu__user-name">{user?.username || 'Cargando...'}</span>
+                        {user?.elo !== undefined && (
+                            <span className="menu__user-elo">🏆 {user.elo} RR</span>
+                        )}
                     </div>
-                </div>
+                </button>
                 <button className="menu__logout-btn" onClick={handleLogout} title="Cerrar sesión">
                     <span className="menu__logout-text">Cerrar sesión</span>
                 </button>

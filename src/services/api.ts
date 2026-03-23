@@ -154,6 +154,7 @@ export const api = {
             result: 'Ganada' | 'Perdida' | 'Empate';
             score: string;
             rankChange: string;
+            player_color?: 'black' | 'white';
         }) => {
             const response = await interceptedFetch(`${BASE_URL}/users/me/history`, {
                 method: 'POST',
