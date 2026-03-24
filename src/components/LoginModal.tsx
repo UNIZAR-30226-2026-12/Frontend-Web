@@ -74,11 +74,11 @@ function LoginModal({ isOpen, onClose, onNavigate }: LoginModalProps) {
         <form className="auth-form__fields" onSubmit={handleLogin}>
           {error && <div className="auth-form__error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
           <label className="auth-form__label">
-            Correo Electrónico
+            Usuario o Correo
             <input
               type="text"
               className="auth-form__input"
-              placeholder="Tu Correo Electrónico"
+              placeholder="Tu Usuario o Correo"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
