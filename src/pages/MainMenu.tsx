@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import { resolveUserAvatar } from '../config/avatarOptions'
@@ -56,7 +56,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                     <div className="menu__user-details">
                         <span className="menu__user-name">{user?.username || 'Cargando...'}</span>
                         {user?.elo !== undefined && (
-                            <span className="menu__user-elo">🏆 {user.elo} RR</span>
+                            <span className="menu__user-elo">{user.elo} RR</span>
                         )}
                     </div>
                 </button>

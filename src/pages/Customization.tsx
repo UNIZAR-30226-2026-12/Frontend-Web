@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type ChangeEvent, type KeyboardEvent } from 'react'
+import { useState, useRef, useEffect, type ChangeEvent } from 'react'
 import { api } from '../services/api'
 import '../styles/background.css'
 import '../styles/pages/Customization.css'
@@ -16,18 +16,12 @@ function Customization({ onNavigate }: CustomizationProps) {
     const [selectedPiece4p, setSelectedPiece4p] = useState(0)
     const [selectedAvatar, setSelectedAvatar] = useState<number | 'custom'>(0)
     const [customAvatar, setCustomAvatar] = useState<string | null>(null)
-    const [username, setUsername] = useState('Jugador')
-    const [email, setEmail] = useState('')
-    const [isEditingName, setIsEditingName] = useState(false)
-    const [profileError, setProfileError] = useState('')
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 const data = await api.users.getMe()
-                setUsername(data.username)
-                setEmail(data.email)
 
                 const { duelIndex, quadIndex } = decodePiecePreference(data.preferred_piece_color)
                 setSelectedPiece1v1(duelIndex)
@@ -69,32 +63,6 @@ function Customization({ onNavigate }: CustomizationProps) {
         }
     }
 
-    const saveProfile = async (nextUsername: string) => {
-        const normalizedUsername = nextUsername.trim()
-        if (!normalizedUsername) {
-            setProfileError('El nombre de usuario no puede estar vacio')
-            return false
-        }
-
-        try {
-            const updated = await api.users.updateMe({ username: normalizedUsername })
-            setUsername(updated.username)
-            setEmail(updated.email)
-            setProfileError('')
-            return true
-        } catch (err: any) {
-            setProfileError(err?.message || 'Error al actualizar el perfil')
-            return false
-        }
-    }
-
-    const handleUpdateName = async () => {
-        const ok = await saveProfile(username)
-        if (ok) {
-            setIsEditingName(false)
-        }
-    }
-
     const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
@@ -113,24 +81,6 @@ function Customization({ onNavigate }: CustomizationProps) {
 
     const triggerFileInput = () => {
         fileInputRef.current?.click()
-    }
-
-    const toggleEditName = () => {
-        if (isEditingName) {
-            handleUpdateName()
-        } else {
-            setIsEditingName(true)
-        }
-    }
-
-    const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setUsername(e.target.value)
-    }
-
-    const handleNameKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            handleUpdateName()
-        }
     }
 
     return (
@@ -164,12 +114,13 @@ function Customization({ onNavigate }: CustomizationProps) {
                     {/* Seccion: Perfil */}
                     <div className="custom__section">
                         <div className="custom__section-header">
-                            <span className="custom__section-title">Perfil</span>
+                            <span className="custom__section-title">Foto de Perfil</span>
                         </div>
 
                         <div className="custom__profile">
                             <div className="custom__profile-top">
                                 {/* Vista previa del avatar seleccionado */}
+                                <span className="custom__selector-label custom__selector-label--centered">Vista previa</span>
                                 <div className="custom__avatar-preview">
                                     {selectedAvatar === 'custom' && customAvatar ? (
                                         <img src={customAvatar} alt="Avatar" className="custom__avatar-img" />
@@ -185,7 +136,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                                 </div>
 
                                 <div className="custom__profile-content">
-                                    <span className="custom__selector-label">Foto de perfil</span>
+                                    <span className="custom__selector-label custom__selector-label--centered">Fotos de perfil para elegir</span>
                                     <div className="custom__avatar-selector">
                                         {AVATAR_OPTIONS.map((avatar, i) => (
                                             <button
@@ -234,42 +185,6 @@ function Customization({ onNavigate }: CustomizationProps) {
                                 </div>
                             </div>
 
-                            <div className="custom__profile-fields">
-                                {profileError && (
-                                    <div className="custom__field">
-                                        <span className="custom__field-value" style={{ color: '#f87171' }}>{profileError}</span>
-                                    </div>
-                                )}
-                                <div className="custom__field">
-                                    <span className="custom__field-label">Nombre</span>
-                                    <div className="custom__field-row">
-                                        {isEditingName ? (
-                                            <input
-                                                type="text"
-                                                className="custom__input-name"
-                                                value={username}
-                                                onChange={handleNameChange}
-                                                onKeyDown={handleNameKeyDown}
-                                                onBlur={handleUpdateName}
-                                                autoFocus
-                                            />
-                                        ) : (
-                                            <span className="custom__field-value">{username}</span>
-                                        )}
-                                        <button
-                                            className="custom__field-edit"
-                                            onClick={toggleEditName}
-                                            title={isEditingName ? 'Modifica tu nombre de jugador' : 'Cambia tu nombre de jugador'}
-                                        >
-                                            {isEditingName ? 'Confirmar cambios' : 'Editar nombre'}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="custom__field">
-                                    <span className="custom__field-label">Correo electronico</span>
-                                    <span className="custom__field-value">{email || 'jugador@email.com'}</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
 

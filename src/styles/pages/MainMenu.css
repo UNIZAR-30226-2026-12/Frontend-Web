@@ -81,15 +81,24 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.menu__user-details {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
 .menu__user-name {
   color: #fff;
   font-weight: 600;
   font-size: 0.95rem;
   letter-spacing: 0.3px;
+  line-height: 1;
 }
 
 .menu__user-elo {
-  display: block;
+  display: inline-flex;
+  align-items: center;
   font-size: 0.72rem;
   color: #f4c542;
   font-weight: 500;

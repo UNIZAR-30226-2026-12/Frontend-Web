@@ -167,6 +167,7 @@ function Friends({ onNavigate }: FriendsProps) {
 
     const onlineCount = friends.filter(friend => friend.status === 'online').length
     const playingCount = friends.filter(friend => friend.status === 'playing').length
+    const navigateToProfile = (id: number, name: string) => onNavigate('profile', { id, name })
 
     return (
         <div className="friends">
@@ -222,15 +223,25 @@ function Friends({ onNavigate }: FriendsProps) {
                                 <p className="friends__empty">No tienes amigos agregados todavia.</p>
                             ) : (
                                 friends.map(friend => (
-                                    <div key={friend.id} className="friend-card">
+                                    <div
+                                        key={friend.id}
+                                        className="friend-card friend-card--clickable"
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => navigateToProfile(friend.id, friend.name)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault()
+                                                navigateToProfile(friend.id, friend.name)
+                                            }
+                                        }}
+                                    >
                                         <div className="friend-card__info">
                                             <img className="friend-card__avatar" src={resolveUserAvatar(friend.avatar_url, friend.name)} alt={`Avatar de ${friend.name}`} />
                                             <div className="friend-card__details">
                                                 <div className="friend-card__name-row">
                                                     <span
                                                         className="friend-card__name"
-                                                        style={{ cursor: 'pointer' }}
-                                                        onClick={() => onNavigate('profile', { id: friend.id, name: friend.name })}
                                                     >
                                                         {friend.name}
                                                     </span>
@@ -246,7 +257,10 @@ function Friends({ onNavigate }: FriendsProps) {
                                         <div className="friend-card__actions">
                                             <button
                                                 className="friend-btn friend-btn--invite"
-                                                onClick={() => handleInvite(friend)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    handleInvite(friend)
+                                                }}
                                                 disabled={friend.status === 'offline'}
                                                 title="Invitar a jugar"
                                             >
@@ -254,7 +268,10 @@ function Friends({ onNavigate }: FriendsProps) {
                                             </button>
                                             <button
                                                 className="friend-btn friend-btn--remove"
-                                                onClick={() => handleRemove(friend.id)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    handleRemove(friend.id)
+                                                }}
                                                 title="Eliminar amigo"
                                             >
                                                 Eliminar
