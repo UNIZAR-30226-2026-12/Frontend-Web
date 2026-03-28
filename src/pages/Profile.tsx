@@ -114,7 +114,11 @@ function Profile({ onNavigate, userId, username }: ProfileProps) {
         setSettingsSuccess('')
 
         if (settingsForm.newPassword && settingsForm.newPassword !== settingsForm.confirmPassword) {
-            setSettingsError('Las contraseÃ±as nuevas no coinciden.')
+            setSettingsError('Las contraseñas nuevas no coinciden.')
+            return
+        }
+        if (settingsForm.newPassword && !settingsForm.currentPassword) {
+            setSettingsError('Debes indicar tu contraseña actual para cambiarla.')
             return
         }
 
@@ -124,7 +128,10 @@ function Profile({ onNavigate, userId, username }: ProfileProps) {
             const updates: any = {}
             if (settingsForm.username && settingsForm.username !== stats?.username) updates.username = settingsForm.username
             if (settingsForm.email) updates.email = settingsForm.email
-            if (settingsForm.newPassword) updates.password = settingsForm.newPassword
+            if (settingsForm.newPassword) {
+                updates.current_password = settingsForm.currentPassword
+                updates.new_password = settingsForm.newPassword
+            }
 
             if (Object.keys(updates).length === 0) {
                 setSettingsSuccess('No hay cambios que guardar.')
@@ -135,6 +142,12 @@ function Profile({ onNavigate, userId, username }: ProfileProps) {
             await api.users.updateMe(updates)
             setSettingsSuccess('Ajustes guardados correctamente.')
             setStats((prev) => (prev ? { ...prev, username: updates.username ?? prev.username } : prev))
+            setSettingsForm((prev) => ({
+                ...prev,
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: '',
+            }))
         } catch (e: any) {
             setSettingsError(e.message || 'Error al guardar ajustes.')
         } finally {
@@ -436,3 +449,4 @@ function Profile({ onNavigate, userId, username }: ProfileProps) {
 }
 
 export default Profile
+

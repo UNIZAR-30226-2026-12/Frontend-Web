@@ -106,7 +106,12 @@ export const api = {
             if (!response.ok) throw new Error('Error al obtener H2H');
             return response.json();
         },
-        updateMe: async (updates: { username?: string; email?: string }) => {
+        updateMe: async (updates: {
+            username?: string;
+            email?: string;
+            current_password?: string;
+            new_password?: string;
+        }) => {
             const response = await interceptedFetch(`${BASE_URL}/users/me`, {
                 method: 'PUT',
                 headers: getHeaders(),
