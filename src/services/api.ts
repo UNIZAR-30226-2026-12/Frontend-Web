@@ -1,4 +1,6 @@
-const BASE_URL = 'http://localhost:8081/api';
+﻿const BASE_URL = 'http://localhost:8081/api';
+export const API_BASE_URL = BASE_URL;
+export const WS_BASE_URL = BASE_URL.replace('http://', 'ws://').replace('/api', '');
 
 const getFallbackBaseUrl = (url: string): string | null => {
     if (url.includes('localhost:8081')) {
@@ -63,7 +65,7 @@ export const api = {
             });
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.detail || 'Error al iniciar sesión');
+                throw new Error(error.detail || 'Error al iniciar sesiÃ³n');
             }
             return response.json();
         },
@@ -96,7 +98,7 @@ export const api = {
             const response = await interceptedFetch(`${BASE_URL}/users/${userId}/stats`, {
                 headers: getHeaders(),
             });
-            if (!response.ok) throw new Error('Error al obtener estadísticas');
+            if (!response.ok) throw new Error('Error al obtener estadÃ­sticas');
             return response.json();
         },
         getH2H: async (userId: number) => {
@@ -133,7 +135,7 @@ export const api = {
                 headers: getHeaders(),
                 body: JSON.stringify(customization),
             });
-            if (!response.ok) throw new Error('Error al actualizar personalización');
+            if (!response.ok) throw new Error('Error al actualizar personalizaciÃ³n');
             return response.json();
         },
         updateElo: async (elo: number) => {
@@ -230,7 +232,6 @@ export const api = {
             return response.json();
         },
     },
-
     // Games
     games: {
         invite: async (friendId: number, mode: string) => {
@@ -242,5 +243,62 @@ export const api = {
             if (!response.ok) throw new Error('Error al enviar invitación');
             return response.json();
         },
+        acceptInvite: async (gameId: number | string) => {
+            const response = await interceptedFetch(`${BASE_URL}/games/${gameId}/accept`, {
+                method: 'POST',
+                headers: getHeaders(),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al aceptar invitación');
+            }
+            return response.json();
+        },
+        rejectInvite: async (gameId: number | string) => {
+            const response = await interceptedFetch(`${BASE_URL}/games/${gameId}/reject`, {
+                method: 'POST',
+                headers: getHeaders(),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al rechazar invitación');
+            }
+            return response.json();
+        },
+        leaveLobby: async (gameId: number | string) => {
+            const response = await interceptedFetch(`${BASE_URL}/games/${gameId}/leave`, {
+                method: 'POST',
+                headers: getHeaders(),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al abandonar sala');
+            }
+            return response.json();
+        },
+        getLobbyState: async (gameId: number | string) => {
+            const response = await interceptedFetch(`${BASE_URL}/games/${gameId}/state`, {
+                headers: getHeaders(),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al obtener estado de sala');
+            }
+            return response.json();
+        },
+        setReady: async (gameId: number | string, ready: boolean) => {
+            const response = await interceptedFetch(`${BASE_URL}/games/${gameId}/ready`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ ready }),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al actualizar estado de listo');
+            }
+            return response.json();
+        },
     }
 };
+
+

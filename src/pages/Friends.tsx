@@ -20,6 +20,21 @@ interface Friend {
     playersCount?: number
 }
 
+interface GameRequest {
+    id: number
+    lobby_id: number
+    name: string
+    avatar_url?: string
+    rr: number
+    gameMode: '1vs1' | '1vs1vs1vs1'
+    playersCount?: number
+}
+
+const normalizeMode = (rawMode: unknown): '1vs1' | '1vs1vs1vs1' => {
+    if (rawMode === '1vs1vs1vs1' || rawMode === '1v1v1v1') return '1vs1vs1vs1'
+    return '1vs1'
+}
+
 interface Toast {
     message: string
     type: 'success' | 'info' | 'error'
@@ -30,7 +45,7 @@ interface Toast {
 function Friends({ onNavigate }: FriendsProps) {
     const [friends, setFriends] = useState<Friend[]>([])
     const [requests, setRequests] = useState<Friend[]>([])
-    const [gameRequests, setGameRequests] = useState<any[]>([])
+    const [gameRequests, setGameRequests] = useState<GameRequest[]>([])
     const [newFriendName, setNewFriendName] = useState('')
     const [toast, setToast] = useState<Toast>({ message: '', type: 'info', visible: false })
     const [isGameModalOpen, setIsGameModalOpen] = useState(false)
@@ -43,7 +58,16 @@ function Friends({ onNavigate }: FriendsProps) {
             const data = await api.friends.list()
             setFriends(data.friends || [])
             setRequests(data.requests || [])
-            setGameRequests(data.gameRequests || [])
+            const normalizedGameRequests: GameRequest[] = (data.gameRequests || []).map((request: any) => ({
+                id: request.id,
+                lobby_id: request.lobby_id ?? request.lobbyId ?? request.id,
+                name: request.name,
+                avatar_url: request.avatar_url,
+                rr: request.rr,
+                gameMode: normalizeMode(request.gameMode ?? request.gamemode ?? request.mode),
+                playersCount: request.playersCount,
+            }))
+            setGameRequests(normalizedGameRequests)
         } catch (err) {
             showToast('Error al cargar amigos', 'error')
         }
@@ -51,10 +75,12 @@ function Friends({ onNavigate }: FriendsProps) {
 
     useEffect(() => {
         fetchFriends()
+        const refreshTimer = window.setInterval(fetchFriends, 5000)
         return () => {
             if (toastTimer.current) {
                 window.clearTimeout(toastTimer.current)
             }
+            window.clearInterval(refreshTimer)
         }
     }, [])
 
@@ -91,16 +117,29 @@ function Friends({ onNavigate }: FriendsProps) {
         }
     }
 
-    const handleAcceptGame = (request: Friend) => {
-        setGameRequests(gameRequests.filter(r => r.id !== request.id))
-        showToast(`Aceptando partida de ${request.name}. Preparando tablero...`, 'success')
-        onNavigate('waiting-room', { mode: request.gameMode })
+    const handleAcceptGame = async (request: GameRequest) => {
+        try {
+            const response = await api.games.acceptInvite(request.lobby_id)
+            setGameRequests(prev => prev.filter(r => r.lobby_id !== request.lobby_id))
+            showToast(`Aceptando partida de ${request.name}. Preparando tablero...`, 'success')
+            onNavigate('waiting-room', {
+                mode: request.gameMode,
+                gameId: response.game_id ?? request.lobby_id,
+                returnTo: 'friends',
+            })
+        } catch (err: any) {
+            showToast(err.message || 'No se pudo aceptar la invitacion', 'error')
+        }
     }
 
-    const handleRejectGame = (id: number) => {
-        const request = gameRequests.find(r => r.id === id)
-        setGameRequests(gameRequests.filter(r => r.id !== id))
-        if (request) showToast(`Invitacion de ${request.name} rechazada`, 'error')
+    const handleRejectGame = async (request: GameRequest) => {
+        try {
+            await api.games.rejectInvite(request.lobby_id)
+            setGameRequests(prev => prev.filter(r => r.lobby_id !== request.lobby_id))
+            showToast(`Invitacion de ${request.name} rechazada`, 'error')
+        } catch (err: any) {
+            showToast(err.message || 'No se pudo rechazar la invitacion', 'error')
+        }
     }
 
     const handleAddFriend = async (e: FormEvent<HTMLFormElement>) => {
@@ -136,10 +175,14 @@ function Friends({ onNavigate }: FriendsProps) {
     const handleConfirmInvite = async (mode: string) => {
         if (!selectedFriend) return
         try {
-            await api.games.invite(selectedFriend.id, mode)
+            const response = await api.games.invite(selectedFriend.id, mode)
             setIsGameModalOpen(false)
             showToast(`Invitacion enviada a ${selectedFriend.name}`, 'info')
-            onNavigate('waiting-room', { mode })
+            onNavigate('waiting-room', {
+                mode,
+                gameId: response.game_id,
+                returnTo: 'friends',
+            })
         } catch (err) {
             showToast('Error al invitar al amigo', 'error')
         }
@@ -335,7 +378,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                 <p className="friends__empty">Sin solicitudes de juego</p>
                             ) : (
                                 gameRequests.map(request => (
-                                    <div key={request.id} className="friend-card friend-card--game-request">
+                                    <div key={request.lobby_id} className="friend-card friend-card--game-request">
                                         <div className="friend-card__info">
                                             <img className="friend-card__avatar" src={resolveUserAvatar(request.avatar_url, request.name)} alt={`Avatar de ${request.name}`} />
                                             <div className="friend-card__details">
@@ -367,7 +410,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                             </button>
                                             <button
                                                 className="friend-btn friend-btn--reject"
-                                                onClick={() => handleRejectGame(request.id)}
+                                                onClick={() => handleRejectGame(request)}
                                                 title="Rechazar"
                                             >
                                                 X

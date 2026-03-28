@@ -1,8 +1,8 @@
 import '../styles/background.css'
 import '../styles/pages/GameBoard1v1.css'
-import { type CSSProperties, useEffect, useMemo, useState } from 'react'
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import Modal from '../components/Modal'
-import { api } from '../services/api'
+import { api, WS_BASE_URL } from '../services/api'
 import { PIECE_STYLES_1V1, decodePiecePreference } from '../config/pieceStyles'
 import { resolveUserAvatar } from '../config/avatarOptions'
 import fireBoard from '../assets/arenas/fireboard.png'
@@ -20,10 +20,14 @@ interface GameBoard1v1Props {
 }
 
 interface MatchData {
+    online?: boolean
+    gameId?: string
     playerName: string
     playerRR: number
+    playerAvatarUrl?: string
     opponentName: string
     opponentRR: number
+    opponentAvatarUrl?: string
 }
 
 type Piece = 'black' | 'white'
@@ -296,9 +300,15 @@ function canApplyBombKeepingBothColors(board: BoardCell[][], row: number, col: n
 }
 
 function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
+    const isOnlineMatch = Boolean(matchData?.online && matchData?.gameId)
     const [selectedPieceStyle1v1, setSelectedPieceStyle1v1] = useState(PIECE_STYLES_1V1[0])
     const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
     const [currentUserElo, setCurrentUserElo] = useState(PLAYER.rr)
+    const [localPiece, setLocalPiece] = useState<Piece>('black')
+    const [onlineStatusMessage, setOnlineStatusMessage] = useState('')
+    const [onlineValidMoves, setOnlineValidMoves] = useState<Set<string>>(new Set())
+    const [onlineWinner, setOnlineWinner] = useState<Piece | null>(null)
+    const onlineWsRef = useRef<WebSocket | null>(null)
     const [hasPersistedRank, setHasPersistedRank] = useState(false)
     const [hasPersistedHistory, setHasPersistedHistory] = useState(false)
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
@@ -310,15 +320,17 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         ...PLAYER,
         name: matchData?.playerName ?? PLAYER.name,
         rr: currentUserElo,
-        color: playerPieceColorName,
+        piece: localPiece,
+        color: localPiece === 'black' ? playerPieceColorName : opponentPieceColorName,
     }
     const opponentProfile = {
         ...OPPONENT,
         name: matchData?.opponentName ?? OPPONENT.name,
         rr: matchData?.opponentRR ?? OPPONENT.rr,
-        color: opponentPieceColorName,
+        piece: getOpponent(localPiece),
+        color: localPiece === 'black' ? opponentPieceColorName : playerPieceColorName,
     }
-    const playerNameByPiece = (piece: Piece) => (piece === 'black' ? playerProfile.name : opponentProfile.name)
+    const playerNameByPiece = (piece: Piece) => (piece === playerProfile.piece ? playerProfile.name : opponentProfile.name)
     const arenaTheme = getArenaFromElo(playerProfile.rr)
 
     const [board, setBoard] = useState<BoardCell[][]>(() => createInitialBoard())
@@ -331,7 +343,10 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
     const [gameOver, setGameOver] = useState(false)
     const [, setSystemMessage] = useState('Haz una jugada o usa una habilidad.')
-    const validMoves = useMemo(() => getValidMoves(board, currentTurn), [board, currentTurn])
+    const validMoves = useMemo(
+        () => (isOnlineMatch ? onlineValidMoves : getValidMoves(board, currentTurn)),
+        [board, currentTurn, isOnlineMatch, onlineValidMoves],
+    )
 
     const rawScore = useMemo(() => countPieces(board), [board])
     const penaltyScore = useMemo(
@@ -351,6 +366,18 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     )
 
     const winnerInfo = useMemo(() => {
+        if (isOnlineMatch && gameOver) {
+            if (!onlineWinner) {
+                return { winnerName: 'Empate', playerWon: false, isDraw: true }
+            }
+            const playerWon = onlineWinner === playerProfile.piece
+            return {
+                winnerName: playerWon ? playerProfile.name : opponentProfile.name,
+                playerWon,
+                isDraw: false,
+            }
+        }
+
         if (finalScore.black === finalScore.white) {
             return {
                 winnerName: 'Empate',
@@ -365,10 +392,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             playerWon: blackWins,
             isDraw: false,
         }
-    }, [finalScore.black, finalScore.white, opponentProfile.name, playerProfile.name])
+    }, [finalScore.black, finalScore.white, gameOver, isOnlineMatch, onlineWinner, opponentProfile.name, opponentProfile.piece, playerProfile.name, playerProfile.piece])
 
     const rrDelta = winnerInfo.isDraw ? 0 : winnerInfo.playerWon ? 30 : -30
     const abandonmentPenalty = -30
+    const postGameScreen = isOnlineMatch ? 'friends' : 'online-game'
 
     useEffect(() => {
         let isMounted = true
@@ -396,6 +424,84 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }, [])
 
     useEffect(() => {
+        if (!isOnlineMatch || !matchData?.gameId) {
+            return
+        }
+
+        const token = localStorage.getItem('token')
+        if (!token) {
+            setOnlineStatusMessage('No hay sesion activa')
+            return
+        }
+
+        const mapServerBoard = (serverBoard: Array<Array<Piece>>) =>
+            serverBoard.map(row => row.map(piece => ({ piece, fixed: false })))
+
+        const wsUrl = `${WS_BASE_URL}/ws/play/${encodeURIComponent(matchData.gameId)}?token=${encodeURIComponent(token)}`
+        const ws = new WebSocket(wsUrl)
+        onlineWsRef.current = ws
+
+        ws.onopen = () => setOnlineStatusMessage('Partida online conectada')
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data)
+
+                if (data?.type === 'player_assignment' && (data?.payload?.color === 'black' || data?.payload?.color === 'white')) {
+                    setLocalPiece(data.payload.color)
+                }
+
+                if (data?.type === 'waiting_for_player') {
+                    setOnlineStatusMessage('Esperando al rival...')
+                }
+
+                if (data?.type === 'game_state_update' && data?.payload) {
+                    const payload = data.payload
+                    if (Array.isArray(payload.board)) {
+                        setBoard(mapServerBoard(payload.board))
+                    }
+                    if (payload.current_player === 'black' || payload.current_player === 'white') {
+                        setCurrentTurn(payload.current_player)
+                    }
+                    setGameOver(Boolean(payload.game_over))
+                    setOnlineWinner(payload.winner === 'black' || payload.winner === 'white' ? payload.winner : null)
+                    setOnlineValidMoves(new Set(
+                        ((payload.valid_moves ?? []) as Array<{ row: number; col: number }>).map(move => `${move.row}-${move.col}`),
+                    ))
+                    if (payload.game_over) {
+                        setOnlineStatusMessage('Partida finalizada')
+                    } else if (payload.current_player === localPiece) {
+                        setOnlineStatusMessage('Tu turno')
+                    } else {
+                        setOnlineStatusMessage('Turno del rival')
+                    }
+                }
+
+                if (data?.type === 'error' && data?.payload?.message) {
+                    setOnlineStatusMessage(data.payload.message)
+                }
+            } catch {
+                // ignore malformed websocket payloads
+            }
+        }
+
+        ws.onclose = () => {
+            if (!gameOver) {
+                setOnlineStatusMessage('Conexion cerrada')
+            }
+        }
+
+        return () => {
+            ws.close()
+            onlineWsRef.current = null
+        }
+    }, [gameOver, isOnlineMatch, localPiece, matchData?.gameId])
+
+    useEffect(() => {
+        if (isOnlineMatch) {
+            return
+        }
+
         if (gameOver) {
             return
         }
@@ -424,9 +530,13 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             setSystemMessage(`${playerNameByPiece(currentTurn)} no tiene acciones. Turno perdido.`)
             setCurrentTurn(opponent)
         }
-    }, [board, currentTurn, gameOver, inventories, skipTurns])
+    }, [board, currentTurn, gameOver, inventories, isOnlineMatch, skipTurns])
 
     useEffect(() => {
+        if (isOnlineMatch) {
+            return
+        }
+
         if (!gameOver || hasPersistedRank) {
             return
         }
@@ -458,9 +568,13 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         return () => {
             cancelled = true
         }
-    }, [currentUserElo, gameOver, hasPersistedRank, rrDelta])
+    }, [currentUserElo, gameOver, hasPersistedRank, isOnlineMatch, rrDelta])
 
     useEffect(() => {
+        if (isOnlineMatch) {
+            return
+        }
+
         if (!gameOver || hasPersistedHistory) {
             return
         }
@@ -495,6 +609,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         finalScore.white,
         gameOver,
         hasPersistedHistory,
+        isOnlineMatch,
         opponentProfile.name,
         rrDelta,
         winnerInfo.isDraw,
@@ -770,6 +885,21 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             return
         }
 
+        if (isOnlineMatch) {
+            const key = `${row}-${col}`
+            if (!validMoves.has(key)) return
+            if (!onlineWsRef.current || onlineWsRef.current.readyState !== WebSocket.OPEN) return
+            if (currentTurn !== playerProfile.piece) return
+
+            onlineWsRef.current.send(JSON.stringify({
+                action: 'make_move',
+                player: playerProfile.piece,
+                row,
+                col,
+            }))
+            return
+        }
+
         if (pendingAbility) {
             resolveTargetAbility(row, col)
             return
@@ -808,7 +938,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
     const handleAttemptLeave = () => {
         if (gameOver) {
-            onNavigate('online-game')
+            onNavigate(postGameScreen)
             return
         }
 
@@ -817,6 +947,18 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
     const handleConfirmLeave = async () => {
         if (isAbandoning) {
+            return
+        }
+
+        if (isOnlineMatch) {
+            if (onlineWsRef.current && onlineWsRef.current.readyState === WebSocket.OPEN) {
+                onlineWsRef.current.send(JSON.stringify({
+                    action: 'surrender',
+                    player: playerProfile.piece,
+                }))
+            }
+            setShowLeaveConfirm(false)
+            onNavigate('friends')
             return
         }
 
@@ -844,13 +986,19 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
 
         setShowLeaveConfirm(false)
-        onNavigate('online-game')
+        onNavigate(postGameScreen)
     }
 
+    const turnColorLabel = currentTurn === playerProfile.piece ? playerProfile.color : opponentProfile.color
     const turnLabel =
         gameOver
             ? 'Partida finalizada'
-            : `${playerNameByPiece(currentTurn)} (${currentTurn === 'black' ? playerProfile.color : opponentProfile.color})`
+            : `${playerNameByPiece(currentTurn)} (${turnColorLabel})`
+
+    const playerScoreRaw = playerProfile.piece === 'black' ? rawScore.black : rawScore.white
+    const opponentScoreRaw = playerProfile.piece === 'black' ? rawScore.white : rawScore.black
+    const playerScoreFinal = playerProfile.piece === 'black' ? finalScore.black : finalScore.white
+    const opponentScoreFinal = playerProfile.piece === 'black' ? finalScore.white : finalScore.black
 
     return (
         <div className="duel">
@@ -879,18 +1027,24 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     <div className="duel__center-info">
                         <span className="duel__turn-label">Turno actual</span>
                         <span className="duel__turn-value">{turnLabel}</span>
-                        <div className="duel__timer">1 accion por turno</div>
+                        <div className="duel__timer">
+                            {isOnlineMatch ? (onlineStatusMessage || 'Partida online en curso') : '1 accion por turno'}
+                        </div>
                     </div>
                 </header>
 
                 <main className="duel__main">
-                    <aside className={`duel__panel ${currentTurn === 'black' && !gameOver ? 'duel__panel--active' : ''}`}>
+                    <aside className={`duel__panel ${currentTurn === playerProfile.piece && !gameOver ? 'duel__panel--active' : ''}`}>
                         <div className="duel__player-card">
-                            <img className="duel__avatar" src={resolveUserAvatar(currentUserAvatar, playerProfile.name)} alt={`Avatar de ${playerProfile.name}`} />
+                            <img
+                                className="duel__avatar"
+                                src={resolveUserAvatar(currentUserAvatar ?? matchData?.playerAvatarUrl, playerProfile.name)}
+                                alt={`Avatar de ${playerProfile.name}`}
+                            />
                             <div className="duel__player-data">
                                 <span className="duel__player-row">
                                     <span className="duel__name">{playerProfile.name}</span>
-                                    <span className="duel__player-score">{rawScore.black} pts</span>
+                                    <span className="duel__player-score">{playerScoreRaw} pts</span>
                                 </span>
                                 <span className="duel__meta">{playerProfile.color}</span>
                             </div>
@@ -899,14 +1053,14 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                             <>
                                 <h2 className="duel__panel-title">Habilidades</h2>
                                 <div className="duel__skills">
-                                    {inventories.black.length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
-                                    {inventories.black.map((ability, index) => (
+                                    {inventories[playerProfile.piece].length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
+                                    {inventories[playerProfile.piece].map((ability, index) => (
                                         <button
-                                            key={`${ability}-${index}-black`}
-                                            className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === 'black' ? 'duel__skill-card--active' : ''}`}
+                                            key={`${ability}-${index}-${playerProfile.piece}`}
+                                            className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === playerProfile.piece ? 'duel__skill-card--active' : ''}`}
                                             onClick={() => handleUseAbility(ability, index)}
                                             type="button"
-                                            disabled={gameOver || currentTurn !== 'black'}
+                                            disabled={gameOver || currentTurn !== playerProfile.piece}
                                         >
                                             <span className="duel__skill-icon">{ABILITY_META[ability].icon}</span>
                                             <div className="duel__skill-text">
@@ -934,7 +1088,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                 const key = `${row}-${col}`
                                 const cell = board[row][col]
                                 const hasQuestion = ENABLE_SPECIAL_MECHANICS_1V1 && questionCells.has(key)
-                                const isPlayable = !pendingAbility && validMoves.has(key) && !gameOver
+                                const canShowPlayableMove = !isOnlineMatch || currentTurn === playerProfile.piece
+                                const isPlayable = !pendingAbility && validMoves.has(key) && !gameOver && canShowPlayableMove
 
                                 return (
                                     <button
@@ -961,13 +1116,17 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         </div>
                     </section>
 
-                    <aside className={`duel__panel ${currentTurn === 'white' && !gameOver ? 'duel__panel--active' : ''}`}>
+                    <aside className={`duel__panel ${currentTurn === opponentProfile.piece && !gameOver ? 'duel__panel--active' : ''}`}>
                         <div className="duel__player-card">
-                            <img className="duel__avatar" src={resolveUserAvatar(undefined, opponentProfile.name)} alt={`Avatar de ${opponentProfile.name}`} />
+                            <img
+                                className="duel__avatar"
+                                src={resolveUserAvatar(matchData?.opponentAvatarUrl, opponentProfile.name)}
+                                alt={`Avatar de ${opponentProfile.name}`}
+                            />
                             <div className="duel__player-data">
                                 <span className="duel__player-row">
                                     <span className="duel__name">{opponentProfile.name}</span>
-                                    <span className="duel__player-score">{rawScore.white} pts</span>
+                                    <span className="duel__player-score">{opponentScoreRaw} pts</span>
                                 </span>
                                 <span className="duel__meta">{opponentProfile.color}</span>
                             </div>
@@ -976,14 +1135,14 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                             <>
                                 <h2 className="duel__panel-title">Habilidades</h2>
                                 <div className="duel__skills">
-                                    {inventories.white.length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
-                                    {inventories.white.map((ability, index) => (
+                                    {inventories[opponentProfile.piece].length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
+                                    {inventories[opponentProfile.piece].map((ability, index) => (
                                         <button
-                                            key={`${ability}-${index}-white`}
-                                            className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === 'white' ? 'duel__skill-card--active' : ''}`}
+                                            key={`${ability}-${index}-${opponentProfile.piece}`}
+                                            className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === opponentProfile.piece ? 'duel__skill-card--active' : ''}`}
                                             onClick={() => handleOpponentUseAbility(ability, index)}
                                             type="button"
-                                            disabled={gameOver || currentTurn !== 'white'}
+                                            disabled={gameOver || currentTurn !== opponentProfile.piece}
                                         >
                                             <span className="duel__skill-icon">{ABILITY_META[ability].icon}</span>
                                             <div className="duel__skill-text">
@@ -999,7 +1158,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 </main>
             </div>
 
-            <Modal isOpen={gameOver} onClose={() => onNavigate('online-game')} maxWidth="560px" showCloseButton={false}>
+            <Modal isOpen={gameOver} onClose={() => onNavigate(postGameScreen)} maxWidth="560px" showCloseButton={false}>
                 <div className="duel-result">
                     <div className="duel-result__top">
                         <h2 className="duel-result__title">Partida finalizada</h2>
@@ -1014,11 +1173,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     <div className="duel-result__scores">
                         <div className="duel-result__row">
                             <span>{playerProfile.name}</span>
-                            <span>{rawScore.black} - {penaltyScore.black} = {finalScore.black} pts</span>
+                            <span>{playerScoreRaw} - {(playerProfile.piece === 'black' ? penaltyScore.black : penaltyScore.white)} = {playerScoreFinal} pts</span>
                         </div>
                         <div className="duel-result__row">
                             <span>{opponentProfile.name}</span>
-                            <span>{rawScore.white} - {penaltyScore.white} = {finalScore.white} pts</span>
+                            <span>{opponentScoreRaw} - {(opponentProfile.piece === 'black' ? penaltyScore.black : penaltyScore.white)} = {opponentScoreFinal} pts</span>
                         </div>
                     </div>
 
@@ -1028,8 +1187,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         </p>
                     )}
 
-                    <button className="duel-result__back-btn" onClick={() => onNavigate('online-game')}>
-                        Volver al menú
+                    <button className="duel-result__back-btn" onClick={() => onNavigate(postGameScreen)}>
+                        {isOnlineMatch ? 'Volver a amigos' : 'Volver al menú'}
                     </button>
                 </div>
             </Modal>
