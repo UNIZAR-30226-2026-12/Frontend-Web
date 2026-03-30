@@ -57,6 +57,12 @@ const buildHistoryPreview = (history: GameHistory[], gameMode: WaitingRoomProps[
     return symbols
 }
 
+const normalizePlayers = (incomingPlayers: Player[]) =>
+    [...incomingPlayers].sort((a, b) => {
+        if (a.id !== b.id) return a.id - b.id
+        return a.username.localeCompare(b.username)
+    })
+
 function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoomProps) {
     const [players, setPlayers] = useState<Player[]>([])
     const [roomStatus, setRoomStatus] = useState<'waiting' | 'playing'>('waiting')
@@ -64,6 +70,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
     const [myUserId, setMyUserId] = useState<number | null>(null)
     const [toast, setToast] = useState<string>('')
     const [historyByPlayer, setHistoryByPlayer] = useState<Record<number, HistoryPreviewSymbol[]>>({})
+    const [isSocketReady, setIsSocketReady] = useState(false)
     const wsRef = useRef<WebSocket | null>(null)
     const loadedHistoryRef = useRef<Set<number>>(new Set())
     const playersRef = useRef<Player[]>([])
@@ -169,7 +176,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
         const loadState = async () => {
             try {
                 const state = await api.games.getLobbyState(gameId)
-                const nextPlayers: Player[] = state.players ?? []
+                const nextPlayers: Player[] = normalizePlayers(state.players ?? [])
                 setPlayers(nextPlayers)
                 setRoomStatus(state.status === 'playing' ? 'playing' : 'waiting')
                 nextPlayers.forEach(player => {
@@ -183,9 +190,12 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
             }
         }
         loadState()
-        const poll = window.setInterval(loadState, 1500)
+        const poll = window.setInterval(() => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return
+            loadState()
+        }, 1500)
         return () => window.clearInterval(poll)
-    }, [gameId, gameMode])
+    }, [gameId, gameMode, isSocketReady])
 
     useEffect(() => {
         if (!gameId) return
@@ -195,13 +205,14 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
         const wsUrl = `${WS_BASE_URL}/ws/play/${encodeURIComponent(String(gameId))}?token=${encodeURIComponent(token)}`
         const ws = new WebSocket(wsUrl)
         wsRef.current = ws
+        ws.onopen = () => setIsSocketReady(true)
 
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data)
 
                 if (data?.type === 'room_sync' && data?.payload) {
-                    const payloadPlayers: Player[] = data.payload.players ?? []
+                    const payloadPlayers: Player[] = normalizePlayers(data.payload.players ?? [])
                     setPlayers(payloadPlayers)
                     setRoomStatus(data.payload.status === 'playing' ? 'playing' : 'waiting')
                     payloadPlayers.forEach(player => fetchPlayerHistoryPreview(player.id))
@@ -225,6 +236,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
 
         ws.onclose = () => {
             wsRef.current = null
+            setIsSocketReady(false)
         }
 
         return () => {

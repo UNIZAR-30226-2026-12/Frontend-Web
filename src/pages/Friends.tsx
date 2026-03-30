@@ -246,8 +246,6 @@ function Friends({ onNavigate }: FriendsProps) {
         setNewFriendName('')
     }
 
-    const onlineCount = friends.filter(friend => friend.status === 'online').length
-    const playingCount = friends.filter(friend => friend.status === 'playing').length
     const groupInviteCandidates = friends.filter(friend => friend.id !== selectedFriend?.id)
     const navigateToProfile = (id: number, name: string) => onNavigate('profile', { id, name })
 
@@ -280,20 +278,6 @@ function Friends({ onNavigate }: FriendsProps) {
                         <button className="friends__primary-btn" onClick={handleOpenAddModal}>
                             Añadir amigo
                         </button>
-                    </div>
-                    <div className="friends__stats">
-                        <div className="friends__stat-card">
-                            <span className="friends__stat-label">Total</span>
-                            <strong className="friends__stat-value">{friends.length}</strong>
-                        </div>
-                        <div className="friends__stat-card">
-                            <span className="friends__stat-label">En linea</span>
-                            <strong className="friends__stat-value friends__stat-value--online">{onlineCount}</strong>
-                        </div>
-                        <div className="friends__stat-card">
-                            <span className="friends__stat-label">Jugando</span>
-                            <strong className="friends__stat-value friends__stat-value--playing">{playingCount}</strong>
-                        </div>
                     </div>
                 </header>
 

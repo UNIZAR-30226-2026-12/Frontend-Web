@@ -73,8 +73,10 @@ function App() {
           setNotification(data.payload.message)
         }
         if (data?.type === 'invite_response' && data?.payload?.message) {
-          setNotification(data.payload.message)
           const action = data?.payload?.action
+          if (action !== 'accepted') {
+            setNotification(data.payload.message)
+          }
           const gameId = data?.payload?.game_id
           if ((action === 'rejected' || action === 'left') && currentScreen === 'waiting-room' && waitingRoomData.gameId?.toString() === gameId?.toString()) {
             navigateTo('friends')
