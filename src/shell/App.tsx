@@ -33,9 +33,14 @@ interface MatchData {
 }
 
 interface MatchData4Players {
+  online?: boolean
+  gameId?: string
+  myUsername?: string
   players: Array<{
+    id?: number
     name: string
     rr: number
+    avatar_url?: string
   }>
 }
 

@@ -377,6 +377,18 @@
     border-left-color: #94a3b8;
 }
 
+.history-card--win {
+    border-left-color: #4ade80;
+}
+
+.history-card--loss {
+    border-left-color: #f87171;
+}
+
+.history-card--draw {
+    border-left-color: #94a3b8;
+}
+
 .history-card__header {
     display: flex;
     justify-content: space-between;
@@ -395,6 +407,18 @@
 
 .history-card__result--perdida {
     color: #f87171;
+}
+
+.history-card__result--win {
+    color: #4ade80;
+}
+
+.history-card__result--loss {
+    color: #f87171;
+}
+
+.history-card__result--draw {
+    color: #94a3b8;
 }
 
 .history-card__date {

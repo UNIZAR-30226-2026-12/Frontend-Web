@@ -49,8 +49,10 @@ function Friends({ onNavigate }: FriendsProps) {
     const [newFriendName, setNewFriendName] = useState('')
     const [toast, setToast] = useState<Toast>({ message: '', type: 'info', visible: false })
     const [isGameModalOpen, setIsGameModalOpen] = useState(false)
+    const [isGroupInviteModalOpen, setIsGroupInviteModalOpen] = useState(false)
     const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false)
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null)
+    const [selectedExtraFriends, setSelectedExtraFriends] = useState<number[]>([])
     const toastTimer = useRef<number | null>(null)
 
     const fetchFriends = async () => {
@@ -172,19 +174,55 @@ function Friends({ onNavigate }: FriendsProps) {
         setIsGameModalOpen(true)
     }
 
+    const sendInvite = async (mode: string, friendIds: number[]) => {
+        const response = await api.games.invite(friendIds, mode)
+        showToast(`Invitacion enviada`, 'info')
+        onNavigate('waiting-room', {
+            mode,
+            gameId: response.game_id,
+            returnTo: 'friends',
+        })
+    }
+
     const handleConfirmInvite = async (mode: string) => {
         if (!selectedFriend) return
-        try {
-            const response = await api.games.invite(selectedFriend.id, mode)
+
+        if (mode === '1vs1vs1vs1') {
             setIsGameModalOpen(false)
-            showToast(`Invitacion enviada a ${selectedFriend.name}`, 'info')
-            onNavigate('waiting-room', {
-                mode,
-                gameId: response.game_id,
-                returnTo: 'friends',
-            })
-        } catch (err) {
+            setSelectedExtraFriends([])
+            setIsGroupInviteModalOpen(true)
+            return
+        }
+
+        try {
+            setIsGameModalOpen(false)
+            await sendInvite(mode, [selectedFriend.id])
+        } catch {
             showToast('Error al invitar al amigo', 'error')
+        }
+    }
+
+    const handleToggleExtraFriend = (friendId: number) => {
+        setSelectedExtraFriends((prev) => {
+            if (prev.includes(friendId)) return prev.filter((id) => id !== friendId)
+            if (prev.length >= 2) return prev
+            return [...prev, friendId]
+        })
+    }
+
+    const handleConfirmGroupInvite = async () => {
+        if (!selectedFriend) return
+        if (selectedExtraFriends.length !== 2) {
+            showToast('Selecciona exactamente 2 amigos mas', 'error')
+            return
+        }
+
+        try {
+            const friendIds = [selectedFriend.id, ...selectedExtraFriends]
+            await sendInvite('1vs1vs1vs1', friendIds)
+            setIsGroupInviteModalOpen(false)
+        } catch {
+            showToast('Error al enviar invitaciones', 'error')
         }
     }
 
@@ -210,6 +248,7 @@ function Friends({ onNavigate }: FriendsProps) {
 
     const onlineCount = friends.filter(friend => friend.status === 'online').length
     const playingCount = friends.filter(friend => friend.status === 'playing').length
+    const groupInviteCandidates = friends.filter(friend => friend.id !== selectedFriend?.id)
     const navigateToProfile = (id: number, name: string) => onNavigate('profile', { id, name })
 
     return (
@@ -290,11 +329,6 @@ function Friends({ onNavigate }: FriendsProps) {
                                                     </span>
                                                     <span className="friend-card__rr">{friend.rr} RR</span>
                                                 </div>
-                                                <span className={`friend-card__status friend-card__status--${friend.status}`}>
-                                                    {friend.status === 'online' && 'En linea'}
-                                                    {friend.status === 'offline' && 'Desconectado'}
-                                                    {friend.status === 'playing' && 'Jugando'}
-                                                </span>
                                             </div>
                                         </div>
                                         <div className="friend-card__actions">
@@ -464,6 +498,58 @@ function Friends({ onNavigate }: FriendsProps) {
                 subtitle={`Que modo de juego quieres jugar contra ${selectedFriend?.name}?`}
                 onSelectMode={handleConfirmInvite}
             />
+
+            <Modal
+                isOpen={isGroupInviteModalOpen}
+                onClose={() => {
+                    setIsGroupInviteModalOpen(false)
+                    setSelectedExtraFriends([])
+                }}
+                maxWidth="560px"
+            >
+                <div className="friends-group-invite">
+                    <h3 className="friends-group-invite__title">Selecciona 2 amigos extra</h3>
+                    <p className="friends-group-invite__subtitle">
+                        Para iniciar 1vs1vs1vs1 con {selectedFriend?.name}, elige dos jugadores mas.
+                    </p>
+
+                    <div className="friends-group-invite__list">
+                        {groupInviteCandidates.length === 0 && (
+                            <p className="friends__empty">No hay amigos disponibles para completar la sala.</p>
+                        )}
+                        {groupInviteCandidates.map((friend) => {
+                            const isSelected = selectedExtraFriends.includes(friend.id)
+                            const isDisabled = !isSelected && selectedExtraFriends.length >= 2
+                            return (
+                                <button
+                                    key={friend.id}
+                                    type="button"
+                                    className={`friends-group-invite__item ${isSelected ? 'friends-group-invite__item--selected' : ''}`}
+                                    disabled={isDisabled}
+                                    onClick={() => handleToggleExtraFriend(friend.id)}
+                                >
+                                    <img
+                                        className="friends-group-invite__avatar"
+                                        src={resolveUserAvatar(friend.avatar_url, friend.name)}
+                                        alt={`Avatar de ${friend.name}`}
+                                    />
+                                    <span className="friends-group-invite__name">{friend.name}</span>
+                                    <span className="friends-group-invite__rr">{friend.rr} RR</span>
+                                </button>
+                            )
+                        })}
+                    </div>
+
+                    <button
+                        type="button"
+                        className="friends__add-btn"
+                        onClick={handleConfirmGroupInvite}
+                        disabled={selectedExtraFriends.length !== 2}
+                    >
+                        Invitar y crear sala
+                    </button>
+                </div>
+            </Modal>
         </div>
     )
 }

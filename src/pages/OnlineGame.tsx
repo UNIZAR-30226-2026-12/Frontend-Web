@@ -24,9 +24,27 @@ interface GameHistory {
     id: number
     date: string
     mode: string
-    result: 'Ganada' | 'Perdida' | 'Empate'
+    result: 'Ganada' | 'Perdida' | 'Empate' | '1º' | '2º' | '3º' | '4º'
     score: string
     rankChange: string
+}
+
+const normalizeOrdinal = (value: string) =>
+    value.replace('Âº', 'º').trim()
+
+const getHistoryTone = (entry: GameHistory): 'win' | 'loss' | 'draw' => {
+    const mode = entry.mode === '1v1v1v1' ? '1vs1vs1vs1' : entry.mode
+    const normalizedResult = normalizeOrdinal(entry.result)
+
+    if (mode === '1vs1vs1vs1') {
+        if (normalizedResult === '1º') return 'win'
+        if (normalizedResult === '4º') return 'loss'
+        return 'draw'
+    }
+
+    if (normalizedResult === 'Ganada') return 'win'
+    if (normalizedResult === 'Perdida') return 'loss'
+    return 'draw'
 }
 
 const MOCK_PUBLIC_GAMES: GameSession[] = [
@@ -200,9 +218,9 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                                 <p className="online__empty">No has jugado partidas todavia.</p>
                             ) : (
                                 history.map(item => (
-                                    <div key={item.id} className={`history-card history-card--${item.result.toLowerCase()}`}>
+                                    <div key={item.id} className={`history-card history-card--${getHistoryTone(item)}`}>
                                         <div className="history-card__header">
-                                            <span className={`history-card__result history-card__result--${item.result.toLowerCase()}`}>
+                                            <span className={`history-card__result history-card__result--${getHistoryTone(item)}`}>
                                                 {item.result}
                                             </span>
                                             <span className="history-card__date">{item.date}</span>

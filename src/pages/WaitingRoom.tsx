@@ -15,7 +15,7 @@ interface Player {
 interface GameHistory {
     id: number
     mode: string
-    result: 'Ganada' | 'Perdida' | 'Empate'
+    result: 'Ganada' | 'Perdida' | 'Empate' | '1º' | '2º' | '3º' | '4º'
     score: string
 }
 
@@ -26,12 +26,12 @@ interface WaitingRoomProps {
     onNavigate: (screen: string, data?: any) => void
 }
 
-type HistoryPreviewSymbol = 'V' | 'D' | 'E' | '-'
+type HistoryPreviewSymbol = 'V' | 'D' | 'E' | '1º' | '2º' | '3º' | '4º' | '-'
 
 const EMPTY_HISTORY_PREVIEW: HistoryPreviewSymbol[] = ['-', '-', '-', '-', '-']
 
 const buildHistoryPreview = (history: GameHistory[], gameMode: WaitingRoomProps['gameMode']): HistoryPreviewSymbol[] => {
-    const acceptedModes = gameMode === '1vs1' ? new Set(['1vs1', '1v1']) : new Set(['1vs1vs1vs1'])
+    const acceptedModes = gameMode === '1vs1' ? new Set(['1vs1', '1v1']) : new Set(['1vs1vs1vs1', '1v1v1v1'])
     const filteredHistory = history.filter(item =>
         acceptedModes.has(item.mode),
     )
@@ -39,9 +39,17 @@ const buildHistoryPreview = (history: GameHistory[], gameMode: WaitingRoomProps[
     const recentSymbols: HistoryPreviewSymbol[] = filteredHistory
         .slice(0, 5)
         .map((item) => {
-            if (item.result === 'Ganada') return 'V'
-            if (item.result === 'Perdida') return 'D'
-            return 'E'
+            if (gameMode === '1vs1') {
+                if (item.result === 'Ganada') return 'V'
+                if (item.result === 'Perdida') return 'D'
+                return 'E'
+            }
+
+            const placement = item.result as HistoryPreviewSymbol
+            if (placement === '1º' || placement === '2º' || placement === '3º' || placement === '4º') {
+                return placement
+            }
+            return '-'
         })
 
     const symbols = [...recentSymbols].reverse()
@@ -111,6 +119,25 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
             (myUserId !== null && player.id === myUserId) || (myUsername && player.username === myUsername),
         )
         if (!me && myUserId === null && !myUsername) {
+            return
+        }
+
+        if (gameMode === '1vs1vs1vs1') {
+            if (allPlayers.length < 4) return
+            hasNavigatedToGameRef.current = true
+            onNavigate('game-1v1v1v1', {
+                matchData: {
+                    online: true,
+                    gameId: String(gameId),
+                    myUsername: me?.username,
+                    players: allPlayers.map((player) => ({
+                        id: player.id,
+                        name: player.username,
+                        rr: player.rr ?? 0,
+                        avatar_url: player.avatar_url,
+                    })),
+                },
+            })
             return
         }
 
@@ -254,14 +281,20 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
     return (
         <div className="waiting-room">
             <div className="home__bg">
-                <span className="home__chip home__chip--1">O</span>
-                <span className="home__chip home__chip--2">O</span>
-                <span className="home__chip home__chip--3">R</span>
-                <span className="home__chip home__chip--4">B</span>
-                <span className="home__chip home__chip--5">G</span>
-                <span className="home__chip home__chip--6">Y</span>
-                <span className="home__chip home__chip--7">P</span>
-                <span className="home__chip home__chip--8">O</span>
+                <span className="home__chip home__chip--1">⚫</span>
+                <span className="home__chip home__chip--2">⚪</span>
+                <span className="home__chip home__chip--3">🔴</span>
+                <span className="home__chip home__chip--4">🔵</span>
+                <span className="home__chip home__chip--5">🟢</span>
+                <span className="home__chip home__chip--6">🟡</span>
+                <span className="home__chip home__chip--7">🟣</span>
+                <span className="home__chip home__chip--8">🟠</span>
+                <span className="home__chip home__chip--9">⚫</span>
+                <span className="home__chip home__chip--10">⚪</span>
+                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
+                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
+                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
+                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
             </div>
 
             <div className="waiting-room__container">
@@ -313,9 +346,9 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
                                             {historyPreview.map((result, resultIndex) => (
                                                 <span
                                                     key={`${player.id}-streak-${resultIndex}`}
-                                                    className={`player-slot__streak-item ${result === 'V'
+                                                    className={`player-slot__streak-item ${result === 'V' || result === '1º'
                                                         ? 'player-slot__streak-item--win'
-                                                        : result === 'D'
+                                                        : result === 'D' || result === '4º'
                                                             ? 'player-slot__streak-item--loss'
                                                             : 'player-slot__streak-item--empty'}`}
                                                 >

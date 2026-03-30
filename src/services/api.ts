@@ -234,11 +234,11 @@ export const api = {
     },
     // Games
     games: {
-        invite: async (friendId: number, mode: string) => {
+        invite: async (friendIds: number[], mode: string) => {
             const response = await interceptedFetch(`${BASE_URL}/games/invite`, {
                 method: 'POST',
                 headers: getHeaders(),
-                body: JSON.stringify({ friend_id: friendId, mode }),
+                body: JSON.stringify({ friend_ids: friendIds, mode }),
             });
             if (!response.ok) throw new Error('Error al enviar invitación');
             return response.json();
