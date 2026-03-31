@@ -231,6 +231,39 @@ export const api = {
             if (!response.ok) throw new Error('Error al eliminar amigo');
             return response.json();
         },
+        getChat: async (userId: number) => {
+            const response = await interceptedFetch(`${BASE_URL}/friends/${userId}/chat`, {
+                headers: getHeaders(),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al obtener chat');
+            }
+            return response.json();
+        },
+        sendChatMessage: async (userId: number, message: string) => {
+            const response = await interceptedFetch(`${BASE_URL}/friends/${userId}/chat`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ message }),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al enviar mensaje');
+            }
+            return response.json();
+        },
+        markChatRead: async (userId: number) => {
+            const response = await interceptedFetch(`${BASE_URL}/friends/${userId}/chat/read`, {
+                method: 'POST',
+                headers: getHeaders(),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al marcar mensajes como leidos');
+            }
+            return response.json();
+        },
     },
     // Games
     games: {

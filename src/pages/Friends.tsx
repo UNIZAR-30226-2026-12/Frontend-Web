@@ -18,6 +18,7 @@ interface Friend {
     rr: number
     gameMode?: '1vs1' | '1vs1vs1vs1'
     playersCount?: number
+    unread_count?: number
 }
 
 interface GameRequest {
@@ -41,6 +42,17 @@ interface Toast {
     visible: boolean
 }
 
+interface ChatMessage {
+    id: number
+    sender_id: number
+    sender_name: string
+    receiver_id: number
+    receiver_name: string
+    message: string
+    is_read: boolean
+    created_at: string
+}
+
 
 function Friends({ onNavigate }: FriendsProps) {
     const [friends, setFriends] = useState<Friend[]>([])
@@ -53,12 +65,23 @@ function Friends({ onNavigate }: FriendsProps) {
     const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false)
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null)
     const [selectedExtraFriends, setSelectedExtraFriends] = useState<number[]>([])
+    const [isChatModalOpen, setIsChatModalOpen] = useState(false)
+    const [activeChatFriend, setActiveChatFriend] = useState<Friend | null>(null)
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+    const [chatInput, setChatInput] = useState('')
+    const [chatLoading, setChatLoading] = useState(false)
+    const [chatSending, setChatSending] = useState(false)
     const toastTimer = useRef<number | null>(null)
+    const chatListRef = useRef<HTMLDivElement | null>(null)
 
     const fetchFriends = async () => {
         try {
             const data = await api.friends.list()
-            setFriends(data.friends || [])
+            const normalizedFriends: Friend[] = (data.friends || []).map((friend: any) => ({
+                ...friend,
+                unread_count: Number(friend.unread_count || 0),
+            }))
+            setFriends(normalizedFriends)
             setRequests(data.requests || [])
             const normalizedGameRequests: GameRequest[] = (data.gameRequests || []).map((request: any) => ({
                 id: request.id,
@@ -75,6 +98,30 @@ function Friends({ onNavigate }: FriendsProps) {
         }
     }
 
+    const fetchChatMessages = async (
+        friendId: number,
+        options: { markAsRead?: boolean; silent?: boolean } = {}
+    ) => {
+        const { markAsRead = true, silent = false } = options
+        if (!silent) setChatLoading(true)
+        try {
+            const response = await api.friends.getChat(friendId)
+            setChatMessages(response.messages || [])
+            if (markAsRead) {
+                await api.friends.markChatRead(friendId)
+                setFriends((prev) =>
+                    prev.map((friend) =>
+                        friend.id === friendId ? { ...friend, unread_count: 0 } : friend
+                    )
+                )
+            }
+        } catch (err: any) {
+            if (!silent) showToast(err.message || 'Error al cargar chat', 'error')
+        } finally {
+            if (!silent) setChatLoading(false)
+        }
+    }
+
     useEffect(() => {
         fetchFriends()
         const refreshTimer = window.setInterval(fetchFriends, 5000)
@@ -85,6 +132,21 @@ function Friends({ onNavigate }: FriendsProps) {
             window.clearInterval(refreshTimer)
         }
     }, [])
+
+    useEffect(() => {
+        if (!isChatModalOpen || !activeChatFriend) return
+
+        const pollTimer = window.setInterval(() => {
+            fetchChatMessages(activeChatFriend.id, { markAsRead: true, silent: true })
+        }, 3000)
+
+        return () => window.clearInterval(pollTimer)
+    }, [isChatModalOpen, activeChatFriend])
+
+    useEffect(() => {
+        if (!isChatModalOpen || !chatListRef.current) return
+        chatListRef.current.scrollTop = chatListRef.current.scrollHeight
+    }, [chatMessages, isChatModalOpen])
 
     const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
         if (toastTimer.current) window.clearTimeout(toastTimer.current)
@@ -237,6 +299,37 @@ function Friends({ onNavigate }: FriendsProps) {
         }
     }
 
+    const handleOpenChat = async (friend: Friend) => {
+        setActiveChatFriend(friend)
+        setIsChatModalOpen(true)
+        setChatInput('')
+        await fetchChatMessages(friend.id, { markAsRead: true, silent: false })
+    }
+
+    const handleCloseChat = () => {
+        setIsChatModalOpen(false)
+        setActiveChatFriend(null)
+        setChatMessages([])
+        setChatInput('')
+    }
+
+    const handleSendChatMessage = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        const text = chatInput.trim()
+        if (!activeChatFriend || !text || chatSending) return
+
+        try {
+            setChatSending(true)
+            await api.friends.sendChatMessage(activeChatFriend.id, text)
+            setChatInput('')
+            await fetchChatMessages(activeChatFriend.id, { markAsRead: false, silent: true })
+        } catch (err: any) {
+            showToast(err.message || 'No se pudo enviar el mensaje', 'error')
+        } finally {
+            setChatSending(false)
+        }
+    }
+
     const handleOpenAddModal = () => {
         setIsAddFriendModalOpen(true)
     }
@@ -326,6 +419,21 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 title="Invitar a jugar"
                                             >
                                                 Duelo
+                                            </button>
+                                            <button
+                                                className="friend-btn friend-btn--chat"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    handleOpenChat(friend)
+                                                }}
+                                                title={`Chatear con ${friend.name}`}
+                                            >
+                                                Chat
+                                                {!!friend.unread_count && friend.unread_count > 0 && (
+                                                    <span className="friend-btn__badge">
+                                                        {friend.unread_count > 99 ? '99+' : friend.unread_count}
+                                                    </span>
+                                                )}
                                             </button>
                                             <button
                                                 className="friend-btn friend-btn--remove"
@@ -532,6 +640,61 @@ function Friends({ onNavigate }: FriendsProps) {
                     >
                         Invitar y crear sala
                     </button>
+                </div>
+            </Modal>
+
+            <Modal isOpen={isChatModalOpen} onClose={handleCloseChat} maxWidth="680px">
+                <div className="friends-chat">
+                    <div className="friends-chat__header">
+                        <img
+                            className="friends-chat__avatar"
+                            src={resolveUserAvatar(activeChatFriend?.avatar_url, activeChatFriend?.name || 'Amigo')}
+                            alt={`Avatar de ${activeChatFriend?.name || 'amigo'}`}
+                        />
+                        <div className="friends-chat__header-info">
+                            <h3 className="friends-chat__title">Chat con {activeChatFriend?.name}</h3>
+                            <p className="friends-chat__subtitle">Mensajes privados entre amigos</p>
+                        </div>
+                    </div>
+
+                    <div className="friends-chat__messages" ref={chatListRef}>
+                        {chatLoading ? (
+                            <p className="friends__empty">Cargando mensajes...</p>
+                        ) : chatMessages.length === 0 ? (
+                            <p className="friends__empty">No hay mensajes aun. Empieza la conversacion.</p>
+                        ) : (
+                            chatMessages.map((msg) => {
+                                const isMine = msg.sender_id !== activeChatFriend?.id
+                                const time = new Date(msg.created_at).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })
+                                return (
+                                    <div
+                                        key={msg.id}
+                                        className={`friends-chat__message ${isMine ? 'friends-chat__message--mine' : 'friends-chat__message--theirs'}`}
+                                    >
+                                        <p className="friends-chat__bubble">{msg.message}</p>
+                                        <span className="friends-chat__time">{time}</span>
+                                    </div>
+                                )
+                            })
+                        )}
+                    </div>
+
+                    <form className="friends-chat__composer" onSubmit={handleSendChatMessage}>
+                        <input
+                            type="text"
+                            className="friends-chat__input"
+                            placeholder="Escribe un mensaje..."
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            maxLength={1000}
+                        />
+                        <button type="submit" className="friends-chat__send-btn" disabled={chatSending || !chatInput.trim()}>
+                            {chatSending ? 'Enviando...' : 'Enviar'}
+                        </button>
+                    </form>
                 </div>
             </Modal>
         </div>
