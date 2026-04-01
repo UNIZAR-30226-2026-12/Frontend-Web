@@ -35,9 +35,7 @@ export const resolveUserAvatar = (avatarUrl?: string | null, fallbackName = 'Jug
     }
 
     if (avatarUrl.startsWith('/uploads/')) {
-        const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-        const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
-        return `${protocol}//${hostname}:8081${avatarUrl}`;
+        return avatarUrl;
     }
 
     return getAvatarFromSeed(fallbackName)

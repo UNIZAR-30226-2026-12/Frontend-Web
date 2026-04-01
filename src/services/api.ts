@@ -1,10 +1,15 @@
 const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
-const defaultUrl = `${protocol}//${hostname}:8081/api`;
+const port = typeof window !== 'undefined' ? window.location.port : '';
 
-const BASE_URL = import.meta.env.VITE_API_URL || defaultUrl;
-export const API_BASE_URL = BASE_URL;
-export const WS_BASE_URL = BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://').replace('/api', '');
+// BASE_URL relativo para que Nginx actúe como proxy inverso
+export const API_BASE_URL = '/api';
+const BASE_URL = API_BASE_URL;
+
+// Lógica de WebSockets autodetectada según el protocolo actual
+const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+const portSuffix = port ? `:${port}` : '';
+export const WS_BASE_URL = `${wsProtocol}//${hostname}${portSuffix}`;
 
 const getFallbackBaseUrl = (url: string): string | null => {
     if (url.includes(':8081')) {
