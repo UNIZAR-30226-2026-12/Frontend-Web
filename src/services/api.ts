@@ -1,13 +1,17 @@
-﻿const BASE_URL = 'http://localhost:8081/api';
+const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
+const defaultUrl = `${protocol}//${hostname}:8081/api`;
+
+const BASE_URL = import.meta.env.VITE_API_URL || defaultUrl;
 export const API_BASE_URL = BASE_URL;
-export const WS_BASE_URL = BASE_URL.replace('http://', 'ws://').replace('/api', '');
+export const WS_BASE_URL = BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://').replace('/api', '');
 
 const getFallbackBaseUrl = (url: string): string | null => {
-    if (url.includes('localhost:8081')) {
-        return url.replace('localhost:8081', 'localhost:8000');
+    if (url.includes(':8081')) {
+        return url.replace(':8081', ':8000');
     }
-    if (url.includes('localhost:8000')) {
-        return url.replace('localhost:8000', 'localhost:8081');
+    if (url.includes(':8000')) {
+        return url.replace(':8000', ':8081');
     }
     return null;
 };
