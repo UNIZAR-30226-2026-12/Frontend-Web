@@ -1,10 +1,10 @@
 # Etapa de construcción
-FROM node:18-alpine as build
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# Copiar archivos de dependencias
-COPY package*.json ./
+# Copiar package.json (sin lockfile: el lockfile es de Windows y no es compatible con Linux)
+COPY package.json ./
 
 # Instalar dependencias
 RUN npm install
