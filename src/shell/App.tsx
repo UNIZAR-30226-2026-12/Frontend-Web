@@ -45,13 +45,13 @@ interface MatchData4Players {
 }
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState('home')
-  const [activeGameMode, setActiveGameMode] = useState<'1vs1' | '1vs1vs1vs1'>('1vs1')
-  const [waitingRoomReturnScreen, setWaitingRoomReturnScreen] = useState('online-game')
-  const [waitingRoomData, setWaitingRoomData] = useState<WaitingRoomData>({})
-  const [activeMatchData, setActiveMatchData] = useState<MatchData | null>(null)
-  const [activeMatchData4Players, setActiveMatchData4Players] = useState<MatchData4Players | null>(null)
-  const [profileData, setProfileData] = useState<{ userId?: number, username?: string }>({})
+  const [currentScreen, setCurrentScreen] = useState(() => localStorage.getItem('currentScreen') || 'home')
+  const [activeGameMode, setActiveGameMode] = useState<'1vs1' | '1vs1vs1vs1'>(() => (localStorage.getItem('activeGameMode') as any) || '1vs1')
+  const [waitingRoomReturnScreen, setWaitingRoomReturnScreen] = useState(() => localStorage.getItem('waitingRoomReturnScreen') || 'online-game')
+  const [waitingRoomData, setWaitingRoomData] = useState<WaitingRoomData>(() => JSON.parse(localStorage.getItem('waitingRoomData') || '{}'))
+  const [activeMatchData, setActiveMatchData] = useState<MatchData | null>(() => JSON.parse(localStorage.getItem('activeMatchData') || 'null'))
+  const [activeMatchData4Players, setActiveMatchData4Players] = useState<MatchData4Players | null>(() => JSON.parse(localStorage.getItem('activeMatchData4Players') || 'null'))
+  const [profileData, setProfileData] = useState<{ userId?: number, username?: string }>(() => JSON.parse(localStorage.getItem('profileData') || '{}'))
   const [notification, setNotification] = useState<string | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
 
@@ -96,6 +96,17 @@ function App() {
       wsRef.current = null
     }
   }, [currentScreen, waitingRoomData.gameId, wsNotificationsUrl])
+
+  // Persistencia de estados críticos en cada cambio
+  useEffect(() => {
+    localStorage.setItem('currentScreen', currentScreen)
+    localStorage.setItem('activeGameMode', activeGameMode)
+    localStorage.setItem('waitingRoomReturnScreen', waitingRoomReturnScreen)
+    localStorage.setItem('waitingRoomData', JSON.stringify(waitingRoomData))
+    localStorage.setItem('activeMatchData', JSON.stringify(activeMatchData))
+    localStorage.setItem('activeMatchData4Players', JSON.stringify(activeMatchData4Players))
+    localStorage.setItem('profileData', JSON.stringify(profileData))
+  }, [currentScreen, activeGameMode, waitingRoomReturnScreen, waitingRoomData, activeMatchData, activeMatchData4Players, profileData])
 
   const navigateTo = (screen: string, data?: any) => {
     if (screen === 'waiting-room') {
