@@ -2,6 +2,8 @@ import '../styles/background.css'
 import '../styles/pages/GameBoard1v1.css'
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import Modal from '../components/Modal'
+import InGameChat, { type ChatMessage } from '../components/InGameChat'
+import '../styles/components/InGameChat.css'
 import { api, WS_BASE_URL } from '../services/api'
 import { PIECE_STYLES_1V1, decodePiecePreference } from '../config/pieceStyles'
 import { resolveUserAvatar } from '../config/avatarOptions'
@@ -314,6 +316,14 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [hasPersistedHistory, setHasPersistedHistory] = useState(false)
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
     const [isAbandoning, setIsAbandoning] = useState(false)
+    const [showPauseConfirm, setShowPauseConfirm] = useState(false)
+    const [pausedUsernames, setPausedUsernames] = useState<string[]>([])
+    const [myUsername, setMyUsername] = useState(matchData?.playerName ?? '')
+
+    // Chat states
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+    const [isChatOpen, setIsChatOpen] = useState(false)
+    const [unreadCount, setUnreadCount] = useState(0)
     const playerPieceColorName = selectedPieceStyle1v1.sideAName
     const opponentPieceColorName = selectedPieceStyle1v1.sideBName
 
@@ -402,7 +412,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     useEffect(() => {
         let isMounted = true
 
-        const loadPieceStyle = async () => {
+        const loadProfile = async () => {
             try {
                 const me = await api.users.getMe()
                 if (!isMounted) return
@@ -410,6 +420,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 setSelectedPieceStyle1v1(PIECE_STYLES_1V1[duelIndex] ?? PIECE_STYLES_1V1[0])
                 setCurrentUserAvatar(me.avatar_url)
                 setCurrentUserElo(me.elo ?? PLAYER.rr)
+                setMyUsername(me.username)
             } catch {
                 if (!isMounted) return
                 setSelectedPieceStyle1v1(PIECE_STYLES_1V1[0])
@@ -418,7 +429,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             }
         }
 
-        loadPieceStyle()
+        loadProfile()
         return () => {
             isMounted = false
         }
@@ -476,10 +487,23 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     } else {
                         setOnlineStatusMessage('Turno del rival')
                     }
+
+                    if (Array.isArray(payload.paused_usernames)) {
+                        setPausedUsernames(payload.paused_usernames)
+                    }
                 }
 
                 if (data?.type === 'error' && data?.payload?.message) {
                     setOnlineStatusMessage(data.payload.message)
+                }
+
+                if (data?.type === 'chat_message' && data?.payload) {
+                    const sender = data.payload.sender || '?'
+                    const message = data.payload.message || ''
+                    setChatMessages(prev => [...prev, { sender, message }])
+                    if (!isChatOpen && sender !== myUsername) {
+                        setUnreadCount(prev => prev + 1)
+                    }
                 }
             } catch {
                 // ignore malformed websocket payloads
@@ -496,7 +520,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             ws.close()
             onlineWsRef.current = null
         }
-    }, [gameOver, isOnlineMatch, localPiece, matchData?.gameId])
+    }, [gameOver, isOnlineMatch, localPiece, matchData?.gameId, myUsername])
 
     useEffect(() => {
         if (isOnlineMatch) {
@@ -990,6 +1014,38 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         onNavigate(postGameScreen)
     }
 
+    const handleAttemptPause = () => {
+        setShowPauseConfirm(true)
+    }
+
+    const handleConfirmPause = () => {
+        if (onlineWsRef.current && onlineWsRef.current.readyState === WebSocket.OPEN) {
+            onlineWsRef.current.send(JSON.stringify({ action: 'pause' }))
+            onNavigate('friends')
+        } else {
+            setShowPauseConfirm(false)
+        }
+    }
+
+    const handleSendChat = (message: string) => {
+        if (onlineWsRef.current && onlineWsRef.current.readyState === WebSocket.OPEN) {
+            onlineWsRef.current.send(JSON.stringify({
+                action: 'chat',
+                message
+            }))
+        } else {
+            // Local fallback for testing or just ignore
+            setChatMessages(prev => [...prev, { sender: playerProfile.name, message }])
+        }
+    }
+
+    const toggleChat = () => {
+        setIsChatOpen(!isChatOpen)
+        if (!isChatOpen) {
+            setUnreadCount(0)
+        }
+    }
+
     const turnColorLabel = currentTurn === playerProfile.piece ? playerProfile.color : opponentProfile.color
     const turnLabel =
         gameOver
@@ -1003,6 +1059,13 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
     return (
         <div className="duel">
+            {!gameOver && pausedUsernames.length > 0 && (
+                <div className="duel__paused-status">
+                    <p className="duel__paused-text">
+                        Partida pausada: espera a que vuelva {pausedUsernames.join(', ')}.
+                    </p>
+                </div>
+            )}
             <div className="home__bg">
                 <span className="home__chip home__chip--1">⚫</span>
                 <span className="home__chip home__chip--2">⚪</span>
@@ -1021,9 +1084,20 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             </div>
 
             <div className="duel__container">
-                <button className="duel__leave-btn duel__leave-btn--top" onClick={handleAttemptLeave}>
-                    Abandonar partida
-                </button>
+                <div style={{ display: 'flex', gap: '12px', position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
+                    <button className="ingame-chat-btn" onClick={toggleChat}>
+                         Chat
+                         {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                    </button>
+                    {isOnlineMatch && matchData?.returnTo === 'friends' && (
+                        <button className="duel__pause-btn" onClick={handleAttemptPause}>
+                            Pausar
+                        </button>
+                    )}
+                    <button className="duel__leave-btn" style={{ position: 'static' }} onClick={handleAttemptLeave}>
+                        Abandonar partida
+                    </button>
+                </div>
                 <header className="duel__header">
                     <div className="duel__center-info">
                         <span className="duel__turn-label">Turno actual</span>
@@ -1035,7 +1109,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 </header>
 
                 <main className="duel__main">
-                    <aside className={`duel__panel ${currentTurn === playerProfile.piece && !gameOver ? 'duel__panel--active' : ''}`}>
+                    <aside className={`duel__panel ${currentTurn === playerProfile.piece && !gameOver ? 'duel__panel--active' : ''} ${pausedUsernames.includes(playerProfile.name) ? 'duel__panel--paused' : ''}`}>
                         <div className="duel__player-card">
                             <img
                                 className="duel__avatar"
@@ -1097,7 +1171,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                         key={key}
                                         className={`duel__cell ${(row + col) % 2 === 0 ? 'duel__cell--dark' : 'duel__cell--light'} ${isPlayable ? 'duel__cell--playable' : ''} ${hasQuestion ? 'duel__cell--question' : ''}`}
                                         onClick={() => handleCellClick(row, col)}
-                                        disabled={gameOver}
+                                        disabled={gameOver || pausedUsernames.length > 0}
                                         type="button"
                                     >
                                         {hasQuestion && <span className="duel__question">?</span>}
@@ -1117,7 +1191,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         </div>
                     </section>
 
-                    <aside className={`duel__panel ${currentTurn === opponentProfile.piece && !gameOver ? 'duel__panel--active' : ''}`}>
+                    <aside className={`duel__panel ${currentTurn === opponentProfile.piece && !gameOver ? 'duel__panel--active' : ''} ${pausedUsernames.includes(opponentProfile.name) ? 'duel__panel--paused' : ''}`}>
                         <div className="duel__player-card">
                             <img
                                 className="duel__avatar"
@@ -1197,8 +1271,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             <Modal isOpen={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} maxWidth="520px">
                 <div className="duel-leave-confirm">
                     <h2 className="duel-leave-confirm__title">Abandonar partida</h2>
-                    <p className="duel-leave-confirm__text">
-                        Si abandonas esta partida en curso, se contará como una derrota en tu historial y perderás puntos RR.
+                    <p className="duel-modal__text">
+                        {pausedUsernames.length > 0 
+                            ? "Como la partida está pausada por el otro jugador, si abandonas ahora no perderás RR y la partida quedará invalidada."
+                            : "Si abandonas esta partida en curso, se contará como una derrota en tu historial y perderás puntos RR."
+                        }
                     </p>
                     <div className="duel-leave-confirm__actions">
                         <button
@@ -1218,6 +1295,38 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     </div>
                 </div>
             </Modal>
+
+            <Modal isOpen={showPauseConfirm} onClose={() => setShowPauseConfirm(false)} maxWidth="520px">
+                <div className="duel-leave-confirm">
+                    <h2 className="duel-leave-confirm__title">Pausar partida</h2>
+                    <p className="duel-leave-confirm__text">
+                        ¿Estás seguro de que quieres pausar la partida? Podrás reanudarla en cualquier momento desde la sección de Amigos.
+                    </p>
+                    <div className="duel-leave-confirm__actions">
+                        <button
+                            className="duel-leave-confirm__btn duel-leave-confirm__btn--cancel"
+                            onClick={() => setShowPauseConfirm(false)}
+                        >
+                            Volver al juego
+                        </button>
+                        <button
+                            className="duel-leave-confirm__btn duel-leave-confirm__btn--confirm"
+                            onClick={handleConfirmPause}
+                        >
+                            Pausar partida
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+
+            <InGameChat 
+                messages={chatMessages} 
+                myUsername={playerProfile.name}
+                isOpen={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+                onSend={handleSendChat}
+            />
         </div>
     )
 }

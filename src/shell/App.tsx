@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import Home from '../pages/Home'
 import MainMenu from '../pages/MainMenu'
 import Rules from '../pages/Rules'
@@ -21,6 +21,7 @@ interface WaitingRoomData {
   opponentRR2?: number
   opponentName3?: string
   opponentRR3?: number
+  isResume?: boolean
 }
 
 interface MatchData {
@@ -74,12 +75,22 @@ function App() {
         }
         if (data?.type === 'invite_response' && data?.payload?.message) {
           const action = data?.payload?.action
+          const gameId = data?.payload?.game_id
+          const currentRoomId = waitingRoomData.gameId?.toString()
+          
+          console.log(`NOTIF DEBUG: Action='${action}', GameId='${gameId}', CurrentRoom='${currentRoomId}', Screen='${currentScreen}'`)
+          
           if (action !== 'accepted') {
             setNotification(data.payload.message)
           }
-          const gameId = data?.payload?.game_id
-          if ((action === 'room_closed' || action === 'kicked') && currentScreen === 'waiting-room' && waitingRoomData.gameId?.toString() === gameId?.toString()) {
+
+          if ((action === 'room_closed' || action === 'kicked') && 
+               currentScreen === 'waiting-room' && 
+               currentRoomId === gameId?.toString()) {
+            console.log("NOTIF DEBUG: Navigating away due to room_closed/kicked")
             navigateTo(waitingRoomReturnScreen)
+          } else {
+            console.log("NOTIF DEBUG: No navigation triggered")
           }
         }
       } catch {
@@ -108,7 +119,8 @@ function App() {
     localStorage.setItem('profileData', JSON.stringify(profileData))
   }, [currentScreen, activeGameMode, waitingRoomReturnScreen, waitingRoomData, activeMatchData, activeMatchData4Players, profileData])
 
-  const navigateTo = (screen: string, data?: any) => {
+  const navigateTo = useCallback((screen: string, data?: any) => {
+    console.log(`NAV DEBUG: Navigating to ${screen}`, data)
     if (screen === 'waiting-room') {
       if (data?.mode) {
         setActiveGameMode(data.mode)
@@ -124,6 +136,7 @@ function App() {
         opponentRR2: data?.opponentRR2,
         opponentName3: data?.opponentName3,
         opponentRR3: data?.opponentRR3,
+        isResume: data?.isResume || false,
       })
     }
     if (screen === 'game-1vs1' && data?.matchData) {
@@ -136,7 +149,7 @@ function App() {
       setProfileData({ userId: data?.id, username: data?.name })
     }
     setCurrentScreen(screen)
-  }
+  }, [currentScreen])
 
   return (
     <>
@@ -152,6 +165,7 @@ function App() {
           gameMode={activeGameMode}
           gameId={waitingRoomData.gameId}
           returnScreen={waitingRoomReturnScreen}
+          isResume={waitingRoomData.isResume}
           onNavigate={navigateTo}
         />
       )}

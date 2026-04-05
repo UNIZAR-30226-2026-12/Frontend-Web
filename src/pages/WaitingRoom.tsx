@@ -3,6 +3,8 @@ import { api, WS_BASE_URL } from '../services/api'
 import { resolveUserAvatar } from '../config/avatarOptions'
 import '../styles/background.css'
 import '../styles/pages/WaitingRoom.css'
+import '../styles/background.css'
+import '../styles/pages/WaitingRoom.css'
 
 interface Player {
     id: number
@@ -23,6 +25,7 @@ interface WaitingRoomProps {
     gameMode: '1vs1' | '1vs1vs1vs1' | '1v1' | '1v1v1v1'
     gameId?: string | number
     returnScreen: string
+    isResume?: boolean
     onNavigate: (screen: string, data?: any) => void
 }
 
@@ -63,7 +66,7 @@ const normalizePlayers = (incomingPlayers: Player[]) =>
         return a.username.localeCompare(b.username)
     })
 
-function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoomProps) {
+function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: WaitingRoomProps) {
     const [players, setPlayers] = useState<Player[]>([])
     const [roomStatus, setRoomStatus] = useState<'waiting' | 'playing'>('waiting')
     const [myUsername, setMyUsername] = useState<string>('')
@@ -75,6 +78,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
     const loadedHistoryRef = useRef<Set<number>>(new Set())
     const playersRef = useRef<Player[]>([])
     const hasNavigatedToGameRef = useRef(false)
+
 
     const maxPlayers = (gameMode === '1vs1' || gameMode === '1v1') ? 2 : 4
     const isFull = players.length >= maxPlayers
@@ -185,12 +189,15 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
                     fetchPlayerHistoryPreview(player.id)
                 })
                 if (state.status === 'playing') {
+                    console.log("NAV DEBUG: Navigating to game via loadState status playing")
                     navigateToGame()
                 }
             } catch (err: any) {
+                console.error("LOBBY DEBUG: loadState error", err)
                 setToast(err.message || 'No se pudo cargar la sala')
                 // Si la sala ha dejado de existir, salimos inmediatamente
                 if (err.status === 404 || err.message?.includes('no encontrada')) {
+                   console.log("NAV DEBUG: Navigating back to returnScreen because of 404")
                    onNavigate(returnScreen)
                 }
             }
@@ -235,6 +242,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
                 if (data?.type === 'error' && data?.payload?.message) {
                     setToast(data.payload.message)
                 }
+
             } catch {
                 // Ignore malformed websocket payloads
             }
@@ -290,11 +298,13 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
         }
     }
 
+
     const statusText = useMemo(() => {
         if (allReady || roomStatus === 'playing') return 'INICIANDO PARTIDA...'
+        if (isResume) return 'REANUDANDO PARTIDA...'
         if (isFull) return 'SALA LLENA'
         return 'ESPERANDO JUGADORES...'
-    }, [allReady, isFull, roomStatus])
+    }, [allReady, isFull, isResume, roomStatus])
 
     return (
         <div className="waiting-room">
@@ -395,6 +405,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
                     </button>
                 </div>
             </div>
+
         </div>
     )
 }

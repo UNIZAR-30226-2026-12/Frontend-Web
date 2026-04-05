@@ -454,6 +454,27 @@
     box-shadow: 0 6px 20px rgba(108, 99, 255, 0.35);
 }
 
+.friend-card--paused {
+    border-left: 3px solid rgba(139, 92, 246, 0.6);
+}
+
+.friend-card__waiting-text {
+    font-size: 0.72rem;
+    color: #4ade80;
+    margin-top: 0.15rem;
+    font-weight: 600;
+}
+
+.friend-btn--resume {
+    background: rgba(34, 197, 94, 0.22);
+    border-color: rgba(34, 197, 94, 0.45);
+}
+
+.friend-btn--abandon {
+    background: rgba(248, 113, 113, 0.2);
+    border-color: rgba(248, 113, 113, 0.38);
+}
+
 .friends-modal {
     display: flex;
     flex-direction: column;

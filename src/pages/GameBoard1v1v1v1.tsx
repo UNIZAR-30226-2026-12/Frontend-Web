@@ -2,6 +2,8 @@ import '../styles/background.css'
 import '../styles/pages/GameBoard1v1v1v1.css'
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import Modal from '../components/Modal'
+import InGameChat, { type ChatMessage } from '../components/InGameChat'
+import '../styles/components/InGameChat.css'
 import { api, WS_BASE_URL } from '../services/api'
 import { PIECE_STYLES_4P, decodePiecePreference } from '../config/pieceStyles'
 import { resolveUserAvatar } from '../config/avatarOptions'
@@ -32,6 +34,7 @@ interface MatchData4Players {
         rr: number
         avatar_url?: string
     }>
+    returnTo?: string
 }
 
 interface ArenaTheme {
@@ -184,6 +187,13 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const [onlineValidMoves, setOnlineValidMoves] = useState<Set<string>>(new Set())
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
     const [isLeaving, setIsLeaving] = useState(false)
+    const [showPauseConfirm, setShowPauseConfirm] = useState(false)
+    const [pausedUsernames, setPausedUsernames] = useState<string[]>([])
+
+    // Chat states
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+    const [isChatOpen, setIsChatOpen] = useState(false)
+    const [unreadCount, setUnreadCount] = useState(0)
 
     const wsRef = useRef<WebSocket | null>(null)
 
@@ -361,6 +371,10 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                         return nextAbandonedPieces
                     })
 
+                    if (Array.isArray(payload.paused_usernames)) {
+                        setPausedUsernames(payload.paused_usernames)
+                    }
+
                     if (payload.game_over) {
                         setStatusMessage('Partida finalizada')
                     } else if (payload.current_player === localPiece) {
@@ -372,6 +386,15 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
                 if (data?.type === 'error' && data?.payload?.message) {
                     setStatusMessage(data.payload.message)
+                }
+
+                if (data?.type === 'chat_message' && data?.payload) {
+                    const sender = data.payload.sender || '?'
+                    const message = data.payload.message || ''
+                    setChatMessages(prev => [...prev, { sender, message }])
+                    if (!isChatOpen && sender !== myUsername) {
+                        setUnreadCount(prev => prev + 1)
+                    }
                 }
             } catch {
                 // Ignore malformed payloads
@@ -450,11 +473,49 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         onNavigate('friends')
     }
 
+    const handleAttemptPause = () => {
+        setShowPauseConfirm(true)
+    }
+
+    const handleConfirmPause = () => {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({ action: 'pause' }))
+            onNavigate('friends')
+        } else {
+            setShowPauseConfirm(false)
+        }
+    }
+
+    const handleSendChat = (message: string) => {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({
+                action: 'chat',
+                message
+            }))
+        } else {
+            setChatMessages(prev => [...prev, { sender: myUsername, message }])
+        }
+    }
+
+    const toggleChat = () => {
+        setIsChatOpen(!isChatOpen)
+        if (!isChatOpen) {
+            setUnreadCount(0)
+        }
+    }
+
     const leftPlayers = normalizedPlayers.slice(0, 2)
     const rightPlayers = normalizedPlayers.slice(2, 4)
 
     return (
         <div className="duel-quad">
+            {!gameOver && pausedUsernames.length > 0 && (
+                <div className="duel__paused-status">
+                    <p className="duel__paused-text">
+                        Partida pausada: espera a que vuelvan {pausedUsernames.join(', ')}.
+                    </p>
+                </div>
+            )}
             <div className="home__bg">
                 <span className="home__chip home__chip--1">⚫</span>
                 <span className="home__chip home__chip--2">⚪</span>
@@ -473,9 +534,20 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             </div>
 
             <div className="duel-quad__container">
-                <button className="duel-quad__leave-btn duel-quad__leave-btn--top" onClick={handleAttemptLeave}>
-                    Abandonar partida
-                </button>
+                <div style={{ display: 'flex', gap: '12px', position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
+                    <button className="ingame-chat-btn" onClick={toggleChat}>
+                         Chat
+                         {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                    </button>
+                    {isOnlineMatch && matchData?.returnTo === 'friends' && (
+                        <button className="duel-quad__pause-btn" onClick={handleAttemptPause}>
+                            Pausar
+                        </button>
+                    )}
+                    <button className="duel-quad__leave-btn" style={{ position: 'static' }} onClick={handleAttemptLeave}>
+                        Abandonar partida
+                    </button>
+                </div>
 
                 <header className="duel-quad__header">
                     <div className="duel-quad__center-info">
@@ -494,8 +566,9 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     <aside className="duel-quad__side">
                         {leftPlayers.map((player) => (
                             <article
+                                padding-title={player.name}
                                 key={`${player.name}-${player.id}-left`}
-                                className={`duel-quad__panel ${player.piece === currentTurn && !gameOver ? 'duel-quad__panel--active' : ''} ${abandonedPieces.includes(player.piece) ? 'duel-quad__panel--abandoned' : ''}`}
+                                className={`duel-quad__panel ${player.piece === currentTurn && !gameOver ? 'duel-quad__panel--active' : ''} ${abandonedPieces.includes(player.piece) ? 'duel-quad__panel--abandoned' : ''} ${pausedUsernames.includes(player.name) ? 'duel-quad__panel--paused' : ''}`}
                             >
                                 <div className="duel-quad__player-card">
                                     <img
@@ -541,7 +614,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                         type="button"
                                         aria-label={`Casilla ${row + 1}-${col + 1}`}
                                         onClick={() => handleCellClick(row, col)}
-                                        disabled={gameOver}
+                                        disabled={gameOver || pausedUsernames.length > 0}
                                     >
                                         {cell && (
                                             <span
@@ -564,8 +637,9 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     <aside className="duel-quad__side">
                         {rightPlayers.map((player) => (
                             <article
+                                padding-title={player.name}
                                 key={`${player.name}-${player.id}-right`}
-                                className={`duel-quad__panel ${player.piece === currentTurn && !gameOver ? 'duel-quad__panel--active' : ''} ${abandonedPieces.includes(player.piece) ? 'duel-quad__panel--abandoned' : ''}`}
+                                className={`duel-quad__panel ${player.piece === currentTurn && !gameOver ? 'duel-quad__panel--active' : ''} ${abandonedPieces.includes(player.piece) ? 'duel-quad__panel--abandoned' : ''} ${pausedUsernames.includes(player.name) ? 'duel-quad__panel--paused' : ''}`}
                             >
                                 <div className="duel-quad__player-card">
                                     <img
@@ -618,9 +692,12 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
             <Modal isOpen={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} maxWidth="520px">
                 <div className="duel-quad-leave-confirm">
-                    <h2 className="duel-quad-leave-confirm__title">Abandonar partida</h2>
-                    <p className="duel-quad-leave-confirm__text">
-                        Si abandonas la partida, se te registrara automaticamente como 4º puesto.
+                    <h2 className="duel-leave-confirm__title">Abandonar partida</h2>
+                    <p className="duel-modal__text">
+                        {pausedUsernames.length > 0 
+                            ? "Como la partida está pausada por el otro jugador, si abandonas ahora no perderás RR y la partida quedará invalidada."
+                            : "Si abandonas la partida, se te registrará automáticamente como 4º puesto."
+                        }
                     </p>
                     <div className="duel-quad-leave-confirm__actions">
                         <button
@@ -640,6 +717,38 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     </div>
                 </div>
             </Modal>
+
+            <Modal isOpen={showPauseConfirm} onClose={() => setShowPauseConfirm(false)} maxWidth="520px">
+                <div className="duel-quad-leave-confirm">
+                    <h2 className="duel-quad-leave-confirm__title">Pausar partida</h2>
+                    <p className="duel-quad-leave-confirm__text">
+                        ¿Estás seguro de que quieres pausar la partida? Podrás reanudarla después desde la sección de Amigos.
+                    </p>
+                    <div className="duel-quad-leave-confirm__actions">
+                        <button
+                            className="duel-quad-leave-confirm__btn duel-quad-leave-confirm__btn--cancel"
+                            onClick={() => setShowPauseConfirm(false)}
+                        >
+                            Volver al juego
+                        </button>
+                        <button
+                            className="duel-quad-leave-confirm__btn duel-quad-leave-confirm__btn--confirm"
+                            onClick={handleConfirmPause}
+                        >
+                            Pausar partida
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+
+            <InGameChat 
+                messages={chatMessages} 
+                myUsername={myUsername}
+                isOpen={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+                onSend={handleSendChat}
+            />
         </div>
     )
 }

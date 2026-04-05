@@ -31,6 +31,14 @@ interface GameRequest {
     playersCount?: number
 }
 
+interface PausedGame {
+    game_id: number
+    mode: '1vs1' | '1vs1vs1vs1'
+    participants: string[]
+    paused_by: string[]
+    active_players: string[]
+}
+
 const normalizeMode = (rawMode: unknown): '1vs1' | '1vs1vs1vs1' => {
     if (rawMode === '1vs1vs1vs1' || rawMode === '1v1v1v1') return '1vs1vs1vs1'
     return '1vs1'
@@ -58,6 +66,7 @@ function Friends({ onNavigate }: FriendsProps) {
     const [friends, setFriends] = useState<Friend[]>([])
     const [requests, setRequests] = useState<Friend[]>([])
     const [gameRequests, setGameRequests] = useState<GameRequest[]>([])
+    const [pausedGames, setPausedGames] = useState<PausedGame[]>([])
     const [newFriendName, setNewFriendName] = useState('')
     const [toast, setToast] = useState<Toast>({ message: '', type: 'info', visible: false })
     const [isGameModalOpen, setIsGameModalOpen] = useState(false)
@@ -93,6 +102,7 @@ function Friends({ onNavigate }: FriendsProps) {
                 playersCount: request.playersCount,
             }))
             setGameRequests(normalizedGameRequests)
+            setPausedGames(data.pausedGames || [])
         } catch (err) {
             showToast('Error al cargar amigos', 'error')
         }
@@ -203,6 +213,25 @@ function Friends({ onNavigate }: FriendsProps) {
             showToast(`Invitacion de ${request.name} rechazada`, 'error')
         } catch (err: any) {
             showToast(err.message || 'No se pudo rechazar la invitacion', 'error')
+        }
+    }
+
+    const handleResumeGame = (pausedGame: PausedGame) => {
+        onNavigate('waiting-room', {
+            mode: pausedGame.mode,
+            gameId: pausedGame.game_id,
+            returnTo: 'friends',
+            isResume: true
+        })
+    }
+
+    const handleAbandonPausedGame = async (gameId: number) => {
+        try {
+            await api.games.leaveLobby(gameId)
+            setPausedGames(prev => prev.filter(g => g.game_id !== gameId))
+            showToast('Partida abandonada y eliminada', 'info')
+        } catch (err: any) {
+            showToast(err.message || 'Error al abandonar partida', 'error')
         }
     }
 
@@ -544,6 +573,49 @@ function Friends({ onNavigate }: FriendsProps) {
                                         </div>
                                     </div>
                                 ))
+                            )}
+                        </div>
+                    </section>
+
+                    <section className="friends__section friends__paused-games-section">
+                        <h2 className="friends__section-title">Partidas pausadas ({pausedGames.length})</h2>
+                        <div className="friends__paused-list">
+                            {pausedGames.length === 0 ? (
+                                <p className="friends__empty">No tienes partidas pausadas activas.</p>
+                            ) : (
+                                pausedGames.map(pg => {
+                                    const others = pg.active_players.filter(u => !pg.paused_by.includes(u));
+                                    const waitingText = others.length > 0 ? 'Te estan esperando' : 'No hay jugadores activos';
+                                    return (
+                                        <div key={pg.game_id} className="friend-card friend-card--paused">
+                                            <div className="friend-card__info">
+                                                <div className="friend-card__details">
+                                                    <div className="friend-card__name-row">
+                                                        <span className="friend-card__name">Partida pausada</span>
+                                                        <span className="friend-card__mode-tag">{pg.mode}</span>
+                                                    </div>
+                                                    <p className="friend-card__waiting-text">{waitingText}</p>
+                                                </div>
+                                            </div>
+                                            <div className="friend-card__actions friend-card__actions--inline">
+                                                <button
+                                                    className="friend-btn friend-btn--resume"
+                                                    onClick={() => handleResumeGame(pg)}
+                                                    title="Reanudar"
+                                                >
+                                                    Reanudar
+                                                </button>
+                                                <button
+                                                    className="friend-btn friend-btn--abandon"
+                                                    onClick={() => handleAbandonPausedGame(pg.game_id)}
+                                                    title="Abandonar"
+                                                >
+                                                    Abandonar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })
                             )}
                         </div>
                     </section>
