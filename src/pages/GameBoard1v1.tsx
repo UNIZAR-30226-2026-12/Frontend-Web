@@ -28,6 +28,7 @@ interface MatchData {
     opponentName: string
     opponentRR: number
     opponentAvatarUrl?: string
+    returnTo?: string
 }
 
 type Piece = 'black' | 'white'
@@ -396,7 +397,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
     const rrDelta = winnerInfo.isDraw ? 0 : winnerInfo.playerWon ? 30 : -30
     const abandonmentPenalty = -30
-    const postGameScreen = isOnlineMatch ? 'friends' : 'online-game'
+    const postGameScreen = matchData?.returnTo || (isOnlineMatch ? 'friends' : 'online-game')
 
     useEffect(() => {
         let isMounted = true
@@ -958,7 +959,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 }))
             }
             setShowLeaveConfirm(false)
-            onNavigate('friends')
+            onNavigate(postGameScreen)
             return
         }
 
@@ -1188,7 +1189,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     )}
 
                     <button className="duel-result__back-btn" onClick={() => onNavigate(postGameScreen)}>
-                        {isOnlineMatch ? 'Volver a amigos' : 'Volver al menú'}
+                        {matchData?.returnTo === 'online-game' ? 'Volver a partidas' : isOnlineMatch ? 'Volver a amigos' : 'Volver al menú'}
                     </button>
                 </div>
             </Modal>

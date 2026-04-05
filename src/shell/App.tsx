@@ -78,8 +78,8 @@ function App() {
             setNotification(data.payload.message)
           }
           const gameId = data?.payload?.game_id
-          if ((action === 'rejected' || action === 'left') && currentScreen === 'waiting-room' && waitingRoomData.gameId?.toString() === gameId?.toString()) {
-            navigateTo('friends')
+          if ((action === 'room_closed' || action === 'kicked') && currentScreen === 'waiting-room' && waitingRoomData.gameId?.toString() === gameId?.toString()) {
+            navigateTo(waitingRoomReturnScreen)
           }
         }
       } catch {

@@ -10,14 +10,14 @@ interface OnlineGameProps {
 }
 
 interface GameSession {
-    id: number
+    game_id: string
     creator: string
     avatar_url?: string
-    creatorRR: number
-    mode: '1vs1' | '1vs1vs1vs1'
+    creator_rr: number
+    mode: '1vs1' | '1vs1vs1vs1' | '1v1' | '1v1v1v1'
     players: number
-    maxPlayers: number
-    status: 'waiting' | 'full'
+    max_players: number
+    status: 'waiting' | 'playing' | 'full'
 }
 
 interface GameHistory {
@@ -47,23 +47,12 @@ const getHistoryTone = (entry: GameHistory): 'win' | 'loss' | 'draw' => {
     return 'draw'
 }
 
-const MOCK_PUBLIC_GAMES: GameSession[] = [
-    { id: 1, creator: 'CyberNinja', creatorRR: 1420, mode: '1vs1', players: 1, maxPlayers: 2, status: 'waiting' },
-    { id: 2, creator: 'ReversiExpert', creatorRR: 1850, mode: '1vs1vs1vs1', players: 3, maxPlayers: 4, status: 'waiting' },
-    { id: 3, creator: 'StarPlayer99', creatorRR: 1200, mode: '1vs1', players: 2, maxPlayers: 2, status: 'full' },
-    { id: 4, creator: 'DarkMaster', creatorRR: 1680, mode: '1vs1', players: 1, maxPlayers: 2, status: 'waiting' },
-    { id: 5, creator: 'LighSaber', creatorRR: 1350, mode: '1vs1vs1vs1', players: 2, maxPlayers: 4, status: 'waiting' },
-    { id: 6, creator: 'GhostRider', creatorRR: 1550, mode: '1vs1', players: 1, maxPlayers: 2, status: 'waiting' },
-    { id: 7, creator: 'PixelArt', creatorRR: 1100, mode: '1vs1vs1vs1', players: 1, maxPlayers: 4, status: 'waiting' },
-    { id: 8, creator: 'RedDragon', creatorRR: 1920, mode: '1vs1', players: 1, maxPlayers: 2, status: 'waiting' },
-    { id: 9, creator: 'BlueWave', creatorRR: 1480, mode: '1vs1', players: 1, maxPlayers: 2, status: 'waiting' },
-    { id: 10, creator: 'GreenLeaf', creatorRR: 1320, mode: '1vs1vs1vs1', players: 3, maxPlayers: 4, status: 'waiting' },
-]
+
 
 
 function OnlineGame({ onNavigate }: OnlineGameProps) {
     const [user, setUser] = useState<any>(null)
-    const [publicGames, setPublicGames] = useState<GameSession[]>(MOCK_PUBLIC_GAMES)
+    const [publicGames, setPublicGames] = useState<GameSession[]>([])
     const [history, setHistory] = useState<GameHistory[]>([])
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [showCreateModal, setShowCreateModal] = useState(false)
@@ -73,6 +62,15 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
         visible: false
     })
 
+    const fetchPublicGames = async () => {
+        try {
+            const data = await api.games.getPublic()
+            setPublicGames(data.lobbies || [])
+        } catch (err) {
+            console.error('Error fetching public games', err)
+        }
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -81,6 +79,8 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
 
                 const historyData = await api.users.getHistory()
                 setHistory(historyData)
+                
+                await fetchPublicGames()
             } catch (err) {
                 console.error('Error fetching online game data', err)
             }
@@ -93,33 +93,45 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
         setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000)
     }
 
-    const handleRefresh = () => {
+    const handleRefresh = async () => {
         setIsRefreshing(true)
-        setTimeout(() => {
-            setIsRefreshing(false)
+        try {
+            await fetchPublicGames()
             showToast('Lista de partidas actualizada', 'info')
-        }, 1000)
+        } catch (err) {
+            showToast('Error al actualizar partidas', 'error')
+        } finally {
+            setIsRefreshing(false)
+        }
     }
 
-    const handleCreateGame = (mode: string) => {
-        const newGame: GameSession = {
-            id: Date.now(),
-            creator: user?.username || 'Tú',
-            creatorRR: user?.elo || 0,
-            mode: mode as '1vs1' | '1vs1vs1vs1',
-            players: 1,
-            maxPlayers: mode === '1vs1' ? 2 : 4,
-            status: 'waiting'
+    const handleJoinGame = async (game: GameSession) => {
+        try {
+            await api.games.join(game.game_id)
+            onNavigate('waiting-room', {
+                gameId: game.game_id,
+                mode: game.mode,
+                creator: game.creator,
+                returnTo: 'online-game'
+            })
+        } catch (err: any) {
+            showToast(err.message || 'Error al unirse a la partida', 'error')
         }
-        setPublicGames([newGame, ...publicGames])
-        setShowCreateModal(false)
-        onNavigate('waiting-room', {
-            mode,
-            playerName: user?.username || 'Jugador',
-            playerRR: user?.elo || 0,
-            opponentName: 'Gamer_Pro',
-            opponentRR: 1420,
-        })
+    }
+
+    const handleCreateGame = async (mode: string) => {
+        try {
+            const res = await api.games.create(mode)
+            setShowCreateModal(false)
+            onNavigate('waiting-room', {
+                gameId: res.game_id,
+                mode: mode,
+                creator: user?.username || 'Yo',
+                returnTo: 'online-game'
+            })
+        } catch (err: any) {
+            showToast(err.message || 'Error al crear partida', 'error')
+        }
     }
 
     return (
@@ -167,7 +179,7 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                             {publicGames
                                 .filter(game => game.status !== 'full')
                                 .map(game => (
-                                    <div key={game.id} className={`game-card game-card--${game.status}`}>
+                                    <div key={game.game_id} className={`game-card game-card--${game.status}`}>
                                         <div className="game-card__info">
                                             <div className="game-card__creator-info">
                                                 <img
@@ -181,24 +193,16 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                                                 </div>
                                             </div>
                                             <div className="game-card__stats">
-                                                <span className="game-card__creator-rr">{game.creatorRR} RR</span>
-                                                <span className="game-card__players-count">👥 {game.players}/{game.maxPlayers}</span>
+                                                <span className="game-card__creator-rr">{game.creator_rr} RR</span>
+                                                <span className="game-card__players-count">👥 {game.players}/{game.max_players}</span>
                                             </div>
                                         </div>
                                         <button
                                             className="game-card__join-btn"
-                                            disabled={game.status === 'full'}
-                                            onClick={() =>
-                                                onNavigate('waiting-room', {
-                                                    mode: game.mode,
-                                                    playerName: user?.username || 'Jugador',
-                                                    playerRR: user?.elo || 0,
-                                                    opponentName: game.creator,
-                                                    opponentRR: game.creatorRR,
-                                                })
-                                            }
+                                            disabled={game.status === 'full' || game.status === 'playing'}
+                                            onClick={() => handleJoinGame(game)}
                                         >
-                                            {game.status === 'full' ? 'Llena' : 'Unirse'}
+                                            {game.status === 'full' ? 'Llena' : game.status === 'playing' ? 'En curso' : 'Unirse'}
                                         </button>
                                     </div>
                                 ))}

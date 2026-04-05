@@ -20,7 +20,7 @@ interface GameHistory {
 }
 
 interface WaitingRoomProps {
-    gameMode: '1vs1' | '1vs1vs1vs1'
+    gameMode: '1vs1' | '1vs1vs1vs1' | '1v1' | '1v1v1v1'
     gameId?: string | number
     returnScreen: string
     onNavigate: (screen: string, data?: any) => void
@@ -76,7 +76,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
     const playersRef = useRef<Player[]>([])
     const hasNavigatedToGameRef = useRef(false)
 
-    const maxPlayers = gameMode === '1vs1' ? 2 : 4
+    const maxPlayers = (gameMode === '1vs1' || gameMode === '1v1') ? 2 : 4
     const isFull = players.length >= maxPlayers
     const localPlayer = players.find(p =>
         (myUserId !== null && p.id === myUserId) || (myUsername && p.username === myUsername),
@@ -143,6 +143,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
                         rr: player.rr ?? 0,
                         avatar_url: player.avatar_url,
                     })),
+                    returnTo: returnScreen,
                 },
             })
             return
@@ -167,6 +168,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
                 opponentName: opponent.username,
                 opponentRR: opponent.rr,
                 opponentAvatarUrl: opponent.avatar_url,
+                returnTo: returnScreen,
             },
         })
     }
@@ -187,6 +189,10 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
                 }
             } catch (err: any) {
                 setToast(err.message || 'No se pudo cargar la sala')
+                // Si la sala ha dejado de existir, salimos inmediatamente
+                if (err.status === 404 || err.message?.includes('no encontrada')) {
+                   onNavigate(returnScreen)
+                }
             }
         }
         loadState()
@@ -278,9 +284,9 @@ function WaitingRoom({ gameMode, gameId, returnScreen, onNavigate }: WaitingRoom
         try {
             await api.games.leaveLobby(gameId)
         } catch {
-            // If lobby was already deleted by the other player, still leave screen
+            // Si la sala ya fue borrada o hubo error, aun así salimos
         } finally {
-            onNavigate('friends')
+            onNavigate(returnScreen)
         }
     }
 

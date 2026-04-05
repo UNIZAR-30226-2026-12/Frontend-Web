@@ -340,6 +340,33 @@ export const api = {
             }
             return response.json();
         },
+        getPublic: async () => {
+            const response = await interceptedFetch(`${BASE_URL}/games/public`, {
+                headers: getHeaders(),
+            });
+            if (!response.ok) throw new Error('Error al obtener partidas públicas');
+            return response.json();
+        },
+        create: async (mode: string) => {
+            const response = await interceptedFetch(`${BASE_URL}/games/create`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ mode }),
+            });
+            if (!response.ok) throw new Error('Error al crear partida');
+            return response.json();
+        },
+        join: async (gameId: number | string) => {
+            const response = await interceptedFetch(`${BASE_URL}/games/join/${gameId}`, {
+                method: 'POST',
+                headers: getHeaders(),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al unirse a la partida');
+            }
+            return response.json();
+        },
     }
 };
 
