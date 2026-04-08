@@ -73,8 +73,14 @@ export const api = {
                 body: formData,
             });
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Error al iniciar sesiÃ³n');
+                let detail = 'Error al iniciar sesión';
+                try {
+                    const error = await response.json();
+                    detail = error.detail || detail;
+                } catch {
+                    // Respuesta sin JSON (p.ej. 404 de Nginx)
+                }
+                throw new Error(detail);
             }
             return response.json();
         },
@@ -87,8 +93,14 @@ export const api = {
                 body: JSON.stringify(userData),
             });
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Error al registrarse');
+                let detail = 'Error al registrarse';
+                try {
+                    const error = await response.json();
+                    detail = error.detail || detail;
+                } catch {
+                    // Respuesta sin JSON (p.ej. 404 de Nginx)
+                }
+                throw new Error(detail);
             }
             return response.json();
         },
