@@ -18,6 +18,7 @@ interface MainMenuProps {
 function MainMenu({ onNavigate }: MainMenuProps) {
     const [user, setUser] = useState<UserData | null>(null)
     const [showIAModal, setShowIAModal] = useState(false)
+    const [isCreatingAI, setIsCreatingAI] = useState(false)
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -42,6 +43,35 @@ function MainMenu({ onNavigate }: MainMenuProps) {
     const handleLogout = () => {
         localStorage.removeItem('token')
         onNavigate('home')
+    }
+
+    const handleSelectAIMode = async () => {
+        if (isCreatingAI) return
+
+        try {
+            setIsCreatingAI(true)
+            const res = await api.games.create('vs_ai')
+            setShowIAModal(false)
+
+            onNavigate('game-1vs1', {
+                matchData: {
+                    online: true,
+                    gameId: String(res.game_id),
+                    playerName: user?.username || 'Jugador',
+                    playerRR: user?.elo ?? 1000,
+                    playerAvatarUrl: user?.avatar_url,
+                    opponentName: 'IA',
+                    opponentRR: 1000,
+                    returnTo: 'menu',
+                },
+            })
+        } catch (error) {
+            console.error('Error al crear partida contra IA', error)
+            const message = error instanceof Error ? error.message : 'No se pudo crear la partida contra IA'
+            window.alert(message)
+        } finally {
+            setIsCreatingAI(false)
+        }
     }
 
     return (
@@ -142,7 +172,10 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                 isOpen={showIAModal}
                 onClose={() => setShowIAModal(false)}
                 title="Jugar contra la IA"
-                subtitle="Elige el modo de juego"
+                subtitle="Selecciona el modo disponible contra IA"
+                availableModes={['1vs1']}
+                onSelectMode={handleSelectAIMode}
+                isLoading={isCreatingAI}
             />
         </div>
     )
