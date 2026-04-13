@@ -232,6 +232,17 @@ export const api = {
         },
     },
 
+    // Ranking
+    ranking: {
+        getGlobal: async (limit: number = 50, skip: number = 0) => {
+            const response = await interceptedFetch(`${BASE_URL}/ranking?limit=${limit}&skip=${skip}`, {
+                headers: getHeaders(),
+            });
+            if (!response.ok) throw new Error('Error al obtener ranking global');
+            return response.json();
+        },
+    },
+
     // Friends
     friends: {
         list: async () => {

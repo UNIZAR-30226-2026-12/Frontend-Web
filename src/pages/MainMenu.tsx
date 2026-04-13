@@ -90,6 +90,14 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                         )}
                     </div>
                 </button>
+                <button
+                    className="menu__top-link-btn"
+                    onClick={() => onNavigate('rules')}
+                    title="Ver reglas del juego"
+                >
+                    <span className="menu__top-link-icon">📘</span>
+                    <span className="menu__top-link-text">Reglas</span>
+                </button>
                 <button className="menu__logout-btn" onClick={handleLogout} title="Cerrar sesión">
                     <span className="menu__logout-text">Cerrar sesión</span>
                 </button>
@@ -130,6 +138,14 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                         </div>
                     </button>
 
+                    <button className="menu__card" onClick={() => onNavigate('ranking')}>
+                        <span className="menu__card-icon">🏆</span>
+                        <div className="menu__card-info">
+                            <span className="menu__card-title">Ranking Global</span>
+                            <span className="menu__card-desc">Consulta el top de jugadores por RR</span>
+                        </div>
+                    </button>
+
                     <button className="menu__card" onClick={() => setShowIAModal(true)}>
                         <span className="menu__card-icon">🤖</span>
                         <div className="menu__card-info">
@@ -146,19 +162,11 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                         </div>
                     </button>
 
-                    <button className="menu__card" onClick={() => onNavigate('friends')}>
+                    <button className="menu__card menu__card--wide" onClick={() => onNavigate('friends')}>
                         <span className="menu__card-icon">👥</span>
                         <div className="menu__card-info">
                             <span className="menu__card-title">Amigos</span>
                             <span className="menu__card-desc">Gestiona tu lista de amigos</span>
-                        </div>
-                    </button>
-
-                    <button className="menu__card menu__card--wide" onClick={() => onNavigate('rules')}>
-                        <span className="menu__card-icon">📘</span>
-                        <div className="menu__card-info">
-                            <span className="menu__card-title">Reglas del juego</span>
-                            <span className="menu__card-desc">Guía para aprender a jugar a Random Reversi</span>
                         </div>
                     </button>
                 </div>

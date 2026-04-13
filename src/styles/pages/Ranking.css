@@ -1,0 +1,209 @@
+.ranking {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    overflow: hidden;
+    padding: 1rem;
+}
+
+.ranking__container {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    height: calc(100vh - 8rem);
+    background: rgba(13, 17, 23, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.ranking__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.ranking__title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+}
+
+.ranking__subtitle {
+    margin: 0.25rem 0 0;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+}
+
+.ranking__refresh-btn {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ranking__refresh-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.ranking__refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ranking__state {
+    margin: auto;
+    color: rgba(255, 255, 255, 0.75);
+    text-align: center;
+}
+
+.ranking__state--error {
+    color: #fca5a5;
+}
+
+.ranking__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    overflow-y: auto;
+    padding-right: 0.4rem;
+    flex: 1;
+    min-height: 0;
+}
+
+.ranking__row {
+    display: grid;
+    grid-template-columns: 72px 44px 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.7rem 0.9rem;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ranking__row:hover {
+    border-color: rgba(108, 99, 255, 0.6);
+    background: rgba(108, 99, 255, 0.12);
+    transform: translateX(3px);
+}
+
+.ranking__row--me {
+    border-color: rgba(251, 191, 36, 0.55);
+    background: rgba(251, 191, 36, 0.12);
+}
+
+.ranking__position {
+    font-weight: 800;
+    font-size: 1rem;
+    color: #a78bfa;
+}
+
+.ranking__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ranking__name {
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ranking__elo {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    white-space: nowrap;
+}
+
+.ranking__back-btn {
+    margin-top: 0.9rem;
+    padding: 0.85rem 1.3rem;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, #2f8f42 0%, #1f5f2d 100%);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 8px 22px rgba(31, 95, 45, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 10;
+}
+
+.ranking__back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(31, 95, 45, 0.4);
+}
+
+@media (max-width: 768px) {
+    .ranking__container {
+        height: calc(100vh - 7rem);
+        padding: 1rem;
+    }
+
+    .ranking__header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ranking__title {
+        font-size: 1.7rem;
+    }
+
+    .ranking__row {
+        grid-template-columns: 56px 40px 1fr;
+        grid-template-areas:
+            "position avatar name"
+            "position avatar elo";
+        gap: 0.35rem 0.65rem;
+        padding: 0.65rem 0.75rem;
+    }
+
+    .ranking__position {
+        grid-area: position;
+    }
+
+    .ranking__avatar {
+        grid-area: avatar;
+        width: 40px;
+        height: 40px;
+    }
+
+    .ranking__name {
+        grid-area: name;
+    }
+
+    .ranking__elo {
+        grid-area: elo;
+        width: fit-content;
+    }
+}

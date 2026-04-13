@@ -6,6 +6,7 @@ import Customization from '../pages/Customization'
 import Friends from '../pages/Friends'
 import Profile from '../pages/Profile'
 import OnlineGame from '../pages/OnlineGame'
+import Ranking from '../pages/Ranking'
 import WaitingRoom from '../pages/WaitingRoom'
 import GameBoard1v1 from '../pages/GameBoard1v1'
 import GameBoard1v1v1v1 from '../pages/GameBoard1v1v1v1'
@@ -160,6 +161,7 @@ function App() {
       {currentScreen === 'friends' && <Friends onNavigate={navigateTo} />}
       {currentScreen === 'profile' && <Profile onNavigate={navigateTo} userId={profileData.userId} username={profileData.username} />}
       {currentScreen === 'online-game' && <OnlineGame onNavigate={navigateTo} />}
+      {currentScreen === 'ranking' && <Ranking onNavigate={navigateTo} />}
       {currentScreen === 'waiting-room' && (
         <WaitingRoom
           gameMode={activeGameMode}

@@ -18,7 +18,8 @@
   align-items: center;
   gap: 1.8rem;
   padding: 2rem 2rem 1.4rem;
-  max-width: 560px;
+  width: min(94vw, 760px);
+  max-width: 760px;
   max-height: 100vh;
   text-align: center;
 }
@@ -129,6 +130,35 @@
   box-shadow: 0 4px 12px rgba(248, 113, 113, 0.2);
 }
 
+.menu__top-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.8rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 2rem;
+  color: #d6dbff;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.menu__top-link-btn:hover {
+  background: rgba(108, 99, 255, 0.2);
+  border-color: rgba(108, 99, 255, 0.45);
+  color: #fff;
+}
+
+.menu__top-link-icon {
+  line-height: 1;
+}
+
+.menu__top-link-text {
+  line-height: 1;
+}
+
 .menu__header {
   display: flex;
   flex-direction: column;
@@ -162,13 +192,11 @@
 
 /* ===== Tarjetas de opciones ===== */
 .menu__options {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
   width: 100%;
-  max-width: 620px;
-  justify-content: center;
+  max-width: 640px;
 }
 
 .menu__card {
@@ -181,12 +209,13 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   text-align: center;
-  width: calc(50% - 0.5rem);
+  width: 100%;
+  min-height: 8.5rem;
   transition: all var(--transition);
 }
 
 .menu__card--wide {
-  width: 100%;
+  grid-column: 1 / -1;
 }
 
 .menu__card:hover {
@@ -229,17 +258,44 @@
 
 /* ===== Responsive ===== */
 @media (max-width: 480px) {
+  .menu__user-bar {
+    top: 0.75rem;
+    right: 0.75rem;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .menu__user-info {
+    padding-right: 0.6rem;
+  }
+
+  .menu__top-link-btn {
+    padding: 0.42rem 0.6rem;
+  }
+
+  .menu__top-link-text {
+    display: none;
+  }
+
+  .menu__logout-btn {
+    padding: 0.45rem 0.6rem;
+  }
+
+  .menu__logout-text {
+    display: none;
+  }
+
   .menu__title {
     font-size: 2.2rem;
   }
 
   .menu__options {
+    grid-template-columns: 1fr;
     max-width: 100%;
   }
 
-  .menu__card,
-  .menu__card--wide {
-    width: 100%;
+  .menu__card {
     padding: 1rem 1.2rem;
+    min-height: auto;
   }
 }
