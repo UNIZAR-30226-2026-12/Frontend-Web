@@ -312,6 +312,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [onlineValidMoves, setOnlineValidMoves] = useState<Set<string>>(new Set())
     const [onlineWinner, setOnlineWinner] = useState<Piece | null>(null)
     const onlineWsRef = useRef<WebSocket | null>(null)
+    const localPieceRef = useRef<Piece>('black')
     const [hasPersistedRank, setHasPersistedRank] = useState(false)
     const [hasPersistedHistory, setHasPersistedHistory] = useState(false)
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
@@ -435,6 +436,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
     }, [])
 
+    // Mantener la ref sincronizada sin generar dependencia reactiva en el WS effect
+    useEffect(() => {
+        localPieceRef.current = localPiece
+    }, [localPiece])
+
     useEffect(() => {
         if (!isOnlineMatch || !matchData?.gameId) {
             return
@@ -453,7 +459,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         const ws = new WebSocket(wsUrl)
         onlineWsRef.current = ws
 
-        ws.onopen = () => setOnlineStatusMessage('Partida online conectada')
+        ws.onopen = () => {
+            setOnlineStatusMessage('Partida online conectada')
+            // Indicar al backend que este jugador está listo para empezar
+            ws.send(JSON.stringify({ action: 'set_ready', ready: true }))
+        }
 
         ws.onmessage = (event) => {
             try {
@@ -461,6 +471,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
                 if (data?.type === 'player_assignment' && (data?.payload?.color === 'black' || data?.payload?.color === 'white')) {
                     setLocalPiece(data.payload.color)
+                    localPieceRef.current = data.payload.color
                 }
 
                 if (data?.type === 'waiting_for_player') {
@@ -482,7 +493,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     ))
                     if (payload.game_over) {
                         setOnlineStatusMessage('Partida finalizada')
-                    } else if (payload.current_player === localPiece) {
+                    } else if (payload.current_player === localPieceRef.current) {
                         setOnlineStatusMessage('Tu turno')
                     } else {
                         setOnlineStatusMessage('Turno del rival')
@@ -511,16 +522,17 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
 
         ws.onclose = () => {
-            if (!gameOver) {
-                setOnlineStatusMessage('Conexion cerrada')
-            }
+            setOnlineStatusMessage('Conexion cerrada')
         }
 
         return () => {
             ws.close()
             onlineWsRef.current = null
         }
-    }, [gameOver, isOnlineMatch, localPiece, matchData?.gameId, myUsername])
+        // Solo depende de datos estables: si gameId o localPiece cambian se reconecta correctamente,
+        // pero localPiece ya no causa re-montados porque se lee via localPieceRef en los handlers.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOnlineMatch, matchData?.gameId])
 
     useEffect(() => {
         if (isOnlineMatch) {
@@ -1086,8 +1098,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             <div className="duel__container">
                 <div style={{ display: 'flex', gap: '12px', position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
                     <button className="ingame-chat-btn" onClick={toggleChat}>
-                         Chat
-                         {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                        Chat
+                        {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
                     </button>
                     {isOnlineMatch && matchData?.returnTo === 'friends' && (
                         <button className="duel__pause-btn" onClick={handleAttemptPause}>
@@ -1272,7 +1284,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 <div className="duel-leave-confirm">
                     <h2 className="duel-leave-confirm__title">Abandonar partida</h2>
                     <p className="duel-modal__text">
-                        {pausedUsernames.length > 0 
+                        {pausedUsernames.length > 0
                             ? "Como la partida está pausada por el otro jugador, si abandonas ahora no perderás RR y la partida quedará invalidada."
                             : "Si abandonas esta partida en curso, se contará como una derrota en tu historial y perderás puntos RR."
                         }
@@ -1320,8 +1332,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             </Modal>
 
 
-            <InGameChat 
-                messages={chatMessages} 
+            <InGameChat
+                messages={chatMessages}
                 myUsername={playerProfile.name}
                 isOpen={isChatOpen}
                 onClose={() => setIsChatOpen(false)}

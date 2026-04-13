@@ -3,8 +3,6 @@ import { api, WS_BASE_URL } from '../services/api'
 import { resolveUserAvatar } from '../config/avatarOptions'
 import '../styles/background.css'
 import '../styles/pages/WaitingRoom.css'
-import '../styles/background.css'
-import '../styles/pages/WaitingRoom.css'
 
 interface Player {
     id: number
@@ -78,6 +76,10 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
     const loadedHistoryRef = useRef<Set<number>>(new Set())
     const playersRef = useRef<Player[]>([])
     const hasNavigatedToGameRef = useRef(false)
+    // Refs that always hold the latest identity values so navigateToGame
+    // can be called safely from WS onmessage without stale-closure issues.
+    const myUsernameRef = useRef<string>('')
+    const myUserIdRef = useRef<number | null>(null)
 
 
     const maxPlayers = (gameMode === '1vs1' || gameMode === '1v1') ? 2 : 4
@@ -90,6 +92,14 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
     useEffect(() => {
         playersRef.current = players
     }, [players])
+
+    useEffect(() => {
+        myUsernameRef.current = myUsername
+    }, [myUsername])
+
+    useEffect(() => {
+        myUserIdRef.current = myUserId
+    }, [myUserId])
 
     const fetchPlayerHistoryPreview = async (playerId: number) => {
         if (loadedHistoryRef.current.has(playerId)) return
@@ -126,12 +136,20 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
         const allPlayers = playersRef.current
         if (allPlayers.length < 2) return
 
-        let me = allPlayers.find(player =>
-            (myUserId !== null && player.id === myUserId) || (myUsername && player.username === myUsername),
-        )
-        if (!me && myUserId === null && !myUsername) {
+        // Always read identity from refs so this function is safe to call
+        // from WS onmessage (which closes over stale state values).
+        const currentUserId = myUserIdRef.current
+        const currentUsername = myUsernameRef.current
+
+        if (currentUserId === null && !currentUsername) {
+            // Identity not yet loaded — the polling or WS room_sync will retry.
             return
         }
+
+        let me = allPlayers.find(player =>
+            (currentUserId !== null && player.id === currentUserId) ||
+            (currentUsername && player.username === currentUsername),
+        )
 
         if (gameMode === '1vs1vs1vs1') {
             if (allPlayers.length < 4) return
@@ -140,7 +158,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                 matchData: {
                     online: true,
                     gameId: String(gameId),
-                    myUsername: me?.username,
+                    myUsername: me?.username ?? currentUsername,
                     players: allPlayers.map((player) => ({
                         id: player.id,
                         name: player.username,
@@ -197,8 +215,8 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                 setToast(err.message || 'No se pudo cargar la sala')
                 // Si la sala ha dejado de existir, salimos inmediatamente
                 if (err.status === 404 || err.message?.includes('no encontrada')) {
-                   console.log("NAV DEBUG: Navigating back to returnScreen because of 404")
-                   onNavigate(returnScreen)
+                    console.log("NAV DEBUG: Navigating back to returnScreen because of 404")
+                    onNavigate(returnScreen)
                 }
             }
         }
@@ -257,7 +275,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
             ws.close()
             wsRef.current = null
         }
-    }, [gameId, myUsername, onNavigate])
+    }, [gameId])
 
     const handleReady = async () => {
         if (!localPlayer || !gameId) return
