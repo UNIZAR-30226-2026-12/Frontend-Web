@@ -84,6 +84,31 @@ export const api = {
             }
             return response.json();
         },
+        forgotPassword: async (email: string) => {
+            const response = await interceptedFetch(`${BASE_URL}/auth/forgot-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email }),
+            });
+            if (!response.ok) {
+                let detail = 'Error al solicitar recuperación';
+                try {
+                    const error = await response.json();
+                    detail = error.detail || detail;
+                } catch {
+                    // Respuesta sin JSON
+                }
+                // 404 = email no existe → error real para el usuario
+                if (response.status === 404) {
+                    throw new Error(detail);
+                }
+                // Otros errores (500 = email existe pero fallo al enviar correo) → no bloquear
+                return { message: detail };
+            }
+            return response.json();
+        },
         register: async (userData: any) => {
             const response = await interceptedFetch(`${BASE_URL}/auth/register`, {
                 method: 'POST',

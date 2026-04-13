@@ -106,3 +106,29 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(108, 99, 255, 0.3);
 }
+
+/* ===== Enlace "¿Has olvidado tu contraseña?" ===== */
+.auth-form__forgot-link {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  align-self: center;
+  transition: color var(--transition);
+}
+
+.auth-form__forgot-link:hover,
+.auth-form__forgot-link:focus-visible {
+  color: var(--color-primary);
+}
+
+/* ===== Mensaje de éxito ===== */
+.auth-form__success {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-top: 0.5rem;
+  text-align: center;
+}

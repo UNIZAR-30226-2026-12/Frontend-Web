@@ -7,6 +7,7 @@ interface LoginModalProps {
   isOpen: boolean
   onClose: () => void
   onNavigate: (screen: string) => void
+  onForgotPassword: () => void
 }
 
 function PasswordEyeIcon({ hidden }: { hidden: boolean }) {
@@ -41,7 +42,7 @@ function PasswordEyeIcon({ hidden }: { hidden: boolean }) {
   )
 }
 
-function LoginModal({ isOpen, onClose, onNavigate }: LoginModalProps) {
+function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword }: LoginModalProps) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -110,6 +111,14 @@ function LoginModal({ isOpen, onClose, onNavigate }: LoginModalProps) {
 
           <button type="submit" className="auth-form__btn">
             Entrar
+          </button>
+
+          <button
+            type="button"
+            className="auth-form__forgot-link"
+            onClick={() => { onClose(); onForgotPassword() }}
+          >
+            ¿Has olvidado tu contraseña?
           </button>
         </form>
       </div>

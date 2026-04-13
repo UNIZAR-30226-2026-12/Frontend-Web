@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import LoginModal from '../components/LoginModal'
 import RegisterModal from '../components/RegisterModal'
+import ForgotPasswordModal from '../components/ForgotPasswordModal'
 import '../styles/background.css'
 import '../styles/pages/Home.css'
 
@@ -11,6 +12,7 @@ interface HomeProps {
 function Home({ onNavigate }: HomeProps) {
   const [showLogin, setShowLogin] = useState(false)
   const [showRegister, setShowRegister] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
 
   return (
     <div className="home">
@@ -62,7 +64,7 @@ function Home({ onNavigate }: HomeProps) {
       </main>
 
       {/* Modales */}
-      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onNavigate={onNavigate} />
+      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onNavigate={onNavigate} onForgotPassword={() => setShowForgotPassword(true)} />
       <RegisterModal
         isOpen={showRegister}
         onClose={() => setShowRegister(false)}
@@ -71,6 +73,7 @@ function Home({ onNavigate }: HomeProps) {
           setShowLogin(true)
         }}
       />
+      <ForgotPasswordModal isOpen={showForgotPassword} onClose={() => setShowForgotPassword(false)} />
     </div>
   )
 }
