@@ -147,21 +147,24 @@
 
 .ranking__back-btn {
     margin-top: 0.9rem;
-    padding: 0.85rem 1.3rem;
-    border-radius: 14px;
+    padding: 0.85rem 2.2rem;
+    border-radius: 12px;
     border: none;
     cursor: pointer;
-    background: linear-gradient(135deg, #2f8f42 0%, #1f5f2d 100%);
+    background: linear-gradient(120deg, #6d5dff, #8b5cf6 55%, #ec4899);
     color: #fff;
-    font-weight: 700;
-    box-shadow: 0 8px 22px rgba(31, 95, 45, 0.35);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    box-shadow: 0 6px 20px rgba(108, 99, 255, 0.28);
+    transition: all 0.3s ease;
     z-index: 10;
 }
 
 .ranking__back-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(31, 95, 45, 0.4);
+    filter: brightness(1.08);
+    box-shadow: 0 6px 20px rgba(108, 99, 255, 0.35);
 }
 
 @media (max-width: 768px) {

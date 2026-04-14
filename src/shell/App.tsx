@@ -53,7 +53,7 @@ function App() {
   const [waitingRoomData, setWaitingRoomData] = useState<WaitingRoomData>(() => JSON.parse(localStorage.getItem('waitingRoomData') || '{}'))
   const [activeMatchData, setActiveMatchData] = useState<MatchData | null>(() => JSON.parse(localStorage.getItem('activeMatchData') || 'null'))
   const [activeMatchData4Players, setActiveMatchData4Players] = useState<MatchData4Players | null>(() => JSON.parse(localStorage.getItem('activeMatchData4Players') || 'null'))
-  const [profileData, setProfileData] = useState<{ userId?: number, username?: string }>(() => JSON.parse(localStorage.getItem('profileData') || '{}'))
+  const [profileData, setProfileData] = useState<{ userId?: number, username?: string, returnTo?: string }>(() => JSON.parse(localStorage.getItem('profileData') || '{}'))
   const [notification, setNotification] = useState<string | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
 
@@ -147,7 +147,7 @@ function App() {
       setActiveMatchData4Players(data.matchData)
     }
     if (screen === 'profile') {
-      setProfileData({ userId: data?.id, username: data?.name })
+      setProfileData({ userId: data?.id, username: data?.name, returnTo: data?.returnTo })
     }
     setCurrentScreen(screen)
   }, [currentScreen])
@@ -159,7 +159,7 @@ function App() {
       {currentScreen === 'rules' && <Rules onNavigate={navigateTo} />}
       {currentScreen === 'customization' && <Customization onNavigate={navigateTo} />}
       {currentScreen === 'friends' && <Friends onNavigate={navigateTo} />}
-      {currentScreen === 'profile' && <Profile onNavigate={navigateTo} userId={profileData.userId} username={profileData.username} />}
+      {currentScreen === 'profile' && <Profile onNavigate={navigateTo} userId={profileData.userId} username={profileData.username} returnTo={profileData.returnTo} />}
       {currentScreen === 'online-game' && <OnlineGame onNavigate={navigateTo} />}
       {currentScreen === 'ranking' && <Ranking onNavigate={navigateTo} />}
       {currentScreen === 'waiting-room' && (

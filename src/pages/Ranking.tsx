@@ -95,7 +95,7 @@ function Ranking({ onNavigate }: RankingProps) {
                             <button
                                 key={entry.id}
                                 className={`ranking__row ${entry.id === myUserId ? 'ranking__row--me' : ''}`}
-                                onClick={() => onNavigate('profile', { id: entry.id, name: entry.username })}
+                                onClick={() => onNavigate('profile', { id: entry.id, name: entry.username, returnTo: 'ranking' })}
                                 type="button"
                             >
                                 <span className="ranking__position">#{index + 1}</span>

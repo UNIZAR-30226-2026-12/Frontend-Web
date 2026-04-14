@@ -8,6 +8,7 @@ interface ProfileProps {
     onNavigate: (screen: string, data?: any) => void
     userId?: number
     username?: string
+    returnTo?: string
 }
 
 interface ModeStats {
@@ -105,7 +106,7 @@ function getLegacy1v1Stats(stats: Stats | null): ModeStats {
     }
 }
 
-function Profile({ onNavigate, userId, username }: ProfileProps) {
+function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
     const [stats, setStats] = useState<Stats | null>(null)
     const [h2h, setH2h] = useState<H2H | null>(null)
     const [loading, setLoading] = useState(true)
@@ -125,6 +126,12 @@ function Profile({ onNavigate, userId, username }: ProfileProps) {
     const [savingSettings, setSavingSettings] = useState(false)
 
     const isOwnProfile = !userId
+    const backScreen = isOwnProfile ? 'menu' : returnTo === 'ranking' ? 'ranking' : 'friends'
+    const backLabel = isOwnProfile
+        ? 'Volver al menu'
+        : returnTo === 'ranking'
+            ? 'Volver a Ranking'
+            : 'Volver a amigos'
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -572,8 +579,8 @@ function Profile({ onNavigate, userId, username }: ProfileProps) {
                     </>
                 )}
 
-                <button className="profile__back-btn" onClick={() => onNavigate(userId ? 'friends' : 'menu')}>
-                    {userId ? 'Volver a amigos' : 'Volver al menu'}
+                <button className="profile__back-btn" onClick={() => onNavigate(backScreen)}>
+                    {backLabel}
                 </button>
             </div>
         </div>

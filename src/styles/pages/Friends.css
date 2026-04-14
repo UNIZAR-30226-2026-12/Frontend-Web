@@ -5,11 +5,11 @@
     justify-content: center;
     height: 100vh;
     overflow: hidden;
-    padding: 1rem;
+    padding: 0.5rem;
 }
 
 .friends__container {
-    width: min(1400px, 100%);
+    width: min(1700px, 95vw);
     max-height: 100%;
     background: linear-gradient(150deg, rgba(26, 26, 46, 0.92), rgba(13, 14, 26, 0.88));
     backdrop-filter: blur(18px);
@@ -111,14 +111,20 @@
 
 .friends__content {
     display: grid;
-    grid-template-columns: 1.45fr 1.05fr 1.2fr;
+    grid-template-columns: minmax(280px, 1fr) minmax(250px, 0.95fr) minmax(250px, 0.95fr) minmax(320px, 1.1fr);
     gap: 0.8rem;
     min-height: 380px;
     max-height: 60vh;
+    align-items: stretch;
+}
+
+.friends__paused-games-section {
+    min-width: 0;
 }
 
 .friends__section {
     min-width: 0;
+    min-height: 0;
     max-height: 100%;
     background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
     border-radius: 16px;
@@ -139,7 +145,8 @@
 }
 
 .friends__list,
-.friends__requests-list {
+.friends__requests-list,
+.friends__paused-list {
     flex: 1;
     overflow-y: auto;
     padding-right: 0.3rem;
@@ -149,18 +156,21 @@
 }
 
 .friends__list::-webkit-scrollbar,
-.friends__requests-list::-webkit-scrollbar {
+.friends__requests-list::-webkit-scrollbar,
+.friends__paused-list::-webkit-scrollbar {
     width: 7px;
 }
 
 .friends__list::-webkit-scrollbar-thumb,
-.friends__requests-list::-webkit-scrollbar-thumb {
+.friends__requests-list::-webkit-scrollbar-thumb,
+.friends__paused-list::-webkit-scrollbar-thumb {
     background: rgba(148, 163, 184, 0.28);
     border-radius: 12px;
 }
 
 .friends__list::-webkit-scrollbar-thumb:hover,
-.friends__requests-list::-webkit-scrollbar-thumb:hover {
+.friends__requests-list::-webkit-scrollbar-thumb:hover,
+.friends__paused-list::-webkit-scrollbar-thumb:hover {
     background: rgba(148, 163, 184, 0.45);
 }
 
@@ -758,7 +768,7 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .friends__game-requests-section {
+    .friends__list-section {
         grid-column: 1 / -1;
     }
 }

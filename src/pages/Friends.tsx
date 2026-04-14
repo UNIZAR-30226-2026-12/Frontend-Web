@@ -369,7 +369,7 @@ function Friends({ onNavigate }: FriendsProps) {
     }
 
     const groupInviteCandidates = friends.filter(friend => friend.id !== selectedFriend?.id)
-    const navigateToProfile = (id: number, name: string) => onNavigate('profile', { id, name })
+    const navigateToProfile = (id: number, name: string) => onNavigate('profile', { id, name, returnTo: 'friends' })
 
     return (
         <div className="friends">
@@ -496,7 +496,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                                     <span
                                                         className="friend-card__name"
                                                         style={{ cursor: 'pointer' }}
-                                                        onClick={() => onNavigate('profile', { id: request.id, name: request.name })}
+                                                        onClick={() => onNavigate('profile', { id: request.id, name: request.name, returnTo: 'friends' })}
                                                     >
                                                         {request.name}
                                                     </span>
@@ -541,7 +541,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                                     <span
                                                         className="friend-card__name"
                                                         style={{ cursor: 'pointer' }}
-                                                        onClick={() => onNavigate('profile', { id: request.id, name: request.name })}
+                                                        onClick={() => onNavigate('profile', { id: request.id, name: request.name, returnTo: 'friends' })}
                                                     >
                                                         {request.name}
                                                     </span>

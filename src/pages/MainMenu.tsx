@@ -76,6 +76,15 @@ function MainMenu({ onNavigate }: MainMenuProps) {
 
     return (
         <div className="menu">
+            <button
+                className="menu__rules-btn"
+                onClick={() => onNavigate('rules')}
+                title="Ver reglas del juego"
+            >
+                <span className="menu__rules-icon">📘</span>
+                <span className="menu__rules-text">Reglas</span>
+            </button>
+
             <div className="menu__user-bar">
                 <button
                     className="menu__user-info menu__user-info--clickable"
@@ -89,14 +98,6 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                             <span className="menu__user-elo">{user.elo} RR</span>
                         )}
                     </div>
-                </button>
-                <button
-                    className="menu__top-link-btn"
-                    onClick={() => onNavigate('rules')}
-                    title="Ver reglas del juego"
-                >
-                    <span className="menu__top-link-icon">📘</span>
-                    <span className="menu__top-link-text">Reglas</span>
                 </button>
                 <button className="menu__logout-btn" onClick={handleLogout} title="Cerrar sesión">
                     <span className="menu__logout-text">Cerrar sesión</span>
