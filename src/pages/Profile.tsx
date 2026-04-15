@@ -1,8 +1,15 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api } from '../services/api'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import '../styles/background.css'
 import '../styles/pages/Profile.css'
+import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
+import backToMenuButtonImage from '../assets/elementosGenerales/botonVolverMenu.png'
+import winRateCard from '../assets/estadisticas/winRate.png'
+import picoRRCard from '../assets/estadisticas/picoRR.png'
+import rachaCard from '../assets/estadisticas/racha.png'
+import estadisticasCard from '../assets/estadisticas/estadisticas.png'
+import nemesisCard from '../assets/estadisticas/nemesis.png'
+import victimaCard from '../assets/estadisticas/victima.png'
 
 interface ProfileProps {
     onNavigate: (screen: string, data?: any) => void
@@ -130,7 +137,7 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
     const backLabel = isOwnProfile
         ? 'Volver al menu'
         : returnTo === 'ranking'
-            ? 'Volver a Ranking'
+            ? 'Volver a ranking'
             : 'Volver a amigos'
 
     useEffect(() => {
@@ -186,17 +193,39 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
     const displayName = stats?.username || username || 'Usuario'
     const winRate = clampPercent(modeStats.winrate)
     const isFourPlayersMode = activeStatsMode === '1vs1vs1vs1'
+    const peakElo = modeStats.peak_elo ?? stats?.peak_elo ?? stats?.elo ?? 1000
+    const nemesisHits = modeStats.nemesis_losses ?? 0
+    const victimWins = modeStats.victim_wins ?? 0
+    const other4PPlacements = (modeStats.second_place ?? 0) + (modeStats.third_place ?? 0)
+    const statsCardValues = isFourPlayersMode
+        ? [modeStats.total_games ?? 0, modeStats.first_place ?? 0, modeStats.fourth_place ?? 0, other4PPlacements]
+        : [modeStats.total_games ?? 0, modeStats.wins ?? 0, modeStats.losses ?? 0, modeStats.draws ?? 0]
+
+    const statsRows = isFourPlayersMode
+        ? [
+            { label: 'Partidas jugadas', value: modeStats.total_games ?? 0 },
+            { label: '1o puesto', value: modeStats.first_place ?? 0 },
+            { label: '2o puesto', value: modeStats.second_place ?? 0 },
+            { label: '3o puesto', value: modeStats.third_place ?? 0 },
+            { label: '4o puesto', value: modeStats.fourth_place ?? 0 },
+        ]
+        : [
+            { label: 'Partidas jugadas', value: modeStats.total_games ?? 0 },
+            { label: 'Victorias', value: modeStats.wins ?? 0 },
+            { label: 'Derrotas', value: modeStats.losses ?? 0 },
+            { label: 'Empates', value: modeStats.draws ?? 0 },
+        ]
 
     const handleSaveSettings = async () => {
         setSettingsError('')
         setSettingsSuccess('')
 
         if (settingsForm.newPassword && settingsForm.newPassword !== settingsForm.confirmPassword) {
-            setSettingsError('Las contraseñas nuevas no coinciden.')
+            setSettingsError('Las contrasenas nuevas no coinciden.')
             return
         }
         if (settingsForm.newPassword && !settingsForm.currentPassword) {
-            setSettingsError('Debes indicar tu contraseña actual para cambiarla.')
+            setSettingsError('Debes indicar tu contrasena actual para cambiarla.')
             return
         }
 
@@ -212,7 +241,7 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
             }
 
             if (Object.keys(updates).length === 0) {
-                setSettingsSuccess('No hay cambios que guardar.')
+                setSettingsSuccess('No hay cambios para guardar.')
                 setSavingSettings(false)
                 return
             }
@@ -251,53 +280,37 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
 
     return (
         <div className="profile">
-            <div className="home__bg">
-                <span className="home__chip home__chip--1">⚫</span>
-                <span className="home__chip home__chip--2">⚪</span>
-                <span className="home__chip home__chip--3">🔴</span>
-                <span className="home__chip home__chip--4">🔵</span>
-                <span className="home__chip home__chip--5">🟢</span>
-                <span className="home__chip home__chip--6">🟡</span>
-                <span className="home__chip home__chip--7">🟣</span>
-                <span className="home__chip home__chip--8">🟠</span>
-                <span className="home__chip home__chip--9">⚫</span>
-                <span className="home__chip home__chip--10">⚪</span>
-                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
-            </div>
+            <img className="profile__background" src={menuBackground} alt="" aria-hidden="true" />
+            <div className="profile__overlay" aria-hidden="true" />
 
             <div className="profile__container">
                 <header className="profile__header">
-                    <div className="profile__hero">
-                        <img
-                            className="profile__avatar"
-                            src={resolveUserAvatar(stats?.avatar_url, displayName)}
-                            alt={`Avatar de ${displayName}`}
-                        />
-                        <div className="profile__hero-info">
-                            <div className="profile__hero-main-row">
-                                <h1 className="profile__name">{displayName}</h1>
-                                <div className="profile__elo-badge">
-                                    <span className="profile__elo-value">{stats?.elo ?? 1000} RR</span>
-                                </div>
+                    <div className="profile__masthead">
+                        <div className="profile__identity">
+                            <div className="profile__avatar-shell">
+                                <img
+                                    className="profile__avatar"
+                                    src={resolveUserAvatar(stats?.avatar_url, displayName)}
+                                    alt={`Avatar de ${displayName}`}
+                                />
                             </div>
+                            <h1 className="profile__name">{displayName}</h1>
+                            <span className="profile__rr-badge">{stats?.elo ?? 1000} RR</span>
                         </div>
-                    </div>
 
-                    <nav className="profile__tabs">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.key}
-                                className={`profile__tab${activeTab === tab.key ? ' profile__tab--active' : ''}`}
-                                onClick={() => setActiveTab(tab.key)}
-                            >
-                                <span>{tab.icon}</span>
-                                <span>{tab.label}</span>
-                            </button>
-                        ))}
-                    </nav>
+                        <nav className="profile__tabs">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.key}
+                                    className={`profile__tab profile__tab--${tab.key}${activeTab === tab.key ? ' profile__tab--active' : ''}`}
+                                    onClick={() => setActiveTab(tab.key)}
+                                >
+                                    <span className="profile__tab-icon">{tab.icon}</span>
+                                    <span>{tab.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
 
                     {activeTab === 'resumen' && (
                         <nav className="profile__mode-tabs">
@@ -314,216 +327,188 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                     )}
                 </header>
 
-                {loading ? (
-                    <div className="profile__loading">
-                        <div className="profile__spinner" />
-                        <span>Cargando datos...</span>
-                    </div>
-                ) : error ? (
-                    <div className="profile__error">{error}</div>
-                ) : (
-                    <>
-                        {activeTab === 'resumen' && (
-                            <div className={`profile__body${isOwnProfile ? '' : ' profile__body--friend'}`}>
-                                <div className={`profile__sidebar${isOwnProfile ? ' profile__sidebar--summary' : ' profile__sidebar--friend'}`}>
-                                    <div className="profile__card profile__card--winrate">
-                                        <h3 className="profile__card-title">Win Rate</h3>
-                                        <div className="profile__winrate-circle">
-                                            <svg viewBox="0 0 80 80" className="profile__winrate-svg">
-                                                <circle cx="40" cy="40" r={circleRadius} className="profile__winrate-track" />
-                                                <circle
-                                                    cx="40"
-                                                    cy="40"
-                                                    r={circleRadius}
-                                                    className="profile__winrate-fill profile__winrate-fill--loss"
-                                                    strokeDasharray={`${circleCircumference} ${circleCircumference}`}
-                                                />
-                                                <circle
-                                                    cx="40"
-                                                    cy="40"
-                                                    r={circleRadius}
-                                                    className="profile__winrate-fill profile__winrate-fill--win"
-                                                    strokeDasharray={`${winStroke} ${circleCircumference}`}
-                                                />
-                                            </svg>
-                                            <span className="profile__winrate-label">{winRate}%</span>
-                                        </div>
-                                        <div className="profile__winrate-legend">
-                                            <span className="profile__legend-dot profile__legend-dot--win" />
-                                            <span>{isFourPlayersMode ? '1º puesto' : 'Victorias'}</span>
-                                            <span className="profile__legend-dot profile__legend-dot--loss" />
-                                            <span>{isFourPlayersMode ? '2º, 3º o 4º puesto' : 'Derrotas'}</span>
-                                        </div>
-                                    </div>
+                <main className="profile__content">
+                    {loading ? (
+                        <div className="profile__state-card">
+                            <div className="profile__spinner" />
+                            <span>Cargando datos...</span>
+                        </div>
+                    ) : error ? (
+                        <div className="profile__state-card profile__state-card--error">{error}</div>
+                    ) : activeTab === 'resumen' ? (
+                        isOwnProfile ? (
+                            <section className="profile__summary-stage">
+                                <div className="profile__proto-grid">
+                                    <article className="profile__proto-card profile__proto-card--winrate">
+                                        <img className="profile__proto-bg" src={winRateCard} alt="" aria-hidden="true" />
+                                        <div className="profile__proto-content profile__proto-content--winrate">
+                                            <div className="profile__winrate-circle">
+                                                <svg viewBox="0 0 80 80" className="profile__winrate-svg">
+                                                    <circle cx="40" cy="40" r={circleRadius} className="profile__winrate-track" />
+                                                    <circle
+                                                        cx="40"
+                                                        cy="40"
+                                                        r={circleRadius}
+                                                        className="profile__winrate-fill profile__winrate-fill--loss"
+                                                        strokeDasharray={`${circleCircumference} ${circleCircumference}`}
+                                                    />
+                                                    <circle
+                                                        cx="40"
+                                                        cy="40"
+                                                        r={circleRadius}
+                                                        className="profile__winrate-fill profile__winrate-fill--win"
+                                                        strokeDasharray={`${winStroke} ${circleCircumference}`}
+                                                    />
+                                                </svg>
+                                                <span className="profile__winrate-label">{winRate}%</span>
+                                            </div>
 
-                                    <div className="profile__card">
-                                        <h3 className="profile__card-title">Estadisticas</h3>
-                                        <ul className="profile__stat-list">
-                                            <li className="profile__stat-row">
-                                                <span className="profile__stat-label">Partidas jugadas</span>
-                                                <strong className="profile__stat-val">{modeStats.total_games ?? 0}</strong>
-                                            </li>
-                                            {!isFourPlayersMode && (
-                                                <>
-                                                    <li className="profile__stat-row">
-                                                        <span className="profile__stat-label profile__stat-label--win">Victorias</span>
-                                                        <strong className="profile__stat-val profile__stat-val--win">{modeStats.wins ?? 0}</strong>
-                                                    </li>
-                                                    <li className="profile__stat-row">
-                                                        <span className="profile__stat-label profile__stat-label--loss">Derrotas</span>
-                                                        <strong className="profile__stat-val profile__stat-val--loss">{modeStats.losses ?? 0}</strong>
-                                                    </li>
-                                                    <li className="profile__stat-row profile__stat-row--last">
-                                                        <span className="profile__stat-label profile__stat-label--draw">Empates</span>
-                                                        <strong className="profile__stat-val profile__stat-val--draw">{modeStats.draws ?? 0}</strong>
-                                                    </li>
-                                                </>
-                                            )}
-                                            {isFourPlayersMode && (
-                                                <>
-                                                    <li className="profile__stat-row">
-                                                        <span className="profile__stat-label profile__stat-label--win">1º puesto</span>
-                                                        <strong className="profile__stat-val profile__stat-val--win">{modeStats.first_place ?? 0}</strong>
-                                                    </li>
-                                                    <li className="profile__stat-row">
-                                                        <span className="profile__stat-label">2º puesto</span>
-                                                        <strong className="profile__stat-val">{modeStats.second_place ?? 0}</strong>
-                                                    </li>
-                                                    <li className="profile__stat-row">
-                                                        <span className="profile__stat-label">3º puesto</span>
-                                                        <strong className="profile__stat-val">{modeStats.third_place ?? 0}</strong>
-                                                    </li>
-                                                    <li className="profile__stat-row profile__stat-row--last">
-                                                        <span className="profile__stat-label profile__stat-label--loss">4º puesto</span>
-                                                        <strong className="profile__stat-val profile__stat-val--loss">{modeStats.fourth_place ?? 0}</strong>
-                                                    </li>
-                                                </>
-                                            )}
-                                        </ul>
-                                    </div>
-
-                                    {userId && (
-                                        <div className="profile__card profile__card--h2h">
-                                            <h3 className="profile__card-title">
-                                                <span className="profile__h2h-icon">⚔️</span>
-                                                Tus resultados contra {displayName}
-                                            </h3>
-                                            {h2h ? (
-                                                <ul className="profile__stat-list">
-                                                    {activeStatsMode === '1vs1' ? (
-                                                        <>
-                                                            <li className="profile__stat-row">
-                                                                <span className="profile__stat-label">Partidas jugadas</span>
-                                                                <strong className="profile__stat-val">{h2h.total_matches}</strong>
-                                                            </li>
-                                                            <li className="profile__stat-row">
-                                                                <span className="profile__stat-label profile__stat-label--win">Tus victorias</span>
-                                                                <strong className="profile__stat-val profile__stat-val--win">{h2h.wins}</strong>
-                                                            </li>
-                                                            <li className="profile__stat-row">
-                                                                <span className="profile__stat-label profile__stat-label--loss">Tus derrotas</span>
-                                                                <strong className="profile__stat-val profile__stat-val--loss">{h2h.losses}</strong>
-                                                            </li>
-                                                            <li className="profile__stat-row profile__stat-row--last">
-                                                                <span className="profile__stat-label profile__stat-label--draw">Empates</span>
-                                                                <strong className="profile__stat-val profile__stat-val--draw">{h2h.draws}</strong>
-                                                            </li>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <li className="profile__stat-row">
-                                                                <span className="profile__stat-label">Partidas juntos</span>
-                                                                <strong className="profile__stat-val">{h2h.total_matches_4p ?? 0}</strong>
-                                                            </li>
-                                                            <li className="profile__stat-row">
-                                                                <span className="profile__stat-label profile__stat-label--win">Tus 1º puestos</span>
-                                                                <strong className="profile__stat-val profile__stat-val--win">{h2h.first_places_4p ?? 0}</strong>
-                                                            </li>
-                                                            <li className="profile__stat-row profile__stat-row--last">
-                                                                <span className="profile__stat-label profile__stat-label--loss">2º, 3º o 4º puesto</span>
-                                                                <strong className="profile__stat-val profile__stat-val--loss">{h2h.other_places_4p ?? 0}</strong>
-                                                            </li>
-                                                        </>
-                                                    )}
-                                                </ul>
-                                            ) : (
-                                                <p className="profile__empty">Sin enfrentamientos previos.</p>
-                                            )}
+                                            <div className="profile__winrate-legend">
+                                                <span className="profile__legend-dot profile__legend-dot--win" />
+                                                <span>{isFourPlayersMode ? '1o puesto' : 'Victorias'}</span>
+                                                <span className="profile__legend-dot profile__legend-dot--loss" />
+                                                <span>{isFourPlayersMode ? '4o puesto' : 'Derrotas'}</span>
+                                            </div>
                                         </div>
-                                    )}
+                                    </article>
+
+                                    <article className="profile__proto-card profile__proto-card--peak">
+                                        <img className="profile__proto-bg" src={picoRRCard} alt="" aria-hidden="true" />
+                                        <div className="profile__proto-content profile__proto-content--peak">
+                                            <span className="profile__proto-value">{peakElo}</span>
+                                            <span className="profile__proto-subtext">Maximo historico</span>
+                                        </div>
+                                    </article>
+
+                                    <article className="profile__proto-card profile__proto-card--streak">
+                                        <img className="profile__proto-bg" src={rachaCard} alt="" aria-hidden="true" />
+                                        <div className="profile__proto-content profile__proto-content--streak">
+                                            <span className="profile__proto-value">{modeStats.win_streak ?? 0}</span>
+                                        </div>
+                                    </article>
+
+                                    <article className="profile__proto-card profile__proto-card--stats">
+                                        <img className="profile__proto-bg" src={estadisticasCard} alt="" aria-hidden="true" />
+                                        <div className="profile__proto-content profile__proto-content--stats">
+                                            {statsCardValues.map((value, index) => (
+                                                <span key={index} className="profile__proto-stats-value">{value}</span>
+                                            ))}
+                                        </div>
+                                        {isFourPlayersMode && (
+                                            <span className="profile__proto-note">Victorias=1o Derrotas=4o Empates=2o+3o</span>
+                                        )}
+                                    </article>
+
+                                    <article className="profile__proto-card profile__proto-card--nemesis">
+                                        <img className="profile__proto-bg" src={nemesisCard} alt="" aria-hidden="true" />
+                                        <div className="profile__proto-content profile__proto-content--nemesis">
+                                            <span className="profile__proto-name">{modeStats.nemesis_name || '--'}</span>
+                                            <span className="profile__proto-text">
+                                                {modeStats.nemesis_name
+                                                    ? `${isFourPlayersMode ? 'Te supera' : 'Te gana'} ${nemesisHits} ${nemesisHits === 1 ? 'vez' : 'veces'}`
+                                                    : 'Aun sin rival destacado'}
+                                            </span>
+                                        </div>
+                                    </article>
+
+                                    <article className="profile__proto-card profile__proto-card--victim">
+                                        <img className="profile__proto-bg" src={victimaCard} alt="" aria-hidden="true" />
+                                        <div className="profile__proto-content profile__proto-content--victim">
+                                            <span className="profile__proto-name">{modeStats.victim_name || '--'}</span>
+                                            <span className="profile__proto-text">
+                                                {modeStats.victim_name
+                                                    ? `${isFourPlayersMode ? 'Le superas' : 'Le ganas'} ${victimWins} ${victimWins === 1 ? 'vez' : 'veces'}`
+                                                    : 'Aun sin victima destacada'}
+                                            </span>
+                                        </div>
+                                    </article>
                                 </div>
-
-                                {isOwnProfile && (
-                                    <div className="profile__highlights">
-                                        <div className="profile__stat-card profile__stat-card--peak">
-                                            <span className="profile__stat-card-icon">👑</span>
-                                            <div className="profile__stat-card-body">
-                                                <span className="profile__stat-card-label">Pico de RR</span>
-                                                <span className="profile__stat-card-value">{modeStats.peak_elo ?? stats?.peak_elo ?? stats?.elo ?? 1000}</span>
-                                                <span className="profile__stat-card-hint">Maximo historico</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="profile__stat-card profile__stat-card--streak">
-                                            <span className="profile__stat-card-icon">🔥</span>
-                                            <div className="profile__stat-card-body">
-                                                <span className="profile__stat-card-label">Mejor racha</span>
-                                                <span className="profile__stat-card-value">{modeStats.win_streak ?? 0}</span>
-                                                <span className="profile__stat-card-hint">{isFourPlayersMode ? '1º puestos seguidos' : 'Victorias seguidas'}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="profile__rival-card profile__rival-card--nemesis">
-                                            <div className="profile__rival-badge">😈</div>
-                                            <div className="profile__rival-body">
-                                                <span className="profile__rival-role">Tu nemesis</span>
-                                                <span className="profile__rival-name">{modeStats.nemesis_name ?? '—'}</span>
-                                                {modeStats.nemesis_losses != null && modeStats.nemesis_losses > 0 && (
-                                                    <span className="profile__rival-info">
-                                                        {isFourPlayersMode ? 'Te ha superado ' : 'Te ha ganado '}
-                                                        <strong>{modeStats.nemesis_losses}</strong> veces
-                                                    </span>
-                                                )}
-                                                {!modeStats.nemesis_name && <span className="profile__rival-empty">Aun sin rival destacado</span>}
-                                            </div>
-                                        </div>
-
-                                        <div className="profile__rival-card profile__rival-card--victim">
-                                            <div className="profile__rival-badge">😇</div>
-                                            <div className="profile__rival-body">
-                                                <span className="profile__rival-role">Tu victima</span>
-                                                <span className="profile__rival-name">{modeStats.victim_name ?? '—'}</span>
-                                                {modeStats.victim_wins != null && modeStats.victim_wins > 0 && (
-                                                    <span className="profile__rival-info">
-                                                        {isFourPlayersMode ? 'Le has superado ' : 'Le has ganado '}
-                                                        <strong>{modeStats.victim_wins}</strong> veces
-                                                    </span>
-                                                )}
-                                                {!modeStats.victim_name && <span className="profile__rival-empty">Aun sin victima favorita</span>}
-                                            </div>
-                                        </div>
+                            </section>
+                        ) : (
+                            <section className="profile__friend-grid">
+                                <article className="profile__paper-card">
+                                    <h3 className="profile__paper-title">Win Rate</h3>
+                                    <div className="profile__winrate-circle">
+                                        <svg viewBox="0 0 80 80" className="profile__winrate-svg">
+                                            <circle cx="40" cy="40" r={circleRadius} className="profile__winrate-track" />
+                                            <circle
+                                                cx="40"
+                                                cy="40"
+                                                r={circleRadius}
+                                                className="profile__winrate-fill profile__winrate-fill--loss"
+                                                strokeDasharray={`${circleCircumference} ${circleCircumference}`}
+                                            />
+                                            <circle
+                                                cx="40"
+                                                cy="40"
+                                                r={circleRadius}
+                                                className="profile__winrate-fill profile__winrate-fill--win"
+                                                strokeDasharray={`${winStroke} ${circleCircumference}`}
+                                            />
+                                        </svg>
+                                        <span className="profile__winrate-label">{winRate}%</span>
                                     </div>
-                                )}
-                            </div>
-                        )}
+                                </article>
 
-                        {activeTab === 'ajustes' && isOwnProfile && (
-                            <div className="profile__settings">
-                                <div className="profile__card profile__settings-card">
-                                    <h3 className="profile__card-title">Cambiar los datos de tu cuenta</h3>
-                                    <div className="profile__settings-form">
-                                        <div className="profile__form-group">
-                                            <label className="profile__form-label">Nombre de usuario</label>
+                                <article className="profile__paper-card">
+                                    <h3 className="profile__paper-title">Estadisticas</h3>
+                                    <ul className="profile__simple-list">
+                                        {statsRows.map((row) => (
+                                            <li key={row.label} className="profile__simple-row">
+                                                <span>{row.label}</span>
+                                                <strong>{row.value}</strong>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </article>
+
+                                {userId && (
+                                    <article className="profile__paper-card">
+                                        <h3 className="profile__paper-title">Cara a cara</h3>
+                                        {h2h ? (
+                                            <ul className="profile__simple-list">
+                                                {activeStatsMode === '1vs1' ? (
+                                                    <>
+                                                        <li className="profile__simple-row"><span>Partidas</span><strong>{h2h.total_matches}</strong></li>
+                                                        <li className="profile__simple-row"><span>Tus victorias</span><strong>{h2h.wins}</strong></li>
+                                                        <li className="profile__simple-row"><span>Tus derrotas</span><strong>{h2h.losses}</strong></li>
+                                                        <li className="profile__simple-row"><span>Empates</span><strong>{h2h.draws}</strong></li>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <li className="profile__simple-row"><span>Partidas juntos</span><strong>{h2h.total_matches_4p ?? 0}</strong></li>
+                                                        <li className="profile__simple-row"><span>Tus 1o puestos</span><strong>{h2h.first_places_4p ?? 0}</strong></li>
+                                                        <li className="profile__simple-row"><span>2o-4o puestos</span><strong>{h2h.other_places_4p ?? 0}</strong></li>
+                                                    </>
+                                                )}
+                                            </ul>
+                                        ) : (
+                                            <p className="profile__empty-text">Sin enfrentamientos previos.</p>
+                                        )}
+                                    </article>
+                                )}
+                            </section>
+                        )
+                    ) : (
+                        isOwnProfile && (
+                            <section className="profile__settings-stage">
+                                <div className="profile__paper-card profile__paper-card--settings">
+                                    <h3 className="profile__paper-title">Ajustes de cuenta</h3>
+
+                                    <div className="profile__form-grid">
+                                        <label className="profile__form-field">
+                                            <span>Nombre de usuario</span>
                                             <input
                                                 className="profile__form-input"
                                                 type="text"
                                                 value={settingsForm.username}
                                                 onChange={(e) => setSettingsForm((prev) => ({ ...prev, username: e.target.value }))}
-                                                placeholder="Tu nombre de usuario"
+                                                placeholder="Tu nombre"
                                             />
-                                        </div>
-                                        <div className="profile__form-group">
-                                            <label className="profile__form-label">Email</label>
+                                        </label>
+
+                                        <label className="profile__form-field">
+                                            <span>Email</span>
                                             <input
                                                 className="profile__form-input"
                                                 type="email"
@@ -531,57 +516,70 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                                 onChange={(e) => setSettingsForm((prev) => ({ ...prev, email: e.target.value }))}
                                                 placeholder="tu@email.com"
                                             />
-                                        </div>
+                                        </label>
 
-                                        <div className="profile__form-group">
-                                            <label className="profile__form-label">Contraseña actual</label>
+                                        <label className="profile__form-field">
+                                            <span>Contrasena actual</span>
                                             <input
                                                 className="profile__form-input"
                                                 type="password"
                                                 value={settingsForm.currentPassword}
                                                 onChange={(e) => setSettingsForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
-                                                placeholder="••••••••"
+                                                placeholder="********"
                                             />
-                                        </div>
-                                        <div className="profile__form-row">
-                                            <div className="profile__form-group">
-                                                <label className="profile__form-label">Nueva contraseña</label>
-                                                <input
-                                                    className="profile__form-input"
-                                                    type="password"
-                                                    value={settingsForm.newPassword}
-                                                    onChange={(e) => setSettingsForm((prev) => ({ ...prev, newPassword: e.target.value }))}
-                                                    placeholder="••••••••"
-                                                />
-                                            </div>
-                                            <div className="profile__form-group">
-                                                <label className="profile__form-label">Confirmar contraseña</label>
-                                                <input
-                                                    className="profile__form-input"
-                                                    type="password"
-                                                    value={settingsForm.confirmPassword}
-                                                    onChange={(e) => setSettingsForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                                                    placeholder="••••••••"
-                                                />
-                                            </div>
-                                        </div>
+                                        </label>
 
-                                        {settingsError && <p className="profile__form-error">{settingsError}</p>}
-                                        {settingsSuccess && <p className="profile__form-success">{settingsSuccess}</p>}
+                                        <label className="profile__form-field">
+                                            <span>Nueva contrasena</span>
+                                            <input
+                                                className="profile__form-input"
+                                                type="password"
+                                                value={settingsForm.newPassword}
+                                                onChange={(e) => setSettingsForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+                                                placeholder="********"
+                                            />
+                                        </label>
 
-                                        <button className="profile__form-save-btn" onClick={handleSaveSettings} disabled={savingSettings}>
-                                            {savingSettings ? 'Guardando...' : '💾 Guardar cambios'}
-                                        </button>
+                                        <label className="profile__form-field">
+                                            <span>Confirmar contrasena</span>
+                                            <input
+                                                className="profile__form-input"
+                                                type="password"
+                                                value={settingsForm.confirmPassword}
+                                                onChange={(e) => setSettingsForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                                                placeholder="********"
+                                            />
+                                        </label>
                                     </div>
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
 
-                <button className="profile__back-btn" onClick={() => onNavigate(backScreen)}>
-                    {backLabel}
-                </button>
+                                    {settingsError && <p className="profile__form-msg profile__form-msg--error">{settingsError}</p>}
+                                    {settingsSuccess && <p className="profile__form-msg profile__form-msg--ok">{settingsSuccess}</p>}
+
+                                    <button className="profile__save-btn" onClick={handleSaveSettings} disabled={savingSettings}>
+                                        {savingSettings ? 'Guardando...' : 'Guardar cambios'}
+                                    </button>
+                                </div>
+                            </section>
+                        )
+                    )}
+                </main>
+
+                <footer className="profile__footer">
+                    {isOwnProfile ? (
+                        <button
+                            className="profile__image-btn profile__image-btn--back"
+                            onClick={() => onNavigate(backScreen)}
+                            aria-label={backLabel}
+                            title={backLabel}
+                        >
+                            <img src={backToMenuButtonImage} alt="" />
+                        </button>
+                    ) : (
+                        <button className="profile__back-text-btn" onClick={() => onNavigate(backScreen)}>
+                            {backLabel}
+                        </button>
+                    )}
+                </footer>
             </div>
         </div>
     )
