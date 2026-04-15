@@ -7,15 +7,31 @@ interface ModalProps {
   children: React.ReactNode
   maxWidth?: string
   showCloseButton?: boolean
+  overlayClassName?: string
+  boxClassName?: string
+  closeButtonClassName?: string
 }
 
-function Modal({ isOpen, onClose, children, maxWidth, showCloseButton = true }: ModalProps) {
+function Modal({
+  isOpen,
+  onClose,
+  children,
+  maxWidth,
+  showCloseButton = true,
+  overlayClassName,
+  boxClassName,
+  closeButtonClassName,
+}: ModalProps) {
   const [isMouseDownOnOverlay, setIsMouseDownOnOverlay] = React.useState(false)
 
   if (!isOpen) return null
 
+  const overlayClasses = ['modal-overlay', overlayClassName].filter(Boolean).join(' ')
+  const boxClasses = ['modal-box', boxClassName].filter(Boolean).join(' ')
+  const closeClasses = ['modal-close', closeButtonClassName].filter(Boolean).join(' ')
+
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Guardamos si el clic empezó en el fondo (overlay)
+    // Save if the click starts on the overlay itself.
     if (e.target === e.currentTarget) {
       setIsMouseDownOnOverlay(true)
     } else {
@@ -24,7 +40,7 @@ function Modal({ isOpen, onClose, children, maxWidth, showCloseButton = true }: 
   }
 
   const handleMouseUp = (e: React.MouseEvent) => {
-    // Solo cerramos si empezó y terminó en el fondo (overlay)
+    // Close only if mouse down and up both happen on the overlay.
     if (e.target === e.currentTarget && isMouseDownOnOverlay) {
       onClose()
     }
@@ -32,18 +48,18 @@ function Modal({ isOpen, onClose, children, maxWidth, showCloseButton = true }: 
   }
 
   return (
-    <div 
-      className="modal-overlay" 
+    <div
+      className={overlayClasses}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
     >
       <div
-        className="modal-box"
+        className={boxClasses}
         onClick={(e) => e.stopPropagation()}
         style={maxWidth ? { maxWidth } : undefined}
       >
         {showCloseButton && (
-          <button className="modal-close" onClick={onClose}>
+          <button className={closeClasses} onClick={onClose}>
             x
           </button>
         )}

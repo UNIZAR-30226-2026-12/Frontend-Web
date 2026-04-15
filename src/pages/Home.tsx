@@ -2,7 +2,14 @@ import { useState } from 'react'
 import LoginModal from '../components/LoginModal'
 import RegisterModal from '../components/RegisterModal'
 import ForgotPasswordModal from '../components/ForgotPasswordModal'
-import '../styles/background.css'
+import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
+import logoReversi from '../assets/elementosGenerales/logoReversi.png'
+import questionMark from '../assets/elementosGenerales/interrogante.png'
+import greenChip from '../assets/elementosGenerales/fichaVerde.png'
+import redChip from '../assets/elementosGenerales/fichaRoja.png'
+import robotMascot from '../assets/inicio/robotSentado.png'
+import loginButton from '../assets/inicio/botonIniciarSesion.png'
+import createAccountButton from '../assets/inicio/botonRegistroBeige.png'
 import '../styles/pages/Home.css'
 
 interface HomeProps {
@@ -16,55 +23,66 @@ function Home({ onNavigate }: HomeProps) {
 
   return (
     <div className="home">
-      {/* Fondo animado con fichas flotantes */}
-      <div className="home__bg">
-        <span className="home__chip home__chip--1">⚫</span>
-        <span className="home__chip home__chip--2">⚪</span>
-        <span className="home__chip home__chip--3">🔴</span>
-        <span className="home__chip home__chip--4">🔵</span>
-        <span className="home__chip home__chip--5">🟢</span>
-        <span className="home__chip home__chip--6">🟡</span>
-        <span className="home__chip home__chip--7">🟣</span>
-        <span className="home__chip home__chip--8">🟠</span>
-        <span className="home__chip home__chip--9">⚫</span>
-        <span className="home__chip home__chip--10">⚪</span>
-        <span className="home__chip home__chip--q1 home__chip--question">❓</span>
-        <span className="home__chip home__chip--q2 home__chip--question">❓</span>
-        <span className="home__chip home__chip--q3 home__chip--question">❓</span>
-        <span className="home__chip home__chip--q4 home__chip--question">❓</span>
+      <img className="home__background" src={menuBackground} alt="" aria-hidden="true" />
+      <div className="home__overlay" aria-hidden="true"></div>
+
+      <div className="home__decorations" aria-hidden="true">
+        <img className="home__chip home__chip--red home__chip--top-left" src={redChip} alt="" />
+        <img className="home__chip home__chip--green home__chip--top-right" src={greenChip} alt="" />
+        <img className="home__chip home__chip--green home__chip--mid-right" src={greenChip} alt="" />
+        <img className="home__chip home__chip--green home__chip--bottom-right" src={greenChip} alt="" />
+        <img className="home__chip home__chip--green home__chip--mid-left" src={greenChip} alt="" />
+        <img className="home__chip home__chip--red home__chip--bottom-left" src={redChip} alt="" />
+
+        <img className="home__question home__question--1" src={questionMark} alt="" />
+        <img className="home__question home__question--2" src={questionMark} alt="" />
+        <img className="home__question home__question--3" src={questionMark} alt="" />
+        <img className="home__question home__question--4" src={questionMark} alt="" />
       </div>
 
       <main className="home__content">
-        {/* Logo / Título */}
-        <div className="home__header">
-          <h1 className="home__title">
-            <span className="home__title-random">Random</span>
-            <span className="home__title-reversi">Reversi</span>
-          </h1>
+        <img className="home__logo" src={logoReversi} alt="Random Reversi" />
+
+        <section className="home__message" aria-label="Descripcion del juego">
+          <span className="home__tape home__tape--left"></span>
+          <span className="home__tape home__tape--right"></span>
           <p className="home__subtitle">
-            El clásico Reversi reinventado con habilidades especiales,
+            El clasico Reversi reinventado con habilidades especiales,
             casillas sorpresa y partidas de hasta 4 jugadores.
           </p>
-        </div>
+        </section>
 
-        {/* Botones de acción */}
         <div className="home__actions">
-          <button className="home__btn home__btn--primary" onClick={() => setShowLogin(true)}>
-            Iniciar Sesión
+          <button
+            className="home__image-button home__image-button--login"
+            onClick={() => setShowLogin(true)}
+            aria-label="Iniciar Sesión"
+          >
+            <img src={loginButton} alt="" />
           </button>
-          <button className="home__btn home__btn--secondary" onClick={() => setShowRegister(true)}>
-            Crear Cuenta
+
+          <button
+            className="home__image-button home__image-button--create"
+            onClick={() => setShowRegister(true)}
+            aria-label="Crear Cuenta"
+          >
+            <img src={createAccountButton} alt="" />
           </button>
         </div>
 
-        {/* Footer */}
         <footer className="home__footer">
-          <p>HuQ Games Studio &middot; Universidad de Zaragoza</p>
+          <p>HuQ Games Studio · Universidad de Zaragoza</p>
         </footer>
       </main>
 
-      {/* Modales */}
-      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onNavigate={onNavigate} onForgotPassword={() => setShowForgotPassword(true)} />
+      <img className="home__mascot" src={robotMascot} alt="" aria-hidden="true" />
+
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onNavigate={onNavigate}
+        onForgotPassword={() => setShowForgotPassword(true)}
+      />
       <RegisterModal
         isOpen={showRegister}
         onClose={() => setShowRegister(false)}
@@ -79,3 +97,4 @@ function Home({ onNavigate }: HomeProps) {
 }
 
 export default Home
+

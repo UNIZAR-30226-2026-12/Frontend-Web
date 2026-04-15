@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { api } from '../services/api'
 import Modal from './Modal'
+import registerPostit from '../assets/registro/positRegistro.png'
+import registerButton from '../assets/registro/botonRegistro.png'
 import '../styles/components/AuthForms.css'
 
 interface RegisterModalProps {
@@ -63,7 +65,7 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
       await api.auth.register({
         username,
         email,
-        password
+        password,
       })
       onRegisterSuccess()
     } catch (err: any) {
@@ -72,87 +74,97 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="auth-form">
-        <h2 className="auth-form__title">Crear Cuenta</h2>
-        <p className="auth-form__subtitle">Únete a Random Reversi</p>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      overlayClassName="auth-modal-overlay"
+      boxClassName="auth-modal-box auth-modal-box--register"
+      closeButtonClassName="auth-modal-close"
+    >
+      <div className="auth-form auth-form--prototype auth-form--register">
+        <img className="auth-form__paper" src={registerPostit} alt="" aria-hidden="true" />
 
-        <form className="auth-form__fields" onSubmit={handleRegister}>
-          {error && <div className="auth-form__error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
-          <label className="auth-form__label">
-            Nombre de usuario
-            <input
-              type="text"
-              className="auth-form__input"
-              placeholder="Tu nombre de usuario"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </label>
+        <div className="auth-form__content">
+          <h2 className="auth-form__sr-title">Crear Cuenta</h2>
 
-          <label className="auth-form__label">
-            Correo electrónico
-            <input
-              type="email"
-              className="auth-form__input"
-              placeholder="usuario@ejemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </label>
+          <form className="auth-form__fields" onSubmit={handleRegister}>
+            {error && <div className="auth-form__error">{error}</div>}
 
-          <label className="auth-form__label">
-            Contraseña
-            <div className="auth-form__password-field">
+            <label className="auth-form__label">
+              Nombre de usuario
               <input
-                type={showPassword ? 'text' : 'password'}
-                className="auth-form__input auth-form__input--password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                type="text"
+                className="auth-form__input"
+                placeholder="Tu nombre de usuario"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
-              <button
-                type="button"
-                className="auth-form__password-toggle"
-                onClick={() => setShowPassword((current) => !current)}
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                aria-pressed={showPassword}
-              >
-                <PasswordEyeIcon hidden={!showPassword} />
-              </button>
-            </div>
-          </label>
+            </label>
 
-          <label className="auth-form__label">
-            Confirmar contraseña
-            <div className="auth-form__password-field">
+            <label className="auth-form__label">
+              Correo electrónico
               <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                className="auth-form__input auth-form__input--password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                type="email"
+                className="auth-form__input"
+                placeholder="usuario@ejemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <button
-                type="button"
-                className="auth-form__password-toggle"
-                onClick={() => setShowConfirmPassword((current) => !current)}
-                aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                aria-pressed={showConfirmPassword}
-              >
-                <PasswordEyeIcon hidden={!showConfirmPassword} />
-              </button>
-            </div>
-          </label>
+            </label>
 
-          <button type="submit" className="auth-form__btn">
-            Registrarse
-          </button>
-        </form>
+            <label className="auth-form__label">
+              Contraseña
+              <div className="auth-form__password-field">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="auth-form__input auth-form__input--password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="auth-form__password-toggle"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-pressed={showPassword}
+                >
+                  <PasswordEyeIcon hidden={!showPassword} />
+                </button>
+              </div>
+            </label>
+
+            <label className="auth-form__label">
+              Confirmar contraseña
+              <div className="auth-form__password-field">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  className="auth-form__input auth-form__input--password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="auth-form__password-toggle"
+                  onClick={() => setShowConfirmPassword((current) => !current)}
+                  aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-pressed={showConfirmPassword}
+                >
+                  <PasswordEyeIcon hidden={!showConfirmPassword} />
+                </button>
+              </div>
+            </label>
+
+            <button type="submit" className="auth-form__image-submit" aria-label="Registrarse">
+              <img src={registerButton} alt="" />
+            </button>
+          </form>
+        </div>
       </div>
     </Modal>
   )

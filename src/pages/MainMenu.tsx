@@ -1,8 +1,17 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import '../styles/background.css'
+import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
+import logoReversi from '../assets/elementosGenerales/logoReversi.png'
+import questionMark from '../assets/elementosGenerales/interrogante.png'
+import rulesButton from '../assets/homeScreenMenu/botonReglas.png'
+import onlineButton from '../assets/homeScreenMenu/botonJugarOnline.png'
+import aiButton from '../assets/homeScreenMenu/botonJugarIA.png'
+import customizationButton from '../assets/homeScreenMenu/botonPersonalizaci\u00f3n.png'
+import friendsButton from '../assets/homeScreenMenu/botonAmigos.png'
+import rankingButton from '../assets/homeScreenMenu/botonRanking.png'
+import logoutSticker from '../assets/homeScreenMenu/cerrarSesion.png'
 import '../styles/pages/MainMenu.css'
 
 interface UserData {
@@ -76,105 +85,76 @@ function MainMenu({ onNavigate }: MainMenuProps) {
 
     return (
         <div className="menu">
-            <button
-                className="menu__rules-btn"
-                onClick={() => onNavigate('rules')}
-                title="Ver reglas del juego"
-            >
-                <span className="menu__rules-icon">📘</span>
-                <span className="menu__rules-text">Reglas</span>
-            </button>
+            <img className="menu__background" src={menuBackground} alt="" aria-hidden="true" />
+            <div className="menu__overlay" aria-hidden="true"></div>
 
-            <div className="menu__user-bar">
+            <div className="menu__question-layer" aria-hidden="true">
+                <img className="menu__question menu__question--1" src={questionMark} alt="" />
+                <img className="menu__question menu__question--2" src={questionMark} alt="" />
+                <img className="menu__question menu__question--3" src={questionMark} alt="" />
+                <img className="menu__question menu__question--4" src={questionMark} alt="" />
+                <img className="menu__question menu__question--5" src={questionMark} alt="" />
+                <img className="menu__question menu__question--6" src={questionMark} alt="" />
+            </div>
+
+            <nav className="menu__top-nav">
+                <button className="menu__rules-btn" onClick={() => onNavigate('rules')} title="Ver reglas del juego" aria-label="Reglas del juego">
+                    <img src={rulesButton} alt="" />
+                </button>
+            </nav>
+
+            <div className="menu__account">
                 <button
-                    className="menu__user-info menu__user-info--clickable"
+                    className="menu__profile-sticker"
                     onClick={() => onNavigate('profile')}
                     title="Ver mi perfil"
                 >
-                    <img className="menu__user-icon" src={resolveUserAvatar(user?.avatar_url, user?.username || 'Jugador')} alt="Avatar" />
-                    <div className="menu__user-details">
-                        <span className="menu__user-name">{user?.username || 'Cargando...'}</span>
-                        {user?.elo !== undefined && (
-                            <span className="menu__user-elo">{user.elo} RR</span>
-                        )}
+                    <span className="menu__tape menu__tape--left"></span>
+                    <span className="menu__tape menu__tape--right"></span>
+                    <div className="menu__profile-frame">
+                        <img
+                            className="menu__profile-avatar"
+                            src={resolveUserAvatar(user?.avatar_url, user?.username || 'Jugador')}
+                            alt="Avatar"
+                        />
                     </div>
+                    <span className="menu__profile-elo">{user?.elo ?? 1000} RR</span>
                 </button>
-                <button className="menu__logout-btn" onClick={handleLogout} title="Cerrar sesión">
-                    <span className="menu__logout-text">Cerrar sesión</span>
+
+                <button className="menu__logout-btn" onClick={handleLogout} title="Cerrar sesion" aria-label="Cerrar sesion">
+                    <img src={logoutSticker} alt="" />
                 </button>
             </div>
 
-            <div className="home__bg">
-                <span className="home__chip home__chip--1">⚫</span>
-                <span className="home__chip home__chip--2">⚪</span>
-                <span className="home__chip home__chip--3">🔴</span>
-                <span className="home__chip home__chip--4">🔵</span>
-                <span className="home__chip home__chip--5">🟢</span>
-                <span className="home__chip home__chip--6">🟡</span>
-                <span className="home__chip home__chip--7">🟣</span>
-                <span className="home__chip home__chip--8">🟠</span>
-                <span className="home__chip home__chip--9">⚫</span>
-                <span className="home__chip home__chip--10">⚪</span>
-                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
-            </div>
-
-            <main className="menu__content">
+            <main className="menu__stage">
                 <div className="menu__header">
-                    <h1 className="menu__title">
-                        <span className="menu__title-random">Random</span>
-                        <span className="menu__title-reversi">Reversi</span>
-                    </h1>
-                    <p className="menu__subtitle">¿Qué te apetece hacer hoy?</p>
+                    <img className="menu__logo" src={logoReversi} alt="Random Reversi" />
+                    <p className="menu__subtitle">Elige tu jugada</p>
                 </div>
 
-                <div className="menu__options">
-                    <button className="menu__card" onClick={() => onNavigate('online-game')}>
-                        <span className="menu__card-icon">🌐</span>
-                        <div className="menu__card-info">
-                            <span className="menu__card-title">Jugar Online</span>
-                            <span className="menu__card-desc">Compite contra otros jugadores en línea</span>
-                        </div>
+                <div className="menu__primary-row">
+                    <button className="menu__image-btn menu__image-btn--online" onClick={() => onNavigate('online-game')} aria-label="Jugar online">
+                        <img src={onlineButton} alt="" />
                     </button>
 
-                    <button className="menu__card" onClick={() => onNavigate('ranking')}>
-                        <span className="menu__card-icon">🏆</span>
-                        <div className="menu__card-info">
-                            <span className="menu__card-title">Ranking Global</span>
-                            <span className="menu__card-desc">Consulta el top de jugadores por RR</span>
-                        </div>
-                    </button>
-
-                    <button className="menu__card" onClick={() => setShowIAModal(true)}>
-                        <span className="menu__card-icon">🤖</span>
-                        <div className="menu__card-info">
-                            <span className="menu__card-title">Jugar contra la IA</span>
-                            <span className="menu__card-desc">Pon a prueba tu estrategia contra la máquina</span>
-                        </div>
-                    </button>
-
-                    <button className="menu__card" onClick={() => onNavigate('customization')}>
-                        <span className="menu__card-icon">🎨</span>
-                        <div className="menu__card-info">
-                            <span className="menu__card-title">Personalización</span>
-                            <span className="menu__card-desc">Personaliza tu perfil y estilos de fichas</span>
-                        </div>
-                    </button>
-
-                    <button className="menu__card menu__card--wide" onClick={() => onNavigate('friends')}>
-                        <span className="menu__card-icon">👥</span>
-                        <div className="menu__card-info">
-                            <span className="menu__card-title">Amigos</span>
-                            <span className="menu__card-desc">Gestiona tu lista de amigos</span>
-                        </div>
+                    <button className="menu__image-btn menu__image-btn--ia" onClick={() => setShowIAModal(true)} aria-label="Jugar contra la IA">
+                        <img src={aiButton} alt="" />
                     </button>
                 </div>
 
-                <footer className="menu__footer">
-                    <p>HuQ Games Studio &middot; Universidad de Zaragoza</p>
-                </footer>
+                <div className="menu__secondary-row">
+                    <button className="menu__image-btn menu__image-btn--custom" onClick={() => onNavigate('customization')} aria-label="Personalizacion">
+                        <img src={customizationButton} alt="" />
+                    </button>
+
+                    <button className="menu__image-btn menu__image-btn--friends" onClick={() => onNavigate('friends')} aria-label="Amigos">
+                        <img src={friendsButton} alt="" />
+                    </button>
+
+                    <button className="menu__image-btn menu__image-btn--ranking" onClick={() => onNavigate('ranking')} aria-label="Ranking global">
+                        <img src={rankingButton} alt="" />
+                    </button>
+                </div>
             </main>
 
             <GameModal

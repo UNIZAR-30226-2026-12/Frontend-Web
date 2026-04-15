@@ -1,6 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { api } from '../services/api'
 import Modal from './Modal'
+import loginPostit from '../assets/inicio/positIniciarSesion.png'
+import loginMascot from '../assets/inicio/robotSentado.png'
+import enterButton from '../assets/elementosGenerales/botonEntrar.png'
 import '../styles/components/AuthForms.css'
 
 interface LoginModalProps {
@@ -67,60 +70,74 @@ function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword }: LoginModa
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="auth-form">
-        <h2 className="auth-form__title">Iniciar Sesión</h2>
-        <p className="auth-form__subtitle">Bienvenido de vuelta a Random Reversi</p>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      showCloseButton={false}
+      overlayClassName="auth-modal-overlay"
+      boxClassName="auth-modal-box auth-modal-box--login"
+    >
+      <div className="auth-form auth-form--prototype auth-form--login">
+        <img className="auth-form__paper" src={loginPostit} alt="" aria-hidden="true" />
+        <img className="auth-form__mascot auth-form__mascot--login" src={loginMascot} alt="" aria-hidden="true" />
 
-        <form className="auth-form__fields" onSubmit={handleLogin}>
-          {error && <div className="auth-form__error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
-          <label className="auth-form__label">
-            Usuario o Correo
-            <input
-              type="text"
-              className="auth-form__input"
-              placeholder="Tu Usuario o Correo"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </label>
+        <div className="auth-form__content">
+          <h2 className="auth-form__sr-title">Iniciar Sesión</h2>
 
-          <label className="auth-form__label">
-            Contraseña
-            <div className="auth-form__password-field">
+          <form className="auth-form__fields" onSubmit={handleLogin}>
+            {error && <div className="auth-form__error">{error}</div>}
+
+            <label className="auth-form__label">
+              Usuario o Correo
               <input
-                type={showPassword ? 'text' : 'password'}
-                className="auth-form__input auth-form__input--password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                type="text"
+                className="auth-form__input"
+                placeholder="Tu Usuario o Correo"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
-              <button
-                type="button"
-                className="auth-form__password-toggle"
-                onClick={() => setShowPassword((current) => !current)}
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                aria-pressed={showPassword}
-              >
-                <PasswordEyeIcon hidden={!showPassword} />
-              </button>
-            </div>
-          </label>
+            </label>
 
-          <button type="submit" className="auth-form__btn">
-            Entrar
-          </button>
+            <label className="auth-form__label">
+              Contraseña
+              <div className="auth-form__password-field">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="auth-form__input auth-form__input--password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="auth-form__password-toggle"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-pressed={showPassword}
+                >
+                  <PasswordEyeIcon hidden={!showPassword} />
+                </button>
+              </div>
+            </label>
 
-          <button
-            type="button"
-            className="auth-form__forgot-link"
-            onClick={() => { onClose(); onForgotPassword() }}
-          >
-            ¿Has olvidado tu contraseña?
-          </button>
-        </form>
+            <button type="submit" className="auth-form__image-submit" aria-label="Entrar">
+              <img src={enterButton} alt="" />
+            </button>
+
+            <button
+              type="button"
+              className="auth-form__forgot-link"
+              onClick={() => {
+                onClose()
+                onForgotPassword()
+              }}
+            >
+              ¿Has olvidado tu contraseña?
+            </button>
+          </form>
+        </div>
       </div>
     </Modal>
   )
