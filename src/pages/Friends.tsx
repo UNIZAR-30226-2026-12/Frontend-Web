@@ -2,9 +2,19 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import Modal from '../components/Modal'
-import '../styles/background.css'
 import '../styles/pages/Friends.css'
 import { resolveUserAvatar } from '../config/avatarOptions'
+import friendsBackground from '../assets/backgrounds/menu-mosaic-bg.png'
+import addFriendButtonImage from '../assets/amigos/botonA\u00F1adirAmigo.png'
+import backToMenuButtonImage from '../assets/elementosGenerales/botonVolverMenu.png'
+import friendsSheetImage from '../assets/amigos/listaAmigos.png'
+import friendRequestsSheetImage from '../assets/amigos/solicitudesAmistad.png'
+import gameRequestsSheetImage from '../assets/amigos/solicitudesJuego.png'
+import pausedGamesSheetImage from '../assets/amigos/partidasPausadas.png'
+import noFriendsIllustration from '../assets/amigos/SinAmigos.png'
+import noFriendRequestsIllustration from '../assets/amigos/SinSolicitudes.png'
+import noGameRequestsIllustration from '../assets/amigos/SinSolicitudesJuego.png'
+import noPausedGamesIllustration from '../assets/amigos/sinPausadas.png'
 
 interface FriendsProps {
     onNavigate: (screen: string, data?: any) => void
@@ -42,6 +52,17 @@ interface PausedGame {
 const normalizeMode = (rawMode: unknown): '1vs1' | '1vs1vs1vs1' => {
     if (rawMode === '1vs1vs1vs1' || rawMode === '1v1v1v1') return '1vs1vs1vs1'
     return '1vs1'
+}
+
+const formatStatus = (status: Friend['status']) => {
+    if (status === 'online') return 'En linea'
+    if (status === 'playing') return 'Jugando'
+    return 'Desconectado'
+}
+
+const toInitial = (name: string) => {
+    const trimmed = name.trim()
+    return trimmed ? trimmed.charAt(0).toUpperCase() : '?'
 }
 
 interface Toast {
@@ -373,257 +394,305 @@ function Friends({ onNavigate }: FriendsProps) {
 
     return (
         <div className="friends">
-            <div className="home__bg">
-                <span className="home__chip home__chip--1">⚫</span>
-                <span className="home__chip home__chip--2">⚪</span>
-                <span className="home__chip home__chip--3">🔴</span>
-                <span className="home__chip home__chip--4">🔵</span>
-                <span className="home__chip home__chip--5">🟢</span>
-                <span className="home__chip home__chip--6">🟡</span>
-                <span className="home__chip home__chip--7">🟣</span>
-                <span className="home__chip home__chip--8">🟠</span>
-                <span className="home__chip home__chip--9">⚫</span>
-                <span className="home__chip home__chip--10">⚪</span>
-                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
-            </div>
+            <img className="friends__background" src={friendsBackground} alt="" aria-hidden="true" />
+            <div className="friends__overlay" aria-hidden="true"></div>
 
             <div className="friends__container">
                 <header className="friends__header">
                     <div className="friends__headline">
-                        <div>
-                            <h1 className="friends__title">Amigos</h1>
-                            <p className="friends__subtitle">Conecta y juega con tus amigos</p>
-                        </div>
-                        <button className="friends__primary-btn" onClick={handleOpenAddModal}>
-                            Añadir amigo
-                        </button>
+                        <h1 className="friends__title">Amigos</h1>
+                        <p className="friends__subtitle">Conecta y juega con tus amigos</p>
                     </div>
+                    <button
+                        className="friends__image-btn friends__image-btn--add"
+                        onClick={handleOpenAddModal}
+                        aria-label="Anadir amigo"
+                        title="Anadir amigo"
+                    >
+                        <img src={addFriendButtonImage} alt="" />
+                    </button>
                 </header>
 
                 <div className="friends__content">
-                    <section className="friends__section friends__list-section">
-                        <h2 className="friends__section-title">Tus amigos ({friends.length})</h2>
-                        <div className="friends__list">
-                            {friends.length === 0 ? (
-                                <p className="friends__empty">No tienes amigos agregados todavia.</p>
-                            ) : (
-                                friends.map(friend => (
-                                    <div
-                                        key={friend.id}
-                                        className="friend-card friend-card--clickable"
-                                        role="button"
-                                        tabIndex={0}
-                                        onClick={() => navigateToProfile(friend.id, friend.name)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault()
-                                                navigateToProfile(friend.id, friend.name)
-                                            }
-                                        }}
-                                    >
-                                        <div className="friend-card__info">
-                                            <img className="friend-card__avatar" src={resolveUserAvatar(friend.avatar_url, friend.name)} alt={`Avatar de ${friend.name}`} />
-                                            <div className="friend-card__details">
-                                                <div className="friend-card__name-row">
-                                                    <span
-                                                        className="friend-card__name"
-                                                    >
-                                                        {friend.name}
-                                                    </span>
-                                                    <span className="friend-card__rr">{friend.rr} RR</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="friend-card__actions">
-                                            <button
-                                                className="friend-btn friend-btn--invite"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    handleInvite(friend)
-                                                }}
-                                                disabled={friend.status === 'offline'}
-                                                title="Invitar a jugar"
-                                            >
-                                                Duelo
-                                            </button>
-                                            <button
-                                                className="friend-btn friend-btn--chat"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    handleOpenChat(friend)
-                                                }}
-                                                title={`Chatear con ${friend.name}`}
-                                            >
-                                                Chat
-                                                {!!friend.unread_count && friend.unread_count > 0 && (
-                                                    <span className="friend-btn__badge">
-                                                        {friend.unread_count > 99 ? '99+' : friend.unread_count}
-                                                    </span>
-                                                )}
-                                            </button>
-                                            <button
-                                                className="friend-btn friend-btn--remove"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    handleRemove(friend.id)
-                                                }}
-                                                title="Eliminar amigo"
-                                            >
-                                                Eliminar
-                                            </button>
-                                        </div>
+                    <section className="friends__section friends__section--friends">
+                        <img className="friends__section-image" src={friendsSheetImage} alt="" aria-hidden="true" />
+                        <div className="friends__section-inner">
+                            <h2 className="friends__section-title">Tus Amigos ({friends.length})</h2>
+                            <div className="friends__list">
+                                {friends.length === 0 ? (
+                                    <div className="friends__empty-state friends__empty-state--friends">
+                                        <img
+                                            className="friends__empty-illustration"
+                                            src={noFriendsIllustration}
+                                            alt="Parece que aun no tienes amigos. Usa el boton de arriba para anadir alguno."
+                                        />
                                     </div>
-                                ))
-                            )}
-                        </div>
-                    </section>
-
-                    <section className="friends__section friends__requests-section">
-                        <h2 className="friends__section-title">Solicitudes de amistad ({requests.length})</h2>
-                        <div className="friends__requests-list">
-                            {requests.length === 0 ? (
-                                <p className="friends__empty">Sin solicitudes de amistad</p>
-                            ) : (
-                                requests.map(request => (
-                                    <div key={request.id} className="friend-card friend-card--request">
-                                        <div className="friend-card__info">
-                                            <img className="friend-card__avatar" src={resolveUserAvatar(request.avatar_url, request.name)} alt={`Avatar de ${request.name}`} />
-                                            <div className="friend-card__details">
-                                                <div className="friend-card__name-row">
-                                                    <span
-                                                        className="friend-card__name"
-                                                        style={{ cursor: 'pointer' }}
-                                                        onClick={() => onNavigate('profile', { id: request.id, name: request.name, returnTo: 'friends' })}
-                                                    >
-                                                        {request.name}
-                                                    </span>
-                                                    <span className="friend-card__rr">{request.rr} RR</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="friend-card__actions friend-card__actions--inline">
-                                            <button
-                                                className="friend-btn friend-btn--accept"
-                                                onClick={() => handleAcceptRequest(request)}
-                                                title="Aceptar"
-                                            >
-                                                ✓
-                                            </button>
-                                            <button
-                                                className="friend-btn friend-btn--reject"
-                                                onClick={() => handleRejectRequest(request.id)}
-                                                title="Rechazar"
-                                            >
-                                                X
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </section>
-
-                    <section className="friends__section friends__game-requests-section">
-                        <h2 className="friends__section-title">Solicitudes de juego ({gameRequests.length})</h2>
-                        <div className="friends__requests-list">
-                            {gameRequests.length === 0 ? (
-                                <p className="friends__empty">Sin solicitudes de juego</p>
-                            ) : (
-                                gameRequests.map(request => (
-                                    <div key={request.lobby_id} className="friend-card friend-card--game-request">
-                                        <div className="friend-card__info">
-                                            <img className="friend-card__avatar" src={resolveUserAvatar(request.avatar_url, request.name)} alt={`Avatar de ${request.name}`} />
-                                            <div className="friend-card__details">
-                                                <div className="friend-card__name-row">
-                                                    <span
-                                                        className="friend-card__name"
-                                                        style={{ cursor: 'pointer' }}
-                                                        onClick={() => onNavigate('profile', { id: request.id, name: request.name, returnTo: 'friends' })}
-                                                    >
-                                                        {request.name}
-                                                    </span>
-                                                    <span className="friend-card__rr">{request.rr} RR</span>
-                                                </div>
-                                                <div className="friend-card__game-info">
-                                                    <span className="friend-card__mode-tag">{request.gameMode}</span>
-                                                    {request.playersCount !== undefined && (
-                                                        <span className="friend-card__players-count">{request.playersCount}/4</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="friend-card__actions friend-card__actions--inline">
-                                            <button
-                                                className="friend-btn friend-btn--accept"
-                                                onClick={() => handleAcceptGame(request)}
-                                                title="Aceptar duelo"
-                                            >
-                                                ✓
-                                            </button>
-                                            <button
-                                                className="friend-btn friend-btn--reject"
-                                                onClick={() => handleRejectGame(request)}
-                                                title="Rechazar"
-                                            >
-                                                X
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </section>
-
-                    <section className="friends__section friends__paused-games-section">
-                        <h2 className="friends__section-title">Partidas pausadas ({pausedGames.length})</h2>
-                        <div className="friends__paused-list">
-                            {pausedGames.length === 0 ? (
-                                <p className="friends__empty">No tienes partidas pausadas activas.</p>
-                            ) : (
-                                pausedGames.map(pg => {
-                                    const others = pg.active_players.filter(u => !pg.paused_by.includes(u));
-                                    const waitingText = others.length > 0 ? 'Te estan esperando' : 'No hay jugadores activos';
-                                    return (
-                                        <div key={pg.game_id} className="friend-card friend-card--paused">
+                                ) : (
+                                    friends.map(friend => (
+                                        <div
+                                            key={friend.id}
+                                            className="friend-card friend-card--friend friend-card--clickable"
+                                            role="button"
+                                            tabIndex={0}
+                                            onClick={() => navigateToProfile(friend.id, friend.name)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault()
+                                                    navigateToProfile(friend.id, friend.name)
+                                                }
+                                            }}
+                                        >
                                             <div className="friend-card__info">
+                                                <img className="friend-card__avatar" src={resolveUserAvatar(friend.avatar_url, friend.name)} alt={`Avatar de ${friend.name}`} />
                                                 <div className="friend-card__details">
                                                     <div className="friend-card__name-row">
-                                                        <span className="friend-card__name">Partida pausada</span>
-                                                        <span className="friend-card__mode-tag">{pg.mode}</span>
+                                                        <span className="friend-card__name">{friend.name}</span>
+                                                        <span className="friend-card__rr">{friend.rr} RR</span>
                                                     </div>
-                                                    <p className="friend-card__waiting-text">{waitingText}</p>
+                                                    <p className={`friend-card__status friend-card__status--${friend.status}`}>
+                                                        {formatStatus(friend.status)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="friend-card__actions">
+                                                <button
+                                                    className="friend-btn friend-btn--invite"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleInvite(friend)
+                                                    }}
+                                                    disabled={friend.status === 'offline'}
+                                                    title="Invitar a jugar"
+                                                >
+                                                    Duelo
+                                                </button>
+                                                <button
+                                                    className="friend-btn friend-btn--chat"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleOpenChat(friend)
+                                                    }}
+                                                    title={`Chatear con ${friend.name}`}
+                                                >
+                                                    Chat
+                                                    {!!friend.unread_count && friend.unread_count > 0 && (
+                                                        <span className="friend-btn__badge">
+                                                            {friend.unread_count > 99 ? '99+' : friend.unread_count}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    className="friend-btn friend-btn--remove"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleRemove(friend.id)
+                                                    }}
+                                                    title="Eliminar amigo"
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="friends__section friends__section--requests">
+                        <img className="friends__section-image" src={friendRequestsSheetImage} alt="" aria-hidden="true" />
+                        <div className="friends__section-inner">
+                            <h2 className="friends__section-title">Solicitudes de Amistad ({requests.length})</h2>
+                            <div className="friends__requests-list">
+                                {requests.length === 0 ? (
+                                    <div className="friends__empty-state friends__empty-state--requests">
+                                        <img
+                                            className="friends__empty-illustration"
+                                            src={noFriendRequestsIllustration}
+                                            alt="Sin solicitudes de amistad"
+                                        />
+                                    </div>
+                                ) : (
+                                    requests.map(request => (
+                                        <div key={request.id} className="friend-card friend-card--request">
+                                            <div className="friend-card__info">
+                                                <img className="friend-card__avatar" src={resolveUserAvatar(request.avatar_url, request.name)} alt={`Avatar de ${request.name}`} />
+                                                <div className="friend-card__details">
+                                                    <div className="friend-card__name-row">
+                                                        <button
+                                                            type="button"
+                                                            className="friend-card__name friend-card__name--link"
+                                                            onClick={() => onNavigate('profile', { id: request.id, name: request.name, returnTo: 'friends' })}
+                                                        >
+                                                            {request.name}
+                                                        </button>
+                                                        <span className="friend-card__rr">{request.rr} RR</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="friend-card__actions friend-card__actions--inline">
                                                 <button
-                                                    className="friend-btn friend-btn--resume"
-                                                    onClick={() => handleResumeGame(pg)}
-                                                    title="Reanudar"
+                                                    className="friend-btn friend-btn--accept"
+                                                    onClick={() => handleAcceptRequest(request)}
+                                                    title="Aceptar solicitud"
                                                 >
-                                                    Reanudar
+                                                    Aceptar
                                                 </button>
                                                 <button
-                                                    className="friend-btn friend-btn--abandon"
-                                                    onClick={() => handleAbandonPausedGame(pg.game_id)}
-                                                    title="Abandonar"
+                                                    className="friend-btn friend-btn--reject"
+                                                    onClick={() => handleRejectRequest(request.id)}
+                                                    title="Rechazar solicitud"
                                                 >
-                                                    Abandonar
+                                                    Rechazar
                                                 </button>
                                             </div>
                                         </div>
-                                    );
-                                })
-                            )}
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="friends__section friends__section--game-requests">
+                        <img className="friends__section-image" src={gameRequestsSheetImage} alt="" aria-hidden="true" />
+                        <div className="friends__section-inner">
+                            <h2 className="friends__section-title">Solicitudes de Juego ({gameRequests.length})</h2>
+                            <div className="friends__requests-list">
+                                {gameRequests.length === 0 ? (
+                                    <div className="friends__empty-state friends__empty-state--games">
+                                        <img
+                                            className="friends__empty-illustration"
+                                            src={noGameRequestsIllustration}
+                                            alt="Sin solicitudes de juego"
+                                        />
+                                    </div>
+                                ) : (
+                                    gameRequests.map(request => (
+                                        <div key={request.lobby_id} className="friend-card friend-card--game-request">
+                                            <div className="friend-card__info">
+                                                <img className="friend-card__avatar" src={resolveUserAvatar(request.avatar_url, request.name)} alt={`Avatar de ${request.name}`} />
+                                                <div className="friend-card__details">
+                                                    <div className="friend-card__name-row">
+                                                        <button
+                                                            type="button"
+                                                            className="friend-card__name friend-card__name--link"
+                                                            onClick={() => onNavigate('profile', { id: request.id, name: request.name, returnTo: 'friends' })}
+                                                        >
+                                                            {request.name}
+                                                        </button>
+                                                        <span className="friend-card__rr">{request.rr} RR</span>
+                                                    </div>
+                                                    <p className="friend-card__invite-text">Te invita a una partida</p>
+                                                    <div className="friend-card__game-info">
+                                                        <span className="friend-card__mode-tag">{request.gameMode}</span>
+                                                        {request.playersCount !== undefined && (
+                                                            <span className="friend-card__players-count">{request.playersCount}/4 jugadores</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="friend-card__actions friend-card__actions--inline">
+                                                <button
+                                                    className="friend-btn friend-btn--join"
+                                                    onClick={() => handleAcceptGame(request)}
+                                                    title="Unirse"
+                                                >
+                                                    Unirse
+                                                </button>
+                                                <button
+                                                    className="friend-btn friend-btn--reject"
+                                                    onClick={() => handleRejectGame(request)}
+                                                    title="Rechazar"
+                                                >
+                                                    Rechazar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="friends__section friends__section--paused-games">
+                        <img className="friends__section-image" src={pausedGamesSheetImage} alt="" aria-hidden="true" />
+                        <div className="friends__section-inner">
+                            <h2 className="friends__section-title">Partidas Pausadas ({pausedGames.length})</h2>
+                            <div className="friends__paused-list">
+                                {pausedGames.length === 0 ? (
+                                    <div className="friends__empty-state friends__empty-state--paused">
+                                        <img
+                                            className="friends__empty-illustration"
+                                            src={noPausedGamesIllustration}
+                                            alt="No tienes partidas pausadas activas."
+                                        />
+                                    </div>
+                                ) : (
+                                    pausedGames.map(pg => {
+                                        const participants = pg.participants.length > 0 ? pg.participants : pg.active_players
+                                        const others = pg.active_players.filter((u) => !pg.paused_by.includes(u))
+                                        const waitingText = others.length > 0
+                                            ? `Esperando a ${others.join(', ')}`
+                                            : 'No hay jugadores activos'
+
+                                        return (
+                                            <div key={pg.game_id} className="friend-card friend-card--paused">
+                                                <div className="friend-card__info">
+                                                    <div className="friend-card__details">
+                                                        <div className="friend-card__name-row">
+                                                            <span className="friend-card__name">Partida en pausa</span>
+                                                            <span className="friend-card__mode-tag">{pg.mode}</span>
+                                                        </div>
+                                                        <div className="friend-card__participants">
+                                                            {participants.slice(0, 4).map((name) => (
+                                                                <span
+                                                                    key={`${pg.game_id}-${name}`}
+                                                                    className="friend-card__participant-avatar"
+                                                                    title={name}
+                                                                >
+                                                                    {toInitial(name)}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                        <p className="friend-card__waiting-text">{waitingText}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="friend-card__actions friend-card__actions--inline">
+                                                    <button
+                                                        className="friend-btn friend-btn--resume"
+                                                        onClick={() => handleResumeGame(pg)}
+                                                        title="Reanudar partida"
+                                                    >
+                                                        Reanudar
+                                                    </button>
+                                                    <button
+                                                        className="friend-btn friend-btn--abandon"
+                                                        onClick={() => handleAbandonPausedGame(pg.game_id)}
+                                                        title="Abandonar partida"
+                                                    >
+                                                        Abandonar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )
+                                    })
+                                )}
+                            </div>
                         </div>
                     </section>
                 </div>
 
-                <button className="friends__back-btn" onClick={() => onNavigate('menu')}>
-                    Volver al menu
-                </button>
+                <footer className="friends__footer">
+                    <button
+                        className="friends__image-btn friends__image-btn--back"
+                        onClick={() => onNavigate('menu')}
+                        aria-label="Volver al menu"
+                        title="Volver al menu"
+                    >
+                        <img src={backToMenuButtonImage} alt="" />
+                    </button>
+                    <p className="friends__credits">HuO Gomes Studio - Universidad de Zaragoza</p>
+                </footer>
             </div>
 
             <div className={`toast toast--${toast.type} ${toast.visible ? 'toast--visible' : ''}`}>
@@ -634,10 +703,9 @@ function Friends({ onNavigate }: FriendsProps) {
                 </span>
                 <span className="toast__message">{toast.message}</span>
             </div>
-
             <Modal isOpen={isAddFriendModalOpen} onClose={handleCloseAddModal} maxWidth="500px">
                 <div className="friends-modal">
-                    <h3 className="friends-modal__title">Añadir nuevo amigo</h3>
+                    <h3 className="friends-modal__title">Anadir nuevo amigo</h3>
                     <p className="friends-modal__subtitle">Escribe su nombre de usuario para enviarle una solicitud de amistad</p>
                     <form className="friends-modal__form" onSubmit={handleAddFriend}>
                         <input
@@ -774,3 +842,4 @@ function Friends({ onNavigate }: FriendsProps) {
 }
 
 export default Friends
+
