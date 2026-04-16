@@ -749,3 +749,83 @@
     letter-spacing: 0.02em;
     text-shadow: 0 0 8px rgba(139, 92, 246, 0.8), 0 0 15px rgba(0, 0, 0, 0.9);
 }
+
+.duel__ability-pending-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(251, 191, 36, 0.15);
+    padding: 8px 16px;
+    border-radius: 12px;
+    margin: 8px 0;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.duel__ability-pending-text {
+    color: #fcd34d;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.duel__ability-cancel-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 800;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.duel__ability-cancel-btn:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+}
+
+.duel__gravity-direction-picker {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 12px 0;
+    animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.duel__gravity-btn {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 1.8rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.duel__gravity-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.15) translateY(-4px);
+    border-color: #facc15;
+    box-shadow: 0 8px 20px rgba(250, 204, 21, 0.3);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); opacity: 1; }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
