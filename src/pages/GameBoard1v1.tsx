@@ -225,30 +225,44 @@ function getValidMoves(board: BoardCell[][], piece: Piece) {
     return moves
 }
 
-function applyGravity(board: BoardCell[][], direction: 'up' | 'down' | 'left' | 'right') {
+function applyGravity(board: BoardCell[][], direction: 'up' | 'down' | 'left' | 'right', questionCells: Set<string>) {
     const next = cloneBoard(board)
+    const nextQuestions = new Set<string>()
 
     const rebuildSegment = (coords: Array<[number, number]>, towardStart: boolean) => {
-        const pieces = coords
-            .map(([r, c]) => next[r][c].piece)
-            .filter((piece): piece is Piece => piece !== null)
-
+        const items: Array<{ type: 'piece', piece: Piece } | { type: 'question' }> = []
+        
         coords.forEach(([r, c]) => {
+            const key = `${r}-${c}`
+            if (next[r][c].piece) {
+                items.push({ type: 'piece', piece: next[r][c].piece! })
+            } else if (questionCells.has(key)) {
+                items.push({ type: 'question' })
+            }
+            // Limpiamos
             next[r][c].piece = null
         })
 
         if (towardStart) {
-            pieces.forEach((piece, i) => {
+            items.forEach((item, i) => {
                 const [r, c] = coords[i]
-                next[r][c].piece = piece
+                if (item.type === 'piece') {
+                    next[r][c].piece = item.piece
+                } else {
+                    nextQuestions.add(`${r}-${c}`)
+                }
             })
             return
         }
 
-        const reversed = [...pieces].reverse()
-        reversed.forEach((piece, i) => {
+        const reversed = [...items].reverse()
+        reversed.forEach((item, i) => {
             const [r, c] = coords[coords.length - 1 - i]
-            next[r][c].piece = piece
+            if (item.type === 'piece') {
+                next[r][c].piece = item.piece
+            } else {
+                nextQuestions.add(`${r}-${c}`)
+            }
         })
     }
 
@@ -260,6 +274,10 @@ function applyGravity(board: BoardCell[][], direction: 'up' | 'down' | 'left' | 
                     rebuildSegment(segment, towardStart)
                 }
                 segment = []
+                // Las fijas que son interrogantes (si existieran) permanecen
+                if (questionCells.has(`${r}-${c}`)) {
+                    nextQuestions.add(`${r}-${c}`)
+                }
                 return
             }
             segment.push([r, c])
@@ -270,18 +288,20 @@ function applyGravity(board: BoardCell[][], direction: 'up' | 'down' | 'left' | 
     }
 
     if (direction === 'left' || direction === 'right') {
+        const towardStart = direction === 'left'
         for (let row = 0; row < BOARD_SIZE; row += 1) {
             const line = Array.from({ length: BOARD_SIZE }, (_, col) => [row, col] as [number, number])
-            processLine(line, direction === 'left')
+            processLine(line, towardStart)
         }
     } else {
+        const towardStart = direction === 'up'
         for (let col = 0; col < BOARD_SIZE; col += 1) {
             const line = Array.from({ length: BOARD_SIZE }, (_, row) => [row, col] as [number, number])
-            processLine(line, direction === 'up')
+            processLine(line, towardStart)
         }
     }
 
-    return next
+    return { board: next, questionCells: nextQuestions }
 }
 
 function canApplyBombKeepingBothColors(board: BoardCell[][], row: number, col: number) {
@@ -354,7 +374,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
     const [selectingGravityDirection, setSelectingGravityDirection] = useState<{ inventoryIndex: number } | null>(null)
     const [gameOver, setGameOver] = useState(false)
-    const [, setSystemMessage] = useState('Haz una jugada o usa una habilidad.')
+    const [systemMessage, setSystemMessage] = useState('Haz una jugada o usa una habilidad.')
     const validMoves = useMemo(
         () => (isOnlineMatch ? onlineValidMoves : getValidMoves(board, currentTurn)),
         [board, currentTurn, isOnlineMatch, onlineValidMoves],
@@ -789,26 +809,26 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
 
         if (ability === 'gravity_up') {
-            const gravityBoard = applyGravity(nextBoard, 'up')
-            finishAction(gravityBoard, nextQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia arriba.')
+            const { board: gravityBoard, questionCells: gravityQuestions } = applyGravity(nextBoard, 'up', nextQuestions)
+            finishAction(gravityBoard, gravityQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia arriba.')
             return
         }
 
         if (ability === 'gravity_down') {
-            const gravityBoard = applyGravity(nextBoard, 'down')
-            finishAction(gravityBoard, nextQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia abajo.')
+            const { board: gravityBoard, questionCells: gravityQuestions } = applyGravity(nextBoard, 'down', nextQuestions)
+            finishAction(gravityBoard, gravityQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia abajo.')
             return
         }
 
         if (ability === 'gravity_left') {
-            const gravityBoard = applyGravity(nextBoard, 'left')
-            finishAction(gravityBoard, nextQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia la izquierda.')
+            const { board: gravityBoard, questionCells: gravityQuestions } = applyGravity(nextBoard, 'left', nextQuestions)
+            finishAction(gravityBoard, gravityQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia la izquierda.')
             return
         }
 
         if (ability === 'gravity_right') {
-            const gravityBoard = applyGravity(nextBoard, 'right')
-            finishAction(gravityBoard, nextQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia la derecha.')
+            const { board: gravityBoard, questionCells: gravityQuestions } = applyGravity(nextBoard, 'right', nextQuestions)
+            finishAction(gravityBoard, gravityQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia la derecha.')
             return
         }
 
@@ -1208,10 +1228,10 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                                 }))
                                             }
                                         } else {
-                                            const nextBoard = applyGravity(board, dir)
+                                            const { board: nextBoard, questionCells: nextQuestions } = applyGravity(board, dir, questionCells)
                                             const nextInventories = JSON.parse(JSON.stringify(inventories))
                                             nextInventories[currentTurn].splice(inventoryIndex, 1)
-                                            finishAction(nextBoard, questionCells, nextInventories, skipTurns, `Gravedad aplicada hacia ${dir}`)
+                                            finishAction(nextBoard, nextQuestions, nextInventories, skipTurns, `Gravedad aplicada hacia ${dir}`)
                                         }
                                         setSelectingGravityDirection(null)
                                     }}
@@ -1223,7 +1243,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     )}
 
                     <div className="duel__board-container">
-                            {isOnlineMatch ? (onlineStatusMessage || 'Partida online en curso') : '1 accion por turno'}
+                            {isOnlineMatch ? (onlineStatusMessage || 'Partida online en curso') : systemMessage}
                         </div>
                     </div>
                 </header>
