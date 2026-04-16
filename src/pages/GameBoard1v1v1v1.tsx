@@ -17,7 +17,33 @@ import woodBackground from '../assets/arenas/woodbackground.png'
 import quartzBackground from '../assets/arenas/quartzbackground.png'
 
 type Piece = 'black' | 'white' | 'red' | 'blue'
-type BoardCell = Piece | null
+interface BoardCell {
+    piece: Piece | null
+    fixed: boolean
+}
+
+type AbilityId =
+    | 'bomb'
+    | 'fix_piece'
+    | 'unfix_piece'
+    | 'flip_rival'
+    | 'place_free'
+    | 'skip_rival'
+    | 'steal_skill'
+    | 'exchange_skill'
+    | 'give_skill'
+    | 'swap_colors'
+    | 'lose_turn'
+    | 'gravity'
+    | 'gravity_up'
+    | 'gravity_down'
+    | 'gravity_left'
+    | 'gravity_right'
+
+interface PendingAbility {
+    id: AbilityId
+    inventoryIndex: number
+}
 
 interface GameBoard1v1v1v1Props {
     onNavigate: (screen: string, data?: any) => void
@@ -54,6 +80,24 @@ interface QuadPlayer {
 const BOARD_SIZE = 16
 const PIECE_ORDER: Piece[] = ['black', 'white', 'red', 'blue']
 
+const ABILITY_META: Record<string, { name: string; icon: string; needsTarget: boolean }> = {
+    bomb: { name: 'Bomba', icon: '💣', needsTarget: true },
+    fix_piece: { name: 'Fijar ficha', icon: '🔒', needsTarget: true },
+    unfix_piece: { name: 'Quitar fijación', icon: '🔓', needsTarget: true },
+    flip_rival: { name: 'Girar ficha rival', icon: '🔄', needsTarget: true },
+    place_free: { name: 'Poner ficha libre', icon: '➕', needsTarget: true },
+    skip_rival: { name: 'Saltar turno rival', icon: '⏭️', needsTarget: false },
+    steal_skill: { name: 'Robar habilidad', icon: '🕵️', needsTarget: false },
+    exchange_skill: { name: 'Intercambiar habilidad', icon: '💱', needsTarget: false },
+    give_skill: { name: 'Regalar habilidad', icon: '🎁', needsTarget: false },
+    swap_colors: { name: 'Cambiar colores', icon: '🎨', needsTarget: false },
+    lose_turn: { name: 'Perder turno', icon: '🚫', needsTarget: false },
+    gravity: { name: 'Gravedad', icon: '🌌', needsTarget: false },
+}
+
+const ENABLE_SPECIAL_MECHANICS_4V4 = true
+const ABILITY_PENALTY = 2
+
 const getArenaFromElo = (elo: number): ArenaTheme => {
     if (elo < 900) return { board: woodBoard, background: woodBackground }
     if (elo < 1100) return { board: quartzBoard, background: quartzBackground }
@@ -72,7 +116,7 @@ const DIRECTIONS = [
 
 function createInitialBoard(): BoardCell[][] {
     const board = Array.from({ length: BOARD_SIZE }, () =>
-        Array.from({ length: BOARD_SIZE }, () => null as BoardCell),
+        Array.from({ length: BOARD_SIZE }, () => ({ piece: null, fixed: false }) as BoardCell),
     )
 
     const topRow = 3
@@ -88,10 +132,10 @@ function createInitialBoard(): BoardCell[][] {
         bottomLeft: Piece,
         bottomRight: Piece,
     ) => {
-        board[startRow][startCol] = topLeft
-        board[startRow][startCol + 1] = topRight
-        board[startRow + 1][startCol] = bottomLeft
-        board[startRow + 1][startCol + 1] = bottomRight
+        board[startRow][startCol].piece = topLeft
+        board[startRow][startCol + 1].piece = topRight
+        board[startRow + 1][startCol].piece = bottomLeft
+        board[startRow + 1][startCol + 1].piece = bottomRight
     }
 
     placeCluster(topRow, leftCol, 'black', 'white', 'red', 'blue')
@@ -102,12 +146,12 @@ function createInitialBoard(): BoardCell[][] {
     return board
 }
 
-function cloneBoard(board: BoardCell[][]) {
-    return board.map(row => [...row])
+function cloneBoard(board: BoardCell[][]): BoardCell[][] {
+    return board.map(row => row.map(cell => ({ ...cell })))
 }
 
 function getFlips(board: BoardCell[][], row: number, col: number, piece: Piece) {
-    if (board[row][col] !== null) {
+    if (board[row][col].piece !== null) {
         return [] as Array<[number, number]>
     }
 
@@ -120,11 +164,15 @@ function getFlips(board: BoardCell[][], row: number, col: number, piece: Piece) 
 
         while (isInsideBoard(r, c)) {
             const cell = board[r][c]
-            if (cell === null) {
+            if (cell.piece === null) {
                 line.length = 0
                 break
             }
-            if (cell !== piece) {
+            if (cell.piece !== piece) {
+                if (cell.fixed) {
+                    line.length = 0
+                    break
+                }
                 line.push([r, c])
                 r += dr
                 c += dc
@@ -133,7 +181,7 @@ function getFlips(board: BoardCell[][], row: number, col: number, piece: Piece) 
             break
         }
 
-        if (line.length > 0 && isInsideBoard(r, c) && board[r][c] === piece) {
+        if (line.length > 0 && isInsideBoard(r, c) && board[r][c].piece === piece) {
             flips.push(...line)
         }
     })
@@ -162,7 +210,7 @@ function countPieces(board: BoardCell[][]) {
     }
     board.forEach(row => {
         row.forEach(cell => {
-            if (cell) result[cell] += 1
+            if (cell.piece) result[cell.piece] += 1
         })
     })
     return result
@@ -180,6 +228,12 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const [currentTurn, setCurrentTurn] = useState<Piece>('black')
     const [gameOver, setGameOver] = useState(false)
     const [winner, setWinner] = useState<Piece | null>(null)
+    const [inventories, setInventories] = useState<Record<Piece, AbilityId[]>>({
+        black: [], white: [], red: [], blue: []
+    })
+    const [questionCells, setQuestionCells] = useState<Set<string>>(new Set())
+    const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
+    const [selectingGravityDirection, setSelectingGravityDirection] = useState<{ inventoryIndex: number } | null>(null)
     const [localPiece, setLocalPiece] = useState<Piece>('black')
     const [statusMessage, setStatusMessage] = useState('Conectando...')
     const [abandonedPieces, setAbandonedPieces] = useState<Piece[]>([])
@@ -239,7 +293,22 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         return map
     }, [normalizedPlayers])
 
-    const scoreByPiece = useMemo(() => countPieces(board), [board])
+    const rawScoreByPiece = useMemo(() => countPieces(board), [board])
+    const penaltyScoreByPiece = useMemo(() => {
+        const penalties = {} as Record<Piece, number>
+        PIECE_ORDER.forEach(piece => {
+            penalties[piece] = ENABLE_SPECIAL_MECHANICS_4V4 ? (inventories[piece]?.length || 0) * ABILITY_PENALTY : 0
+        })
+        return penalties
+    }, [inventories])
+
+    const scoreByPiece = useMemo(() => {
+        const scores = {} as Record<Piece, number>
+        PIECE_ORDER.forEach(piece => {
+            scores[piece] = rawScoreByPiece[piece] - penaltyScoreByPiece[piece]
+        })
+        return scores
+    }, [rawScoreByPiece, penaltyScoreByPiece])
     const finalRankingRows = useMemo(() => {
         const activeRows = PIECE_ORDER
             .filter((piece) => !abandonedPieces.includes(piece))
@@ -349,10 +418,29 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 if (data?.type === 'game_state_update' && data?.payload) {
                     const payload = data.payload
                     if (Array.isArray(payload.board)) {
-                        setBoard(cloneBoard(payload.board))
+                        const fixedPieces = Array.isArray(payload.fixed_pieces) ? payload.fixed_pieces : []
+                        const fixedSet = new Set(fixedPieces.map((p: any) => `${p[0]}-${p[1]}`))
+                        
+                        setBoard(payload.board.map((row: any, r: number) => 
+                            row.map((piece: any, c: number) => ({
+                                piece, 
+                                fixed: fixedSet.has(`${r}-${c}`)
+                            }))
+                        ))
                     }
                     if (PIECE_ORDER.includes(payload.current_player)) {
                         setCurrentTurn(payload.current_player as Piece)
+                    }
+                    if (payload.skill_tiles) {
+                        setQuestionCells(new Set(payload.skill_tiles.map((p: any) => `${p[0]}-${p[1]}`)))
+                    }
+                    if (payload.skills_inventory) {
+                        setInventories({
+                            black: payload.skills_inventory.black || [],
+                            white: payload.skills_inventory.white || [],
+                            red: payload.skills_inventory.red || [],
+                            blue: payload.skills_inventory.blue || []
+                        })
                     }
                     setGameOver(Boolean(payload.game_over))
                     setWinner(PIECE_ORDER.includes(payload.winner) ? payload.winner as Piece : null)
@@ -413,10 +501,66 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         }
     }, [gameOver, isOnlineMatch, localPiece, matchData?.gameId])
 
+    const useInstantAbility = (ability: AbilityId, inventoryIndex: number) => {
+        if (isOnlineMatch) {
+            if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return
+            if (currentTurn !== localPiece) return
+
+            wsRef.current.send(JSON.stringify({
+                action: 'use_skill',
+                type: ability,
+                target_player: PIECE_ORDER.find(p => p !== localPiece && !abandonedPieces.includes(p)) || 'white', 
+                inventory_index: inventoryIndex
+            }))
+            return
+        }
+    }
+
+    const handleUseAbility = (ability: AbilityId, inventoryIndex: number) => {
+        if (!ENABLE_SPECIAL_MECHANICS_4V4 || gameOver || currentTurn !== localPiece) {
+            return
+        }
+
+        if (pendingAbility?.inventoryIndex === inventoryIndex) {
+            setPendingAbility(null)
+            return
+        }
+
+        if (ABILITY_META[ability].needsTarget) {
+            setPendingAbility({ id: ability, inventoryIndex })
+            setStatusMessage(`Selecciona casilla para ${ABILITY_META[ability].name}.`)
+            return
+        }
+
+        if (ability === 'gravity') {
+            setSelectingGravityDirection({ inventoryIndex })
+            setStatusMessage('Selecciona direccion para la gravedad.')
+            return
+        }
+
+        useInstantAbility(ability, inventoryIndex)
+    }
+
     const handleCellClick = (row: number, col: number) => {
         if (gameOver) return
 
         if (isOnlineMatch) {
+            if (pendingAbility) {
+                if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return
+                if (currentTurn !== localPiece) return
+
+                wsRef.current.send(JSON.stringify({
+                    action: 'use_skill',
+                    type: pendingAbility.id,
+                    row,
+                    col,
+                    target_player: PIECE_ORDER.find(p => p !== localPiece && !abandonedPieces.includes(p)) || 'white',
+                    inventory_index: pendingAbility.inventoryIndex
+                }))
+                setPendingAbility(null)
+                return
+            }
+
             const key = `${row}-${col}`
             if (!validMoves.has(key)) return
             if (currentTurn !== localPiece) return
@@ -436,9 +580,9 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         if (flips.length === 0) return
 
         const nextBoard = cloneBoard(board)
-        nextBoard[row][col] = currentTurn
+        nextBoard[row][col].piece = currentTurn
         flips.forEach(([flipRow, flipCol]) => {
-            nextBoard[flipRow][flipCol] = currentTurn
+            nextBoard[flipRow][flipCol].piece = currentTurn
         })
 
         setBoard(nextBoard)
@@ -555,6 +699,54 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                         <span className="duel-quad__turn-value">
                             {gameOver ? 'Partida finalizada' : `${currentTurnPlayer?.name ?? '-'} (${currentTurnPlayer?.color ?? '-'})`}
                         </span>
+                        {/* UI de Habilidad Pendiente o Direccion de Gravedad */}
+                        {(pendingAbility || selectingGravityDirection) && (
+                            <div className="duel-quad__ability-pending-bar">
+                                <span className="duel-quad__ability-pending-text">
+                                    {pendingAbility 
+                                        ? `Usando: ${ABILITY_META[pendingAbility.id].name}` 
+                                        : 'Selecciona Direccion de Gravedad'}
+                                </span>
+                                <button 
+                                    className="duel-quad__ability-cancel-btn"
+                                    onClick={() => {
+                                        setPendingAbility(null)
+                                        setSelectingGravityDirection(null)
+                                        setStatusMessage('Accion cancelada.')
+                                    }}
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        )}
+
+                        {selectingGravityDirection && (
+                            <div className="duel-quad__gravity-direction-picker">
+                                {(['up', 'down', 'left', 'right'] as const).map((dir) => (
+                                    <button
+                                        key={dir}
+                                        className={`duel-quad__gravity-btn duel-quad__gravity-btn--${dir}`}
+                                        onClick={() => {
+                                            const { inventoryIndex } = selectingGravityDirection
+                                            if (isOnlineMatch) {
+                                                if (wsRef.current?.readyState === WebSocket.OPEN) {
+                                                    wsRef.current.send(JSON.stringify({
+                                                        action: 'use_skill',
+                                                        type: 'gravity',
+                                                        direction: dir,
+                                                        inventory_index: inventoryIndex
+                                                    }))
+                                                }
+                                            }
+                                            setSelectingGravityDirection(null)
+                                        }}
+                                    >
+                                        {dir === 'up' ? '⬆️' : dir === 'down' ? '⬇️' : dir === 'left' ? '⬅️' : '➡️'}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
                         <div className="duel-quad__timer">{statusMessage}</div>
                         {abandonNotice && (
                             <span className="duel-quad__abandon-notice">{abandonNotice}</span>
@@ -579,7 +771,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                     <div className="duel-quad__player-data">
                                         <span className="duel-quad__player-row">
                                             <span className="duel-quad__player-name">{player.name}</span>
-                                            <span className="duel-quad__player-score">{scoreByPiece[player.piece]} pts</span>
+                                            <span className="duel-quad__player-score">{rawScoreByPiece[player.piece]} pts</span>
                                         </span>
                                         <span className="duel-quad__player-meta">{player.color}</span>
                                         {abandonedPieces.includes(player.piece) && (
@@ -587,6 +779,21 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                         )}
                                     </div>
                                 </div>
+                                {ENABLE_SPECIAL_MECHANICS_4V4 && (
+                                    <div className="duel-quad__skills">
+                                        {inventories[player.piece].map((ability, idx) => (
+                                            <button
+                                                key={`${ability}-${idx}`}
+                                                className={`duel-quad__skill-btn ${pendingAbility?.inventoryIndex === idx && currentTurn === localPiece && player.piece === localPiece ? 'duel-quad__skill-btn--active' : ''}`}
+                                                onClick={() => player.piece === localPiece && handleUseAbility(ability, idx)}
+                                                disabled={player.piece !== localPiece || gameOver || currentTurn !== localPiece}
+                                                title={(ABILITY_META[ability] || { name: 'Desconocida' }).name}
+                                            >
+                                                {(ABILITY_META[ability] || { icon: '❓' }).icon}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </article>
                         ))}
                     </aside>
@@ -604,26 +811,28 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                 const col = index % BOARD_SIZE
                                 const key = `${row}-${col}`
                                 const cell = board[row][col]
+                                const hasQuestion = ENABLE_SPECIAL_MECHANICS_4V4 && questionCells.has(key)
                                 const canShowPlayableMove = !isOnlineMatch || currentTurn === localPiece
-                                const isPlayable = validMoves.has(key) && !gameOver && canShowPlayableMove
+                                const isPlayable = !pendingAbility && validMoves.has(key) && !gameOver && canShowPlayableMove
 
                                 return (
                                     <button
                                         key={key}
-                                        className={`duel-quad__cell ${(row + col) % 2 === 0 ? 'duel-quad__cell--dark' : 'duel-quad__cell--light'} ${isPlayable ? 'duel-quad__cell--playable' : ''}`}
+                                        className={`duel-quad__cell ${(row + col) % 2 === 0 ? 'duel-quad__cell--dark' : 'duel-quad__cell--light'} ${isPlayable ? 'duel-quad__cell--playable' : ''} ${hasQuestion ? 'duel-quad__cell--question' : ''}`}
                                         type="button"
                                         aria-label={`Casilla ${row + 1}-${col + 1}`}
                                         onClick={() => handleCellClick(row, col)}
                                         disabled={gameOver || pausedUsernames.length > 0}
                                     >
-                                        {cell && (
+                                        {hasQuestion && <span className="duel-quad__question">?</span>}
+                                        {cell.piece && (
                                             <span
-                                                className={`duel-quad-piece duel-quad-piece--${cell}`}
+                                                className={`duel-quad-piece duel-quad-piece--${cell.piece} ${cell.fixed ? 'duel-quad-piece--fixed' : ''}`}
                                                 style={{
                                                     background:
-                                                        cell === 'black' ? selectedPieceStyle4p.p1
-                                                            : cell === 'white' ? selectedPieceStyle4p.p2
-                                                                : cell === 'red' ? selectedPieceStyle4p.p3
+                                                        cell.piece === 'black' ? selectedPieceStyle4p.p1
+                                                            : cell.piece === 'white' ? selectedPieceStyle4p.p2
+                                                                : cell.piece === 'red' ? selectedPieceStyle4p.p3
                                                                     : selectedPieceStyle4p.p4,
                                                 }}
                                             />
@@ -650,7 +859,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                     <div className="duel-quad__player-data">
                                         <span className="duel-quad__player-row">
                                             <span className="duel-quad__player-name">{player.name}</span>
-                                            <span className="duel-quad__player-score">{scoreByPiece[player.piece]} pts</span>
+                                            <span className="duel-quad__player-score">{rawScoreByPiece[player.piece]} pts</span>
                                         </span>
                                         <span className="duel-quad__player-meta">{player.color}</span>
                                         {abandonedPieces.includes(player.piece) && (
@@ -658,6 +867,21 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                         )}
                                     </div>
                                 </div>
+                                {ENABLE_SPECIAL_MECHANICS_4V4 && (
+                                    <div className="duel-quad__skills">
+                                        {inventories[player.piece].map((ability, idx) => (
+                                            <button
+                                                key={`${ability}-${idx}`}
+                                                className={`duel-quad__skill-btn ${pendingAbility?.inventoryIndex === idx && currentTurn === localPiece && player.piece === localPiece ? 'duel-quad__skill-btn--active' : ''}`}
+                                                onClick={() => player.piece === localPiece && handleUseAbility(ability, idx)}
+                                                disabled={player.piece !== localPiece || gameOver || currentTurn !== localPiece}
+                                                title={(ABILITY_META[ability] || { name: 'Desconocida' }).name}
+                                            >
+                                                {(ABILITY_META[ability] || { icon: '❓' }).icon}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </article>
                         ))}
                     </aside>
@@ -679,10 +903,16 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                         {finalRankingRows.map((row, index) => (
                             <div key={`result-${row.player?.id ?? index}`} className="duel-quad-result__row">
                                 <span>{`${row.rank}º - ${row.player?.name ?? row.piece}`}</span>
-                                <span>{row.abandoned ? 'Abandonó' : `${row.score} pts`}</span>
+                                <span>{row.abandoned ? 'Abandonó' : `${rawScoreByPiece[row.piece]} - ${penaltyScoreByPiece[row.piece]} = ${row.score} pts`}</span>
                             </div>
                         ))}
                     </div>
+
+                    {ENABLE_SPECIAL_MECHANICS_4V4 && (
+                        <p className="duel-quad-result__note" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginTop: '0.5rem', textAlign: 'center' }}>
+                            Penalización aplicada: -{ABILITY_PENALTY} pts por cada habilidad sin usar.
+                        </p>
+                    )}
 
                     <button className="duel-quad-result__back-btn" onClick={() => onNavigate('friends')}>
                         Volver a amigos

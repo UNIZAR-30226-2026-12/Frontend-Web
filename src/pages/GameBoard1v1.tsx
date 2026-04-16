@@ -36,16 +36,17 @@ interface MatchData {
 type Piece = 'black' | 'white'
 type AbilityId =
     | 'bomb'
-    | 'place_fixed'
-    | 'remove_fixed'
-    | 'flip_enemy'
-    | 'place_anywhere'
-    | 'skip_rival_turn'
-    | 'steal_random_ability'
-    | 'swap_random_ability'
-    | 'give_random_ability'
+    | 'fix_piece'
+    | 'unfix_piece'
+    | 'flip_rival'
+    | 'place_free'
+    | 'skip_rival'
+    | 'steal_skill'
+    | 'exchange_skill'
+    | 'give_skill'
     | 'swap_colors'
     | 'lose_turn'
+    | 'gravity'
     | 'gravity_up'
     | 'gravity_down'
     | 'gravity_left'
@@ -64,7 +65,8 @@ interface PendingAbility {
 const BOARD_SIZE = 8
 const QUESTION_COUNT = 8
 const ABILITY_PENALTY = 2
-const ENABLE_SPECIAL_MECHANICS_1V1 = false
+// Enable mechanics for online matches or testing
+const ENABLE_SPECIAL_MECHANICS_1V1 = true
 
 const PLAYER = {
     name: 'Jugador',
@@ -78,22 +80,19 @@ const OPPONENT = {
     piece: 'white' as Piece,
 }
 
-const ABILITY_META: Record<AbilityId, { name: string; icon: string; needsTarget: boolean }> = {
-    bomb: { name: 'Bomba', icon: 'B', needsTarget: true },
-    place_fixed: { name: 'Poner ficha fija', icon: 'F+', needsTarget: true },
-    remove_fixed: { name: 'Quitar ficha fija', icon: 'F-', needsTarget: true },
-    flip_enemy: { name: 'Girar ficha rival', icon: 'G', needsTarget: true },
-    place_anywhere: { name: 'Poner ficha libre', icon: '+', needsTarget: true },
-    skip_rival_turn: { name: 'Saltar turno rival', icon: '>>', needsTarget: false },
-    steal_random_ability: { name: 'Robar habilidad', icon: 'R', needsTarget: false },
-    swap_random_ability: { name: 'Intercambiar habilidad', icon: '<>', needsTarget: false },
-    give_random_ability: { name: 'Dar habilidad', icon: 'D', needsTarget: false },
-    swap_colors: { name: 'Cambiar colores', icon: 'C', needsTarget: false },
-    lose_turn: { name: 'Pierdes un turno', icon: 'X', needsTarget: false },
-    gravity_up: { name: 'Gravedad arriba', icon: '^', needsTarget: false },
-    gravity_down: { name: 'Gravedad abajo', icon: 'v', needsTarget: false },
-    gravity_left: { name: 'Gravedad izquierda', icon: '<', needsTarget: false },
-    gravity_right: { name: 'Gravedad derecha', icon: '>', needsTarget: false },
+const ABILITY_META: Record<string, { name: string; icon: string; needsTarget: boolean }> = {
+    bomb: { name: 'Bomba', icon: '💣', needsTarget: true },
+    fix_piece: { name: 'Fijar ficha', icon: '🔒', needsTarget: true },
+    unfix_piece: { name: 'Quitar fijación', icon: '🔓', needsTarget: true },
+    flip_rival: { name: 'Girar ficha rival', icon: '🔄', needsTarget: true },
+    place_free: { name: 'Poner ficha libre', icon: '➕', needsTarget: true },
+    skip_rival: { name: 'Saltar turno rival', icon: '⏭️', needsTarget: false },
+    steal_skill: { name: 'Robar habilidad', icon: '🕵️', needsTarget: false },
+    exchange_skill: { name: 'Intercambiar habilidad', icon: '💱', needsTarget: false },
+    give_skill: { name: 'Regalar habilidad', icon: '🎁', needsTarget: false },
+    swap_colors: { name: 'Cambiar colores', icon: '🎨', needsTarget: false },
+    lose_turn: { name: 'Perder turno', icon: '🚫', needsTarget: false },
+    gravity: { name: 'Gravedad', icon: '🌌', needsTarget: false },
 }
 
 const ABILITY_POOL = Object.keys(ABILITY_META) as AbilityId[]
@@ -353,6 +352,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [inventories, setInventories] = useState<Record<Piece, AbilityId[]>>({ black: [], white: [] })
     const [skipTurns, setSkipTurns] = useState<Record<Piece, number>>({ black: 0, white: 0 })
     const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
+    const [selectingGravityDirection, setSelectingGravityDirection] = useState<{ inventoryIndex: number } | null>(null)
     const [gameOver, setGameOver] = useState(false)
     const [, setSystemMessage] = useState('Haz una jugada o usa una habilidad.')
     const validMoves = useMemo(
@@ -452,9 +452,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             return
         }
 
-        const mapServerBoard = (serverBoard: Array<Array<Piece>>) =>
-            serverBoard.map(row => row.map(piece => ({ piece, fixed: false })))
-
         const wsUrl = `${WS_BASE_URL}/ws/play/${encodeURIComponent(matchData.gameId)}?token=${encodeURIComponent(token)}`
         const ws = new WebSocket(wsUrl)
         onlineWsRef.current = ws
@@ -481,10 +478,27 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 if (data?.type === 'game_state_update' && data?.payload) {
                     const payload = data.payload
                     if (Array.isArray(payload.board)) {
-                        setBoard(mapServerBoard(payload.board))
+                        const fixedPieces = Array.isArray(payload.fixed_pieces) ? payload.fixed_pieces : []
+                        const fixedSet = new Set(fixedPieces.map((p: any) => `${p[0]}-${p[1]}`))
+                        
+                        setBoard(payload.board.map((row: any, r: number) => 
+                            row.map((piece: any, c: number) => ({
+                                piece, 
+                                fixed: fixedSet.has(`${r}-${c}`)
+                            }))
+                        ))
                     }
-                    if (payload.current_player === 'black' || payload.current_player === 'white') {
+                    if (payload.current_player) {
                         setCurrentTurn(payload.current_player)
+                    }
+                    if (payload.skill_tiles) {
+                        setQuestionCells(new Set(payload.skill_tiles.map((p: any) => `${p[0]}-${p[1]}`)))
+                    }
+                    if (payload.skills_inventory) {
+                        setInventories({
+                            black: payload.skills_inventory.black || [],
+                            white: payload.skills_inventory.white || []
+                        })
                     }
                     setGameOver(Boolean(payload.game_over))
                     setOnlineWinner(payload.winner === 'black' || payload.winner === 'white' ? payload.winner : null)
@@ -688,6 +702,19 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }
 
     const useInstantAbility = (ability: AbilityId, inventoryIndex: number) => {
+        if (isOnlineMatch) {
+            if (!onlineWsRef.current || onlineWsRef.current.readyState !== WebSocket.OPEN) return
+            if (currentTurn !== playerProfile.piece) return
+
+            onlineWsRef.current.send(JSON.stringify({
+                action: 'use_skill',
+                type: ability,
+                target_player: opponentProfile.piece,
+                inventory_index: inventoryIndex
+            }))
+            return
+        }
+
         const player = currentTurn
         const opponent = getOpponent(player)
         const nextBoard = cloneBoard(board)
@@ -705,12 +732,12 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
         let message = `${playerNameByPiece(player)} usó ${ABILITY_META[ability].name}.`
 
-        if (ability === 'skip_rival_turn') {
+        if (ability === 'skip_rival') {
             nextSkipTurns[opponent] += 1
             message = `${playerNameByPiece(player)} hará que ${playerNameByPiece(opponent)} pierda su próximo turno.`
         }
 
-        if (ability === 'steal_random_ability') {
+        if (ability === 'steal_skill') {
             if (nextInventories[opponent].length > 0) {
                 const stolenIndex = randomInt(nextInventories[opponent].length)
                 const [stolen] = nextInventories[opponent].splice(stolenIndex, 1)
@@ -721,7 +748,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             }
         }
 
-        if (ability === 'swap_random_ability') {
+        if (ability === 'exchange_skill') {
             if (nextInventories[player].length > 0 && nextInventories[opponent].length > 0) {
                 const playerIndex = randomInt(nextInventories[player].length)
                 const opponentIndex = randomInt(nextInventories[opponent].length)
@@ -734,7 +761,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             }
         }
 
-        if (ability === 'give_random_ability') {
+        if (ability === 'give_skill') {
             if (nextInventories[player].length > 0) {
                 const giveIndex = randomInt(nextInventories[player].length)
                 const [given] = nextInventories[player].splice(giveIndex, 1)
@@ -793,6 +820,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             return
         }
 
+        if (isOnlineMatch) {
+            // This is already handled in handleCellClick now
+            return
+        }
+
         const player = currentTurn
         const opponent = getOpponent(player)
         const ability = pendingAbility.id
@@ -834,7 +866,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             }
         }
 
-        if (ability === 'place_fixed') {
+        if (ability === 'fix_piece') {
             validTarget = targetCell.piece === null
             if (validTarget) {
                 targetCell.piece = player
@@ -844,7 +876,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             }
         }
 
-        if (ability === 'remove_fixed') {
+        if (ability === 'unfix_piece') {
             validTarget = targetCell.piece !== null && targetCell.fixed
             if (validTarget) {
                 targetCell.piece = null
@@ -853,7 +885,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             }
         }
 
-        if (ability === 'flip_enemy') {
+        if (ability === 'flip_rival') {
             validTarget = targetCell.piece === opponent && !targetCell.fixed
             if (validTarget) {
                 targetCell.piece = player
@@ -861,7 +893,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             }
         }
 
-        if (ability === 'place_anywhere') {
+        if (ability === 'place_free') {
             validTarget = targetCell.piece === null
             if (validTarget) {
                 targetCell.piece = player
@@ -895,6 +927,12 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             return
         }
 
+        if (ability === 'gravity') {
+            setSelectingGravityDirection({ inventoryIndex })
+            setSystemMessage('Selecciona direccion para la gravedad.')
+            return
+        }
+
         useInstantAbility(ability, inventoryIndex)
     }
 
@@ -923,6 +961,23 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
 
         if (isOnlineMatch) {
+            if (pendingAbility) {
+                // Use skill instead of make_move
+                if (!onlineWsRef.current || onlineWsRef.current.readyState !== WebSocket.OPEN) return
+                if (currentTurn !== playerProfile.piece) return
+
+                onlineWsRef.current.send(JSON.stringify({
+                    action: 'use_skill',
+                    type: pendingAbility.id,
+                    row,
+                    col,
+                    target_player: opponentProfile.piece, // Default target
+                    inventory_index: pendingAbility.inventoryIndex
+                }))
+                setPendingAbility(null)
+                return
+            }
+
             const key = `${row}-${col}`
             if (!validMoves.has(key)) return
             if (!onlineWsRef.current || onlineWsRef.current.readyState !== WebSocket.OPEN) return
@@ -1114,7 +1169,60 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     <div className="duel__center-info">
                         <span className="duel__turn-label">Turno actual</span>
                         <span className="duel__turn-value">{turnLabel}</span>
-                        <div className="duel__timer">
+                        {/* UI de Habilidad Pendiente o Direccion de Gravedad */}
+                    {(pendingAbility || selectingGravityDirection) && (
+                        <div className="duel__ability-pending-bar">
+                            <span className="duel__ability-pending-text">
+                                {pendingAbility 
+                                    ? `Usando: ${ABILITY_META[pendingAbility.id].name}` 
+                                    : 'Selecciona Direccion de Gravedad'}
+                            </span>
+                            <button 
+                                className="duel__ability-cancel-btn"
+                                onClick={() => {
+                                    setPendingAbility(null)
+                                    setSelectingGravityDirection(null)
+                                    setSystemMessage('Accion cancelada.')
+                                }}
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    )}
+
+                    {selectingGravityDirection && (
+                        <div className="duel__gravity-direction-picker">
+                            {(['up', 'down', 'left', 'right'] as const).map((dir) => (
+                                <button
+                                    key={dir}
+                                    className={`duel__gravity-btn duel__gravity-btn--${dir}`}
+                                    onClick={() => {
+                                        const { inventoryIndex } = selectingGravityDirection
+                                        if (isOnlineMatch) {
+                                            if (onlineWsRef.current?.readyState === WebSocket.OPEN) {
+                                                onlineWsRef.current.send(JSON.stringify({
+                                                    action: 'use_skill',
+                                                    type: 'gravity',
+                                                    direction: dir,
+                                                    inventory_index: inventoryIndex
+                                                }))
+                                            }
+                                        } else {
+                                            const nextBoard = applyGravity(board, dir)
+                                            const nextInventories = JSON.parse(JSON.stringify(inventories))
+                                            nextInventories[currentTurn].splice(inventoryIndex, 1)
+                                            finishAction(nextBoard, questionCells, nextInventories, skipTurns, `Gravedad aplicada hacia ${dir}`)
+                                        }
+                                        setSelectingGravityDirection(null)
+                                    }}
+                                >
+                                    {dir === 'up' ? '⬆️' : dir === 'down' ? '⬇️' : dir === 'left' ? '⬅️' : '➡️'}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="duel__board-container">
                             {isOnlineMatch ? (onlineStatusMessage || 'Partida online en curso') : '1 accion por turno'}
                         </div>
                     </div>
@@ -1149,9 +1257,9 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                             type="button"
                                             disabled={gameOver || currentTurn !== playerProfile.piece}
                                         >
-                                            <span className="duel__skill-icon">{ABILITY_META[ability].icon}</span>
+                                            <span className="duel__skill-icon">{(ABILITY_META[ability] || { icon: '❓' }).icon}</span>
                                             <div className="duel__skill-text">
-                                                <span className="duel__skill-name">{ABILITY_META[ability].name}</span>
+                                                <span className="duel__skill-name">{(ABILITY_META[ability] || { name: 'Desconocida' }).name}</span>
                                                 <span className="duel__skill-uses">1 uso</span>
                                             </div>
                                         </button>
@@ -1231,9 +1339,9 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                             type="button"
                                             disabled={gameOver || currentTurn !== opponentProfile.piece}
                                         >
-                                            <span className="duel__skill-icon">{ABILITY_META[ability].icon}</span>
+                                            <span className="duel__skill-icon">{(ABILITY_META[ability] || { icon: '❓' }).icon}</span>
                                             <div className="duel__skill-text">
-                                                <span className="duel__skill-name">{ABILITY_META[ability].name}</span>
+                                                <span className="duel__skill-name">{(ABILITY_META[ability] || { name: 'Desconocida' }).name}</span>
                                                 <span className="duel__skill-uses">1 uso</span>
                                             </div>
                                         </button>
