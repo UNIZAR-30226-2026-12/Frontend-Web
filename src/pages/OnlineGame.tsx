@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react'
+import { CSSProperties, useEffect, useMemo, useState } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import '../styles/background.css'
+import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
+import backToMenuButtonImage from '../assets/elementosGenerales/botonVolverMenu.png'
+import titleImage from '../assets/jugarOnline/tituloJugarOnline.png'
+import corkBoardImage from '../assets/jugarOnline/tableroCorcho.png'
+import statusImage from '../assets/jugarOnline/estatus.png'
+import publicationImage from '../assets/jugarOnline/publicacionPartida.png'
+import createButtonImage from '../assets/jugarOnline/crearPartida.png'
+import refreshButtonImage from '../assets/jugarOnline/actualizar.png'
+import joinButtonImage from '../assets/jugarOnline/botonUnirse.png'
 import '../styles/pages/OnlineGame.css'
 
 interface OnlineGameProps {
@@ -21,34 +29,110 @@ interface GameSession {
 }
 
 interface GameHistory {
-    id: number
+    id?: number | string
     date: string
     mode: string
-    result: 'Ganada' | 'Perdida' | 'Empate' | '1º' | '2º' | '3º' | '4º'
-    score: string
-    rankChange: string
+    result: string
+    score?: string
+    rankChange?: string
 }
 
-const normalizeOrdinal = (value: string) =>
-    value.replace('Âº', 'º').trim()
+type HistoryTone = 'win' | 'loss' | 'draw'
 
-const getHistoryTone = (entry: GameHistory): 'win' | 'loss' | 'draw' => {
-    const mode = entry.mode === '1v1v1v1' ? '1vs1vs1vs1' : entry.mode
-    const normalizedResult = normalizeOrdinal(entry.result)
+const PUBLICATION_SLOTS = [
+    { top: '22%', left: '28%', rotate: -5 },
+    { top: '24%', left: '60%', rotate: 4 },
+    { top: '45%', left: '43%', rotate: -3 },
+    { top: '68%', left: '28%', rotate: -4 },
+    { top: '68%', left: '60%', rotate: 3 },
+    { top: '45%', left: '75%', rotate: -5 },
+    { top: '56%', left: '74%', rotate: 4 },
+    { top: '33%', left: '24%', rotate: 3 },
+]
 
-    if (mode === '1vs1vs1vs1') {
-        if (normalizedResult === '1º') return 'win'
-        if (normalizedResult === '4º') return 'loss'
-        return 'draw'
+const normalizeMode = (mode: string): '1vs1' | '1vs1vs1vs1' => {
+    const cleanedMode = String(mode || '').toLowerCase()
+    if (cleanedMode === '1v1' || cleanedMode === '1vs1') return '1vs1'
+    return '1vs1vs1vs1'
+}
+
+const normalizeLobbyStatus = (status: string): 'waiting' | 'playing' | 'full' => {
+    const cleanedStatus = String(status || '').toLowerCase()
+    if (cleanedStatus === 'full') return 'full'
+    if (cleanedStatus === 'playing') return 'playing'
+    return 'waiting'
+}
+
+const formatLobbyMode = (mode: string) => (normalizeMode(mode) === '1vs1' ? '1V1' : '4P')
+const formatHistoryMode = (mode: string) => (normalizeMode(mode) === '1vs1' ? '1v1' : '4P')
+
+const normalizeResult = (result: string) =>
+    String(result || '')
+        .replace(/ÃƒÆ’Ã¢â‚¬Å¡/g, '')
+        .replace(/Ãƒâ€š/g, '')
+        .replace(/Ã‚/g, '')
+        .trim()
+
+const safeRrValue = (value: unknown) => {
+    const numeric = Number(value)
+    if (!Number.isFinite(numeric)) return 0
+    return Math.round(numeric)
+}
+
+const getLobbyStatusLabel = (status: 'waiting' | 'playing' | 'full') => {
+    if (status === 'playing') return 'EN CURSO'
+    if (status === 'full') return 'LLENA'
+    return 'UNIRSE'
+}
+
+const formatRankChange = (value?: string) => {
+    const cleaned = String(value || '').trim()
+    if (!cleaned) return '-- RR'
+    if (/rr/i.test(cleaned)) return cleaned.toUpperCase()
+
+    if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) {
+        const numeric = Number(cleaned)
+        const signed = numeric > 0 ? `+${numeric}` : `${numeric}`
+        return `${signed} RR`
     }
 
-    if (normalizedResult === 'Ganada') return 'win'
-    if (normalizedResult === 'Perdida') return 'loss'
-    return 'draw'
+    return cleaned
 }
 
+const formatHistoryDate = (value: string) => {
+    const isoCandidate = String(value || '').trim()
+    if (/^\d{4}-\d{2}-\d{2}/.test(isoCandidate)) {
+        return isoCandidate.slice(0, 10)
+    }
 
+    const parsedDate = new Date(isoCandidate)
+    if (Number.isNaN(parsedDate.getTime())) return isoCandidate || '--'
 
+    const year = parsedDate.getFullYear()
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
+    const day = String(parsedDate.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+}
+
+const getHistoryOutcome = (entry: GameHistory): { tone: HistoryTone; label: string; symbol: string } => {
+    const mode = normalizeMode(entry.mode)
+    const result = normalizeResult(entry.result).toLowerCase()
+
+    if (mode === '1vs1vs1vs1') {
+        const placement = Number((result.match(/\d+/) || [])[0])
+        if (placement === 1) return { tone: 'win', label: 'GANADA', symbol: 'OK' }
+        if (placement === 4) return { tone: 'loss', label: 'PERDIDA', symbol: 'X' }
+        return { tone: 'draw', label: 'EMPATE', symbol: '-' }
+    }
+
+    if (result.includes('ganad') || result.includes('victoria')) {
+        return { tone: 'win', label: 'GANADA', symbol: 'OK' }
+    }
+    if (result.includes('perdid') || result.includes('derrota')) {
+        return { tone: 'loss', label: 'PERDIDA', symbol: 'X' }
+    }
+    return { tone: 'draw', label: 'EMPATE', symbol: '-' }
+}
 
 function OnlineGame({ onNavigate }: OnlineGameProps) {
     const [user, setUser] = useState<any>(null)
@@ -59,60 +143,77 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error'; visible: boolean }>({
         message: '',
         type: 'info',
-        visible: false
+        visible: false,
     })
 
+    const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
+        setToast({ message, type, visible: true })
+        window.setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 3000)
+    }
+
     const fetchPublicGames = async () => {
-        try {
-            const data = await api.games.getPublic()
-            setPublicGames(data.lobbies || [])
-        } catch (err) {
-            console.error('Error fetching public games', err)
-        }
+        const data = await api.games.getPublic()
+        const lobbies = Array.isArray(data?.lobbies) ? data.lobbies : []
+        setPublicGames(lobbies)
     }
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const userData = await api.users.getMe()
-                setUser(userData)
+                const [userData, historyData] = await Promise.all([
+                    api.users.getMe(),
+                    api.users.getHistory(),
+                ])
 
-                const historyData = await api.users.getHistory()
-                setHistory(historyData)
-                
+                setUser(userData)
+                setHistory(Array.isArray(historyData) ? historyData : [])
                 await fetchPublicGames()
             } catch (err) {
                 console.error('Error fetching online game data', err)
+                showToast('No se pudieron cargar los datos de jugar online', 'error')
             }
         }
+
         fetchData()
     }, [])
 
-    const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
-        setToast({ message, type, visible: true })
-        setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000)
-    }
+    const availableGames = useMemo(
+        () => publicGames.filter((game) => normalizeLobbyStatus(game.status) !== 'full'),
+        [publicGames],
+    )
+
+    const visibleGames = useMemo(
+        () => availableGames.slice(0, PUBLICATION_SLOTS.length),
+        [availableGames],
+    )
+
+    const hiddenGamesCount = Math.max(0, availableGames.length - visibleGames.length)
 
     const handleRefresh = async () => {
+        if (isRefreshing) return
         setIsRefreshing(true)
         try {
             await fetchPublicGames()
-            showToast('Lista de partidas actualizada', 'info')
+            showToast('Lista de salas actualizada', 'info')
         } catch (err) {
-            showToast('Error al actualizar partidas', 'error')
+            console.error('Error refreshing public games', err)
+            showToast('Error al actualizar salas', 'error')
         } finally {
             setIsRefreshing(false)
         }
     }
 
     const handleJoinGame = async (game: GameSession) => {
+        const status = normalizeLobbyStatus(game.status)
+        if (status !== 'waiting') return
+
         try {
             await api.games.join(game.game_id)
             onNavigate('waiting-room', {
                 gameId: game.game_id,
-                mode: game.mode,
+                mode: normalizeMode(game.mode),
                 creator: game.creator,
-                returnTo: 'online-game'
+                returnTo: 'online-game',
             })
         } catch (err: any) {
             showToast(err.message || 'Error al unirse a la partida', 'error')
@@ -125,9 +226,9 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
             setShowCreateModal(false)
             onNavigate('waiting-room', {
                 gameId: res.game_id,
-                mode: mode,
+                mode,
                 creator: user?.username || 'Yo',
-                returnTo: 'online-game'
+                returnTo: 'online-game',
             })
         } catch (err: any) {
             showToast(err.message || 'Error al crear partida', 'error')
@@ -136,122 +237,177 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
 
     return (
         <div className="online">
+            <img className="online__background" src={menuBackground} alt="" aria-hidden="true" />
+            <div className="online__overlay" aria-hidden="true"></div>
 
-            {/* Fondo animado compartido */}
-            <div className="home__bg">
-                <span className="home__chip home__chip--1">⚫</span>
-                <span className="home__chip home__chip--2">⚪</span>
-                <span className="home__chip home__chip--3">🔴</span>
-                <span className="home__chip home__chip--4">🔵</span>
-                <span className="home__chip home__chip--5">🟢</span>
-                <span className="home__chip home__chip--6">🟡</span>
-                <span className="home__chip home__chip--7">🟣</span>
-                <span className="home__chip home__chip--8">🟠</span>
-                <span className="home__chip home__chip--9">⚫</span>
-                <span className="home__chip home__chip--10">⚪</span>
-                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
-            </div>
-
-            <div className="online__container">
+            <main className="online__layout">
                 <header className="online__header">
-                    <div className="online__header-left">
-                        <h1 className="online__title">Jugar Online</h1>
-                        <p className="online__subtitle">Compite contra jugadores de todo el mundo</p>
-                    </div>
+                    <img className="online__title-image" src={titleImage} alt="Jugar online" />
+
                     <div className="online__header-actions">
-                        <button className="online__btn online__btn--refresh" onClick={handleRefresh} disabled={isRefreshing}>
-                            {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+                        <button
+                            className={`online__image-btn ${isRefreshing ? 'online__image-btn--loading' : ''}`}
+                            onClick={handleRefresh}
+                            disabled={isRefreshing}
+                            aria-label="Actualizar salas publicas"
+                            title="Actualizar salas publicas"
+                        >
+                            <img src={refreshButtonImage} alt="" aria-hidden="true" />
                         </button>
-                        <button className="online__btn online__btn--create" onClick={() => setShowCreateModal(true)}>
-                            Crear Partida
+
+                        <button
+                            className="online__image-btn online__image-btn--create"
+                            onClick={() => setShowCreateModal(true)}
+                            aria-label="Crear partida"
+                            title="Crear partida"
+                        >
+                            <img src={createButtonImage} alt="" aria-hidden="true" />
                         </button>
                     </div>
                 </header>
 
-                <div className="online__content">
-                    {/* Sección: Partidas Públicas */}
-                    <div className="online__section online__public-section">
-                        <h2 className="online__section-title">Partidas Públicas</h2>
-                        <div className="online__games-list">
-                            {publicGames
-                                .filter(game => game.status !== 'full')
-                                .map(game => (
-                                    <div key={game.game_id} className={`game-card game-card--${game.status}`}>
-                                        <div className="game-card__info">
-                                            <div className="game-card__creator-info">
-                                                <img
-                                                    className="game-card__creator-avatar"
-                                                    src={resolveUserAvatar(game.avatar_url, game.creator)}
-                                                    alt={`Avatar de ${game.creator}`}
-                                                />
-                                                <div className="game-card__creator-details">
-                                                    <span className="game-card__creator-name">{game.creator}</span>
-                                                    <span className="game-card__mode-tag">{game.mode}</span>
+                <div className="online__stage">
+                    <section className="online__board-column">
+                        <section className="online__board">
+                            <img className="online__board-image" src={corkBoardImage} alt="" aria-hidden="true" />
+
+                            <div className="online__board-inner">
+                                <p className="online__board-counter">{availableGames.length} salas disponibles</p>
+
+                                {visibleGames.length === 0 ? (
+                                    <p className="online__empty online__empty--board">
+                                        No hay salas abiertas ahora mismo. Crea una partida para empezar.
+                                    </p>
+                                ) : (
+                                    visibleGames.map((game, index) => {
+                                        const status = normalizeLobbyStatus(game.status)
+                                        const slot = PUBLICATION_SLOTS[index]
+                                        const slotStyle = {
+                                            '--slot-top': slot.top,
+                                            '--slot-left': slot.left,
+                                            '--slot-rotate': `${slot.rotate}deg`,
+                                        } as CSSProperties
+
+                                        return (
+                                            <article
+                                                key={game.game_id}
+                                                className={`online-publication online-publication--${status}`}
+                                                style={slotStyle}
+                                            >
+                                                <img className="online-publication__image" src={publicationImage} alt="" aria-hidden="true" />
+
+                                                <div className="online-publication__content">
+                                                    <span className="online-publication__host">HOST</span>
+
+                                                    <img
+                                                        className="online-publication__avatar"
+                                                        src={resolveUserAvatar(game.avatar_url, game.creator)}
+                                                        alt={`Avatar de ${game.creator}`}
+                                                    />
+
+                                                    <span className="online-publication__name" title={game.creator}>
+                                                        {game.creator}
+                                                    </span>
+
+                                                    <span className="online-publication__rr">
+                                                        {safeRrValue(game.creator_rr)} RR
+                                                    </span>
+
+                                                    <span className="online-publication__mode">
+                                                        {formatLobbyMode(game.mode)}
+                                                    </span>
+
+                                                    <span className="online-publication__players">
+                                                        <span className="online-publication__players-icon" aria-hidden="true"></span>
+                                                        {game.players}/{game.max_players}
+                                                    </span>
+
+                                                    <button
+                                                        className={`online-publication__join ${status !== 'waiting' ? 'online-publication__join--disabled' : ''}`}
+                                                        disabled={status !== 'waiting'}
+                                                        onClick={() => handleJoinGame(game)}
+                                                        aria-label={status === 'waiting' ? `Unirse a sala de ${game.creator}` : getLobbyStatusLabel(status)}
+                                                        title={status === 'waiting' ? `Unirse a sala de ${game.creator}` : getLobbyStatusLabel(status)}
+                                                    >
+                                                        <img src={joinButtonImage} alt="" aria-hidden="true" />
+                                                        {status !== 'waiting' && (
+                                                            <span className="online-publication__join-state">
+                                                                {getLobbyStatusLabel(status)}
+                                                            </span>
+                                                        )}
+                                                    </button>
                                                 </div>
-                                            </div>
-                                            <div className="game-card__stats">
-                                                <span className="game-card__creator-rr">{game.creator_rr} RR</span>
-                                                <span className="game-card__players-count">👥 {game.players}/{game.max_players}</span>
-                                            </div>
-                                        </div>
-                                        <button
-                                            className="game-card__join-btn"
-                                            disabled={game.status === 'full' || game.status === 'playing'}
-                                            onClick={() => handleJoinGame(game)}
-                                        >
-                                            {game.status === 'full' ? 'Llena' : game.status === 'playing' ? 'En curso' : 'Unirse'}
-                                        </button>
-                                    </div>
-                                ))}
-                        </div>
-                    </div>
+                                            </article>
+                                        )
+                                    })
+                                )}
 
-                    {/* Sección: Historial */}
-                    <div className="online__section online__history-section">
-                        <div className="online__rr-card">
-                            <span className="online__rr-card-label">ELO actual:</span>
-                            <span className="online__rr-card-value">{user?.elo || 0} RR</span>
-                        </div>
+                                {hiddenGamesCount > 0 && (
+                                    <p className="online__board-overflow">+{hiddenGamesCount} salas mas en cola</p>
+                                )}
+                            </div>
+                        </section>
 
-                        <h2 className="online__section-title">Tu Historial</h2>
+                        <button
+                            className="online__back-btn"
+                            onClick={() => onNavigate('menu')}
+                            aria-label="Volver al menu"
+                            title="Volver al menu"
+                        >
+                            <img src={backToMenuButtonImage} alt="" />
+                        </button>
+                    </section>
+
+                    <aside className="online__status-panel">
+                        <img className="online__status-image" src={statusImage} alt="Tu estatus y tu historial" />
+
+                        <p className="online__status-elo">{safeRrValue(user?.elo)} RR</p>
+
                         <div className="online__history-list">
                             {history.length === 0 ? (
-                                <p className="online__empty">No has jugado partidas todavia.</p>
+                                <p className="online__empty online__empty--history">Todavia no hay partidas registradas.</p>
                             ) : (
-                                history.map(item => (
-                                    <div key={item.id} className={`history-card history-card--${getHistoryTone(item)}`}>
-                                        <div className="history-card__header">
-                                            <span className={`history-card__result history-card__result--${getHistoryTone(item)}`}>
-                                                {item.result}
-                                            </span>
-                                            <span className="history-card__date">{item.date}</span>
-                                        </div>
-                                        <div className="history-card__body">
-                                            <span className="history-card__mode">{item.mode}</span>
-                                            <span className="history-card__score">{item.score}</span>
-                                            <span className="history-card__rank">{item.rankChange}</span>
-                                        </div>
-                                    </div>
-                                ))
+                                history.slice(0, 7).map((entry, index) => {
+                                    const outcome = getHistoryOutcome(entry)
+                                    const rankChange = formatRankChange(entry.rankChange)
+                                    const scoreValue = entry.score || '--'
+                                    const modeValue = formatHistoryMode(entry.mode)
+
+                                    return (
+                                        <article
+                                            key={`${entry.id ?? 'history'}-${index}`}
+                                            className={`online-history-row online-history-row--${outcome.tone}`}
+                                        >
+                                            <span className="online-history-row__accent" aria-hidden="true"></span>
+
+                                            <div className="online-history-row__main">
+                                                <div className="online-history-row__top">
+                                                    <span className="online-history-row__result">
+                                                        {outcome.label}
+                                                        <span className="online-history-row__symbol">{outcome.symbol}</span>
+                                                    </span>
+                                                    <span className="online-history-row__date">{formatHistoryDate(entry.date)}</span>
+                                                </div>
+                                                <div className="online-history-row__bottom">
+                                                    <span className="online-history-row__score">{scoreValue}</span>
+                                                    <span className="online-history-row__mode">{modeValue}</span>
+                                                </div>
+                                            </div>
+                                            <span className="online-history-row__rr">{rankChange}</span>
+                                        </article>
+                                    )
+                                })
                             )}
                         </div>
-                    </div>
+                    </aside>
                 </div>
-            </div>
+            </main>
 
-            <button className="online__back-btn" onClick={() => onNavigate('menu')}>
-                Volver al menú
-            </button>
-
-            {/* Notificación crear partida */}
             <div className={`toast toast--${toast.type} ${toast.visible ? 'toast--visible' : ''}`}>
                 <span className="toast__icon">
-                    {toast.type === 'success' && '✅'}
-                    {toast.type === 'info' && '🔔'}
-                    {toast.type === 'error' && '❌'}
+                    {toast.type === 'success' && 'OK'}
+                    {toast.type === 'info' && 'i'}
+                    {toast.type === 'error' && 'X'}
                 </span>
                 <span className="toast__message">{toast.message}</span>
             </div>
@@ -260,7 +416,7 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                 isOpen={showCreateModal}
                 onClose={() => setShowCreateModal(false)}
                 title="Crear nueva partida"
-                subtitle="Elige el modo para tu sala pública"
+                subtitle="Elige el modo para tu sala publica"
                 onSelectMode={handleCreateGame}
             />
         </div>
@@ -268,4 +424,3 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
 }
 
 export default OnlineGame
-
