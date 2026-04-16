@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { api } from '../services/api'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import '../styles/background.css'
+import rankingTitle from '../assets/ranking/rankingGlobal.png'
+import rankingSheet from '../assets/ranking/libretaRanking.png'
+import trophyIcon from '../assets/ranking/Trofeo.png'
+import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
+import questionMark from '../assets/elementosGenerales/interrogante.png'
+import backToMenuButtonImage from '../assets/elementosGenerales/botonVolverMenu.png'
+import rulesButton from '../assets/homeScreenMenu/botonReglas.png'
+import logoutSticker from '../assets/homeScreenMenu/cerrarSesion.png'
 import '../styles/pages/Ranking.css'
 
 interface RankingProps {
@@ -15,12 +22,19 @@ interface RankingEntry {
     avatar_url?: string
 }
 
+interface CurrentUser {
+    id: number
+    username: string
+    elo: number
+    avatar_url?: string
+}
+
 function Ranking({ onNavigate }: RankingProps) {
     const [ranking, setRanking] = useState<RankingEntry[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [error, setError] = useState('')
-    const [myUserId, setMyUserId] = useState<number | null>(null)
+    const [myUser, setMyUser] = useState<CurrentUser | null>(null)
 
     const fetchRanking = async (refresh = false) => {
         if (refresh) {
@@ -46,75 +60,126 @@ function Ranking({ onNavigate }: RankingProps) {
 
     useEffect(() => {
         fetchRanking()
-        api.users.getMe().then((me) => setMyUserId(me.id)).catch(() => setMyUserId(null))
+        api.users.getMe()
+            .then((me) => {
+                setMyUser({
+                    id: me.id,
+                    username: me.username || 'Jugador',
+                    elo: me.elo ?? 1000,
+                    avatar_url: me.avatar_url,
+                })
+            })
+            .catch(() => setMyUser(null))
     }, [])
+
+    const myUserId = myUser?.id ?? null
+
+    const handleLogout = () => {
+        localStorage.removeItem('token')
+        onNavigate('home')
+    }
 
     return (
         <div className="ranking">
-            <div className="home__bg">
-                <span className="home__chip home__chip--1">⚫</span>
-                <span className="home__chip home__chip--2">⚪</span>
-                <span className="home__chip home__chip--3">🔴</span>
-                <span className="home__chip home__chip--4">🔵</span>
-                <span className="home__chip home__chip--5">🟢</span>
-                <span className="home__chip home__chip--6">🟡</span>
-                <span className="home__chip home__chip--7">🟣</span>
-                <span className="home__chip home__chip--8">🟠</span>
-                <span className="home__chip home__chip--9">⚫</span>
-                <span className="home__chip home__chip--10">⚪</span>
-                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
+            <img className="ranking__background" src={menuBackground} alt="" aria-hidden="true" />
+            <div className="ranking__overlay" aria-hidden="true"></div>
+
+            <div className="ranking__question-layer" aria-hidden="true">
+                <img className="ranking__question ranking__question--1" src={questionMark} alt="" />
+                <img className="ranking__question ranking__question--2" src={questionMark} alt="" />
+                <img className="ranking__question ranking__question--3" src={questionMark} alt="" />
+                <img className="ranking__question ranking__question--4" src={questionMark} alt="" />
             </div>
 
-            <div className="ranking__container">
-                <header className="ranking__header">
-                    <div>
-                        <h1 className="ranking__title">Ranking Global</h1>
-                        <p className="ranking__subtitle">Top de jugadores ordenados por ELO (RR)</p>
+            <nav className="ranking__top-nav">
+                <button className="ranking__rules-btn" onClick={() => onNavigate('rules')} title="Ver reglas del juego" aria-label="Reglas del juego">
+                    <img src={rulesButton} alt="" />
+                </button>
+            </nav>
+
+            <div className="ranking__account">
+                <button
+                    className="ranking__profile-sticker"
+                    onClick={() => onNavigate('profile')}
+                    title="Ver mi perfil"
+                    aria-label="Ver mi perfil"
+                >
+                    <span className="ranking__tape ranking__tape--left"></span>
+                    <span className="ranking__tape ranking__tape--right"></span>
+                    <div className="ranking__profile-frame">
+                        <img
+                            className="ranking__profile-avatar"
+                            src={resolveUserAvatar(myUser?.avatar_url, myUser?.username || 'Jugador')}
+                            alt="Avatar"
+                        />
                     </div>
+                    <span className="ranking__profile-elo">{myUser?.elo ?? 1000} RR</span>
+                </button>
+
+                <button className="ranking__logout-btn" onClick={handleLogout} title="Cerrar sesion" aria-label="Cerrar sesion">
+                    <img src={logoutSticker} alt="" />
+                </button>
+            </div>
+
+            <main className="ranking__stage">
+                <header className="ranking__header">
+                    <img className="ranking__title-image" src={rankingTitle} alt="Ranking global" />
                     <button
                         className="ranking__refresh-btn"
                         onClick={() => fetchRanking(true)}
                         disabled={isRefreshing}
+                        type="button"
                     >
                         {isRefreshing ? 'Actualizando...' : 'Actualizar'}
                     </button>
                 </header>
 
-                {isLoading ? (
-                    <p className="ranking__state">Cargando ranking...</p>
-                ) : error ? (
-                    <p className="ranking__state ranking__state--error">{error}</p>
-                ) : ranking.length === 0 ? (
-                    <p className="ranking__state">No hay jugadores para mostrar.</p>
-                ) : (
-                    <div className="ranking__list">
-                        {ranking.map((entry, index) => (
-                            <button
-                                key={entry.id}
-                                className={`ranking__row ${entry.id === myUserId ? 'ranking__row--me' : ''}`}
-                                onClick={() => onNavigate('profile', { id: entry.id, name: entry.username, returnTo: 'ranking' })}
-                                type="button"
-                            >
-                                <span className="ranking__position">#{index + 1}</span>
-                                <img
-                                    className="ranking__avatar"
-                                    src={resolveUserAvatar(entry.avatar_url, entry.username)}
-                                    alt={`Avatar de ${entry.username}`}
-                                />
-                                <span className="ranking__name">{entry.username}</span>
-                                <span className="ranking__elo">{entry.elo} RR</span>
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
+                <section className="ranking__sheet">
+                    <img className="ranking__sheet-bg" src={rankingSheet} alt="" aria-hidden="true" />
 
-            <button className="ranking__back-btn" onClick={() => onNavigate('menu')}>
-                Volver al menu
-            </button>
+                    {isLoading ? (
+                        <p className="ranking__state">Cargando ranking...</p>
+                    ) : error ? (
+                        <p className="ranking__state ranking__state--error">{error}</p>
+                    ) : ranking.length === 0 ? (
+                        <p className="ranking__state">No hay jugadores para mostrar.</p>
+                    ) : (
+                        <div className="ranking__table">
+                            {ranking.map((entry, index) => (
+                                <button
+                                    key={entry.id}
+                                    className={`ranking__row ${entry.id === myUserId ? 'ranking__row--me' : ''}`}
+                                    onClick={() => onNavigate('profile', { id: entry.id, name: entry.username, returnTo: 'ranking' })}
+                                    type="button"
+                                    title={`Ver perfil de ${entry.username}`}
+                                >
+                                    <span className={`ranking__position ${index === 0 ? 'ranking__position--champion' : ''}`}>
+                                        {index === 0 && (
+                                            <img className="ranking__trophy" src={trophyIcon} alt="" aria-hidden="true" />
+                                        )}
+                                        <span>{index + 1}</span>
+                                    </span>
+
+                                    <span className="ranking__player">
+                                        <img
+                                            className="ranking__avatar"
+                                            src={resolveUserAvatar(entry.avatar_url, entry.username)}
+                                            alt={`Avatar de ${entry.username}`}
+                                        />
+                                        <span className="ranking__name">{entry.username}</span>
+                                    </span>
+
+                                    <span className="ranking__elo">{entry.elo} RR</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                <button className="ranking__back-btn" onClick={() => onNavigate('menu')} type="button" aria-label="Volver al menu">
+                    <img src={backToMenuButtonImage} alt="" />
+                </button>
+            </main>
         </div>
     )
 }
