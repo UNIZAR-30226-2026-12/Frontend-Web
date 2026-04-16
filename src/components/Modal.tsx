@@ -59,7 +59,11 @@ function Modal({
         style={maxWidth ? { maxWidth } : undefined}
       >
         {showCloseButton && (
-          <button className={closeClasses} onClick={onClose}>
+          <button
+            type="button"
+            className={closeClasses}
+            onClick={onClose}
+          >
             x
           </button>
         )}

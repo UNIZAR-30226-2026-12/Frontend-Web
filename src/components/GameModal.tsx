@@ -26,8 +26,15 @@ function GameModal({
     const showFourPlayers = availableModes.includes('1vs1vs1vs1')
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} maxWidth="650px">
-            <div className="game-modal">
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            maxWidth="650px"
+            overlayClassName="popup-overlay"
+            boxClassName="popup-box popup-box--game"
+            closeButtonClassName="popup-close"
+        >
+            <div className="game-modal popup-surface">
                 <h2 className="game-modal__title">{title}</h2>
                 <p className="game-modal__subtitle">{subtitle}</p>
 

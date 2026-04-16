@@ -403,13 +403,13 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                 </div>
             </main>
 
-            <div className={`toast toast--${toast.type} ${toast.visible ? 'toast--visible' : ''}`}>
-                <span className="toast__icon">
+            <div className={`popup-toast popup-toast--${toast.type} ${toast.visible ? 'popup-toast--visible' : ''}`}>
+                <span className="popup-toast__icon">
                     {toast.type === 'success' && 'OK'}
                     {toast.type === 'info' && 'i'}
                     {toast.type === 'error' && 'X'}
                 </span>
-                <span className="toast__message">{toast.message}</span>
+                <span className="popup-toast__message">{toast.message}</span>
             </div>
 
             <GameModal

@@ -695,16 +695,23 @@ function Friends({ onNavigate }: FriendsProps) {
                 </footer>
             </div>
 
-            <div className={`toast toast--${toast.type} ${toast.visible ? 'toast--visible' : ''}`}>
-                <span className="toast__icon">
+            <div className={`popup-toast popup-toast--${toast.type} ${toast.visible ? 'popup-toast--visible' : ''}`}>
+                <span className="popup-toast__icon">
                     {toast.type === 'success' && 'OK'}
                     {toast.type === 'info' && 'i'}
                     {toast.type === 'error' && 'X'}
                 </span>
-                <span className="toast__message">{toast.message}</span>
+                <span className="popup-toast__message">{toast.message}</span>
             </div>
-            <Modal isOpen={isAddFriendModalOpen} onClose={handleCloseAddModal} maxWidth="500px">
-                <div className="friends-modal">
+            <Modal
+                isOpen={isAddFriendModalOpen}
+                onClose={handleCloseAddModal}
+                maxWidth="500px"
+                overlayClassName="popup-overlay"
+                boxClassName="popup-box popup-box--compact"
+                closeButtonClassName="popup-close"
+            >
+                <div className="friends-modal popup-surface">
                     <h3 className="friends-modal__title">Anadir nuevo amigo</h3>
                     <p className="friends-modal__subtitle">Escribe su nombre de usuario para enviarle una solicitud de amistad</p>
                     <form className="friends-modal__form" onSubmit={handleAddFriend}>
@@ -738,8 +745,11 @@ function Friends({ onNavigate }: FriendsProps) {
                     setSelectedExtraFriends([])
                 }}
                 maxWidth="560px"
+                overlayClassName="popup-overlay"
+                boxClassName="popup-box popup-box--compact"
+                closeButtonClassName="popup-close"
             >
-                <div className="friends-group-invite">
+                <div className="friends-group-invite popup-surface">
                     <h3 className="friends-group-invite__title">Selecciona 2 amigos extra</h3>
                     <p className="friends-group-invite__subtitle">
                         Para iniciar 1vs1vs1vs1 con {selectedFriend?.name}, elige dos jugadores mas.
@@ -783,8 +793,15 @@ function Friends({ onNavigate }: FriendsProps) {
                 </div>
             </Modal>
 
-            <Modal isOpen={isChatModalOpen} onClose={handleCloseChat} maxWidth="680px">
-                <div className="friends-chat">
+            <Modal
+                isOpen={isChatModalOpen}
+                onClose={handleCloseChat}
+                maxWidth="680px"
+                overlayClassName="popup-overlay"
+                boxClassName="popup-box popup-box--chat"
+                closeButtonClassName="popup-close"
+            >
+                <div className="friends-chat popup-surface">
                     <div className="friends-chat__header">
                         <img
                             className="friends-chat__avatar"

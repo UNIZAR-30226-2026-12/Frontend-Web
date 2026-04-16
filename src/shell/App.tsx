@@ -11,6 +11,7 @@ import WaitingRoom from '../pages/WaitingRoom'
 import GameBoard1v1 from '../pages/GameBoard1v1'
 import GameBoard1v1v1v1 from '../pages/GameBoard1v1v1v1'
 import { WS_BASE_URL } from '../services/api'
+import '../styles/components/PopupGuide.css'
 
 interface WaitingRoomData {
   gameId?: string | number
@@ -175,44 +176,20 @@ function App() {
       {currentScreen === 'game-1v1v1v1' && <GameBoard1v1v1v1 onNavigate={navigateTo} matchData={activeMatchData4Players} />}
 
       {notification && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 9999,
-          background: 'rgba(2, 6, 23, 0.65)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '18px',
-        }}>
-          <div style={{
-            width: 'min(92vw, 520px)',
-            background: '#101827',
-            color: '#f5f5f5',
-            border: '1px solid #2e3a4f',
-            borderRadius: '12px',
-            padding: '14px 16px',
-            boxShadow: '0 12px 30px rgba(0,0,0,0.42)',
-            fontSize: '15px',
-            lineHeight: 1.4,
-          }}>
-            <button
-              type="button"
-              onClick={() => setNotification(null)}
-              style={{
-                float: 'right',
-                border: 'none',
-                background: 'transparent',
-                color: '#9ca3af',
-                cursor: 'pointer',
-                fontSize: '18px',
-                marginLeft: '8px',
-              }}
-              aria-label="Cerrar"
-            >
-              x
-            </button>
-            {notification}
+        <div className="popup-notification-overlay" role="alertdialog" aria-modal="true">
+          <div className="popup-notification-card">
+            <div className="popup-notification-header">
+              <span className="popup-notification-title">NOTIFICACION</span>
+              <button
+                type="button"
+                onClick={() => setNotification(null)}
+                className="popup-notification-close"
+                aria-label="Cerrar"
+              >
+                x
+              </button>
+            </div>
+            <p className="popup-notification-text">{notification}</p>
           </div>
         </div>
       )}

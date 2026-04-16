@@ -33,8 +33,14 @@ function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProps) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose}>
-      <div className="auth-form">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      overlayClassName="popup-overlay"
+      boxClassName="popup-box popup-box--compact"
+      closeButtonClassName="popup-close"
+    >
+      <div className="auth-form auth-form--popup popup-surface">
         <h2 className="auth-form__title">Restablecer Contraseña</h2>
 
         {success ? (
@@ -43,7 +49,7 @@ function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProps) {
           </p>
         ) : (
           <form className="auth-form__fields" onSubmit={handleSubmit}>
-            {error && <div className="auth-form__error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+            {error && <div className="auth-form__error">{error}</div>}
             <label className="auth-form__label">
               Introduce tu correo electrónico
               <input
