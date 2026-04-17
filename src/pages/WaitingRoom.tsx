@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, WS_BASE_URL } from '../services/api'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import '../styles/background.css'
+import boardImage from '../assets/salaEspera/Pizarra.png'
+import titleImage from '../assets/salaEspera/titulo.png'
+import drawTokenImage from '../assets/salaEspera/empate.png'
+import blackWinTokenImage from '../assets/salaEspera/FichaNegraVictoria.png'
+import whiteWinTokenImage from '../assets/salaEspera/FichaVictoriaBlanco.png'
+import blackLossTokenImage from '../assets/salaEspera/FichaNegraDerrota.png'
+import whiteLossTokenImage from '../assets/salaEspera/FichaBlancaDerrota.png'
+import questionMarkImage from '../assets/elementosGenerales/interrogante.png'
+import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
+import leaveButtonImage from '../assets/elementosGenerales/fichaRoja.png'
+import readyButtonImage from '../assets/elementosGenerales/fichaVerde.png'
 import '../styles/pages/WaitingRoom.css'
 
 interface Player {
@@ -15,7 +25,7 @@ interface Player {
 interface GameHistory {
     id: number
     mode: string
-    result: 'Ganada' | 'Perdida' | 'Empate' | '1º' | '2º' | '3º' | '4º'
+    result: string
     score: string
 }
 
@@ -27,34 +37,57 @@ interface WaitingRoomProps {
     onNavigate: (screen: string, data?: any) => void
 }
 
-type HistoryPreviewSymbol = 'V' | 'D' | 'E' | '1º' | '2º' | '3º' | '4º' | '-'
+type GameModeNormalized = '1vs1' | '1vs1vs1vs1'
+type HistoryPreviewSymbol = 'V' | 'D' | 'E' | '1' | '2' | '3' | '4' | '-'
 
+const HISTORY_PREVIEW_LENGTH = 5
 const EMPTY_HISTORY_PREVIEW: HistoryPreviewSymbol[] = ['-', '-', '-', '-', '-']
 
-const buildHistoryPreview = (history: GameHistory[], gameMode: WaitingRoomProps['gameMode']): HistoryPreviewSymbol[] => {
-    const acceptedModes = gameMode === '1vs1' ? new Set(['1vs1', '1v1']) : new Set(['1vs1vs1vs1', '1v1v1v1'])
-    const filteredHistory = history.filter(item =>
-        acceptedModes.has(item.mode),
+const normalizeGameMode = (mode: WaitingRoomProps['gameMode']): GameModeNormalized => {
+    const cleanedMode = String(mode || '').toLowerCase()
+    if (cleanedMode === '1vs1' || cleanedMode === '1v1') return '1vs1'
+    return '1vs1vs1vs1'
+}
+
+const normalizeResultText = (value: string) =>
+    String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+
+const parsePlacement = (value: string): HistoryPreviewSymbol | null => {
+    const placement = String(value || '').match(/[1-4]/)?.[0]
+    if (!placement) return null
+    return placement as HistoryPreviewSymbol
+}
+
+const buildHistoryPreview = (history: GameHistory[], gameMode: GameModeNormalized): HistoryPreviewSymbol[] => {
+    const acceptedModes = gameMode === '1vs1'
+        ? new Set(['1vs1', '1v1'])
+        : new Set(['1vs1vs1vs1', '1v1v1v1'])
+
+    const filteredHistory = history.filter((item) =>
+        acceptedModes.has(String(item.mode || '').toLowerCase()),
     )
 
     const recentSymbols: HistoryPreviewSymbol[] = filteredHistory
-        .slice(0, 5)
+        .slice(0, HISTORY_PREVIEW_LENGTH)
         .map((item) => {
             if (gameMode === '1vs1') {
-                if (item.result === 'Ganada') return 'V'
-                if (item.result === 'Perdida') return 'D'
+                const normalizedResult = normalizeResultText(item.result)
+                if (normalizedResult.includes('ganad') || normalizedResult.includes('victoria')) return 'V'
+                if (normalizedResult.includes('perdid') || normalizedResult.includes('derrota')) return 'D'
                 return 'E'
             }
 
-            const placement = item.result as HistoryPreviewSymbol
-            if (placement === '1º' || placement === '2º' || placement === '3º' || placement === '4º') {
-                return placement
-            }
-            return '-'
+            return parsePlacement(item.result) ?? '-'
         })
 
     const symbols = [...recentSymbols].reverse()
-    while (symbols.length < 5) symbols.unshift('-')
+    while (symbols.length < HISTORY_PREVIEW_LENGTH) {
+        symbols.unshift('-')
+    }
+
     return symbols
 }
 
@@ -64,7 +97,28 @@ const normalizePlayers = (incomingPlayers: Player[]) =>
         return a.username.localeCompare(b.username)
     })
 
+const getHistoryTokenImage = (symbol: HistoryPreviewSymbol, index: number) => {
+    if (symbol === 'V' || symbol === '1') {
+        return index % 2 === 0 ? blackWinTokenImage : whiteWinTokenImage
+    }
+    if (symbol === 'D' || symbol === '4') {
+        return index % 2 === 0 ? blackLossTokenImage : whiteLossTokenImage
+    }
+    if (symbol === 'E' || symbol === '2' || symbol === '3') {
+        return drawTokenImage
+    }
+    return null
+}
+
+const getHistoryTokenLabel = (symbol: HistoryPreviewSymbol) => {
+    if (symbol === 'V' || symbol === '1') return 'Victoria'
+    if (symbol === 'D' || symbol === '4') return 'Derrota'
+    if (symbol === 'E' || symbol === '2' || symbol === '3') return 'Empate o puesto intermedio'
+    return 'Sin dato'
+}
+
 function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: WaitingRoomProps) {
+    const normalizedGameMode = useMemo(() => normalizeGameMode(gameMode), [gameMode])
     const [players, setPlayers] = useState<Player[]>([])
     const [roomStatus, setRoomStatus] = useState<'waiting' | 'playing'>('waiting')
     const [myUsername, setMyUsername] = useState<string>('')
@@ -76,18 +130,15 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
     const loadedHistoryRef = useRef<Set<number>>(new Set())
     const playersRef = useRef<Player[]>([])
     const hasNavigatedToGameRef = useRef(false)
-    // Refs that always hold the latest identity values so navigateToGame
-    // can be called safely from WS onmessage without stale-closure issues.
     const myUsernameRef = useRef<string>('')
     const myUserIdRef = useRef<number | null>(null)
 
-
-    const maxPlayers = (gameMode === '1vs1' || gameMode === '1v1') ? 2 : 4
+    const maxPlayers = normalizedGameMode === '1vs1' ? 2 : 4
     const isFull = players.length >= maxPlayers
-    const localPlayer = players.find(p =>
-        (myUserId !== null && p.id === myUserId) || (myUsername && p.username === myUsername),
+    const localPlayer = players.find((player) =>
+        (myUserId !== null && player.id === myUserId) || (myUsername && player.username === myUsername),
     )
-    const allReady = isFull && players.every(player => player.is_ready)
+    const allReady = isFull && players.every((player) => player.is_ready)
 
     useEffect(() => {
         playersRef.current = players
@@ -104,14 +155,15 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
     const fetchPlayerHistoryPreview = async (playerId: number) => {
         if (loadedHistoryRef.current.has(playerId)) return
         loadedHistoryRef.current.add(playerId)
+
         try {
             const history = await api.users.getHistory(playerId)
-            setHistoryByPlayer(prev => ({
+            setHistoryByPlayer((prev) => ({
                 ...prev,
-                [playerId]: buildHistoryPreview(history, gameMode),
+                [playerId]: buildHistoryPreview(history, normalizedGameMode),
             }))
         } catch {
-            setHistoryByPlayer(prev => ({
+            setHistoryByPlayer((prev) => ({
                 ...prev,
                 [playerId]: EMPTY_HISTORY_PREVIEW,
             }))
@@ -128,30 +180,26 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                 setToast('No se pudo cargar tu usuario')
             }
         }
+
         init()
     }, [])
 
     const navigateToGame = () => {
         if (hasNavigatedToGameRef.current || !gameId) return
+
         const allPlayers = playersRef.current
         if (allPlayers.length < 2) return
 
-        // Always read identity from refs so this function is safe to call
-        // from WS onmessage (which closes over stale state values).
         const currentUserId = myUserIdRef.current
         const currentUsername = myUsernameRef.current
+        if (currentUserId === null && !currentUsername) return
 
-        if (currentUserId === null && !currentUsername) {
-            // Identity not yet loaded — the polling or WS room_sync will retry.
-            return
-        }
-
-        let me = allPlayers.find(player =>
+        let me = allPlayers.find((player) =>
             (currentUserId !== null && player.id === currentUserId) ||
             (currentUsername && player.username === currentUsername),
         )
 
-        if (gameMode === '1vs1vs1vs1') {
+        if (normalizedGameMode === '1vs1vs1vs1') {
             if (allPlayers.length < 4) return
             hasNavigatedToGameRef.current = true
             onNavigate('game-1v1v1v1', {
@@ -171,11 +219,11 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
             return
         }
 
-        const opponent = allPlayers.find(player => (me ? player.id !== me.id : true))
+        const opponent = allPlayers.find((player) => (me ? player.id !== me.id : true))
         if (!opponent) return
 
         if (!me && allPlayers.length === 2) {
-            me = allPlayers.find(player => player.id !== opponent.id)
+            me = allPlayers.find((player) => player.id !== opponent.id)
         }
         if (!me) return
 
@@ -197,36 +245,37 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
 
     useEffect(() => {
         if (!gameId) return
+
         const loadState = async () => {
             try {
                 const state = await api.games.getLobbyState(gameId)
                 const nextPlayers: Player[] = normalizePlayers(state.players ?? [])
                 setPlayers(nextPlayers)
                 setRoomStatus(state.status === 'playing' ? 'playing' : 'waiting')
-                nextPlayers.forEach(player => {
+
+                nextPlayers.forEach((player) => {
                     fetchPlayerHistoryPreview(player.id)
                 })
+
                 if (state.status === 'playing') {
-                    console.log("NAV DEBUG: Navigating to game via loadState status playing")
                     navigateToGame()
                 }
             } catch (err: any) {
-                console.error("LOBBY DEBUG: loadState error", err)
                 setToast(err.message || 'No se pudo cargar la sala')
-                // Si la sala ha dejado de existir, salimos inmediatamente
                 if (err.status === 404 || err.message?.includes('no encontrada')) {
-                    console.log("NAV DEBUG: Navigating back to returnScreen because of 404")
                     onNavigate(returnScreen)
                 }
             }
         }
+
         loadState()
         const poll = window.setInterval(() => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return
             loadState()
         }, 1500)
+
         return () => window.clearInterval(poll)
-    }, [gameId, gameMode, isSocketReady])
+    }, [gameId, isSocketReady, normalizedGameMode, onNavigate, returnScreen])
 
     useEffect(() => {
         if (!gameId) return
@@ -246,7 +295,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                     const payloadPlayers: Player[] = normalizePlayers(data.payload.players ?? [])
                     setPlayers(payloadPlayers)
                     setRoomStatus(data.payload.status === 'playing' ? 'playing' : 'waiting')
-                    payloadPlayers.forEach(player => fetchPlayerHistoryPreview(player.id))
+                    payloadPlayers.forEach((player) => fetchPlayerHistoryPreview(player.id))
                 }
 
                 if (data?.type === 'waiting_for_player') {
@@ -260,7 +309,6 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                 if (data?.type === 'error' && data?.payload?.message) {
                     setToast(data.payload.message)
                 }
-
             } catch {
                 // Ignore malformed websocket payloads
             }
@@ -292,7 +340,8 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
         try {
             await api.games.setReady(gameId, nextReady)
             const state = await api.games.getLobbyState(gameId)
-            setPlayers(state.players ?? [])
+            const nextPlayers = normalizePlayers(state.players ?? [])
+            setPlayers(nextPlayers)
             setRoomStatus(state.status === 'playing' ? 'playing' : 'waiting')
             if (state.status === 'playing') {
                 navigateToGame()
@@ -307,123 +356,167 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
             onNavigate(returnScreen)
             return
         }
+
         try {
             await api.games.leaveLobby(gameId)
         } catch {
-            // Si la sala ya fue borrada o hubo error, aun así salimos
+            // If the room no longer exists we still navigate out.
         } finally {
             onNavigate(returnScreen)
         }
     }
 
-
     const statusText = useMemo(() => {
         if (allReady || roomStatus === 'playing') return 'INICIANDO PARTIDA...'
         if (isResume) return 'REANUDANDO PARTIDA...'
         if (isFull) return 'SALA LLENA'
-        return 'ESPERANDO JUGADORES...'
+        return 'ESPERANDO OPONENTES...'
     }, [allReady, isFull, isResume, roomStatus])
+
+    const helperText = useMemo(() => {
+        if (allReady || roomStatus === 'playing') {
+            return 'Preparando tablero y jugadores...'
+        }
+        if (isResume) {
+            return 'Recuperando estado de la partida pausada.'
+        }
+        if (normalizedGameMode === '1vs1') {
+            return 'Prepara tu estrategia. Esperando a que se una el rival.'
+        }
+        return 'Prepara tu estrategia. Esperando a que se unan todos los jugadores.'
+    }, [allReady, isResume, normalizedGameMode, roomStatus])
+
+    const modeLabel = normalizedGameMode === '1vs1' ? '1 VS 1' : '1 VS 1 VS 1 VS 1'
+    const streakLabel = normalizedGameMode === '1vs1' ? 'Racha ultimas 5 partidas' : 'Top ultimas 5 partidas'
 
     return (
         <div className="waiting-room">
-            <div className="home__bg">
-                <span className="home__chip home__chip--1">⚫</span>
-                <span className="home__chip home__chip--2">⚪</span>
-                <span className="home__chip home__chip--3">🔴</span>
-                <span className="home__chip home__chip--4">🔵</span>
-                <span className="home__chip home__chip--5">🟢</span>
-                <span className="home__chip home__chip--6">🟡</span>
-                <span className="home__chip home__chip--7">🟣</span>
-                <span className="home__chip home__chip--8">🟠</span>
-                <span className="home__chip home__chip--9">⚫</span>
-                <span className="home__chip home__chip--10">⚪</span>
-                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
-            </div>
+            <img className="waiting-room__background" src={menuBackground} alt="" aria-hidden="true" />
+            <div className="waiting-room__overlay" aria-hidden="true"></div>
 
-            <div className="waiting-room__container">
-                <header className="waiting-room__header">
-                    <h1 className="waiting-room__title">Sala de Espera</h1>
-                    <span className="waiting-room__mode-tag">{gameMode}</span>
-                </header>
+            <img className="waiting-room__question waiting-room__question--left" src={questionMarkImage} alt="" aria-hidden="true" />
+            <img className="waiting-room__question waiting-room__question--right" src={questionMarkImage} alt="" aria-hidden="true" />
 
-                <div className="waiting-room__animation">
-                    <div className="waiting-room__chip-3d"></div>
-                </div>
+            <main className="waiting-room__layout">
+                <img className="waiting-room__title-image" src={titleImage} alt="Sala de espera" />
 
-                <p className="waiting-room__loading-text">{statusText}</p>
-                {toast && <p className="waiting-room__loading-text" style={{ color: '#fca5a5' }}>{toast}</p>}
+                <section className="waiting-room__board" aria-label="Sala de espera">
+                    <img className="waiting-room__board-image" src={boardImage} alt="" aria-hidden="true" />
 
-                <div className="waiting-room__players">
-                    {Array.from({ length: maxPlayers }).map((_, index) => {
-                        const player = players[index]
-                        const historyPreview = player ? (historyByPlayer[player.id] ?? EMPTY_HISTORY_PREVIEW) : EMPTY_HISTORY_PREVIEW
+                    <div className="waiting-room__board-content">
+                        <p className="waiting-room__status-pill">{statusText}</p>
 
-                        return (
-                            <div
-                                key={index}
-                                className={`player-slot ${player ? 'player-slot--active' : 'player-slot--empty'} ${player?.is_ready ? 'player-slot--ready' : ''}`}
-                            >
-                                <div className="player-slot__avatar">
-                                    {player ? (
-                                        <>
-                                            <img
-                                                className="player-slot__avatar-img"
-                                                src={resolveUserAvatar(player.avatar_url, player.username)}
-                                                alt={`Avatar de ${player.username}`}
-                                            />
-                                            {player.is_ready && (
-                                                <span className="player-slot__ready-badge" aria-label="Jugador listo">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M20 6L9 17l-5-5" />
-                                                    </svg>
+                        <div className={`waiting-room__players waiting-room__players--${maxPlayers}`}>
+                            {Array.from({ length: maxPlayers }).map((_, index) => {
+                                const player = players[index]
+                                const historyPreview = player
+                                    ? (historyByPlayer[player.id] ?? EMPTY_HISTORY_PREVIEW)
+                                    : EMPTY_HISTORY_PREVIEW
+                                const isMe = !!player && (
+                                    (myUserId !== null && player.id === myUserId) ||
+                                    (myUsername && player.username === myUsername)
+                                )
+
+                                const cardClassName = [
+                                    'waiting-player-card',
+                                    player ? 'waiting-player-card--active' : 'waiting-player-card--empty',
+                                    player?.is_ready ? 'waiting-player-card--ready' : '',
+                                    isMe ? 'waiting-player-card--me' : '',
+                                ]
+                                    .filter(Boolean)
+                                    .join(' ')
+
+                                return (
+                                    <article className={cardClassName} key={index}>
+                                        <div className="waiting-player-card__photo">
+                                            {player ? (
+                                                <img
+                                                    className="waiting-player-card__avatar"
+                                                    src={resolveUserAvatar(player.avatar_url, player.username)}
+                                                    alt={`Avatar de ${player.username}`}
+                                                />
+                                            ) : (
+                                                <img
+                                                    className="waiting-player-card__avatar waiting-player-card__avatar--placeholder"
+                                                    src={questionMarkImage}
+                                                    alt="Hueco de jugador vacio"
+                                                />
+                                            )}
+
+                                            {player?.is_ready && (
+                                                <span className="waiting-player-card__ready-badge" aria-label="Jugador listo">
+                                                    LISTO
                                                 </span>
                                             )}
-                                        </>
-                                    ) : '?'}
-                                </div>
+                                        </div>
 
-                                <div className="player-slot__details">
-                                    <span className="player-slot__name">{player ? player.username : 'Esperando...'}</span>
-                                    {player && (
-                                        <span className="player-slot__streak" aria-label="Racha ultimas 5 partidas">
-                                            {historyPreview.map((result, resultIndex) => (
-                                                <span
-                                                    key={`${player.id}-streak-${resultIndex}`}
-                                                    className={`player-slot__streak-item ${result === 'V' || result === '1º'
-                                                        ? 'player-slot__streak-item--win'
-                                                        : result === 'D' || result === '4º'
-                                                            ? 'player-slot__streak-item--loss'
-                                                            : 'player-slot__streak-item--empty'}`}
-                                                >
-                                                    {result}
-                                                </span>
-                                            ))}
+                                        <span className="waiting-player-card__name" title={player?.username || 'Esperando jugador'}>
+                                            {player ? player.username : 'Esperando...'}
                                         </span>
-                                    )}
-                                    {player && <span className="player-slot__rr">{player.rr} RR</span>}
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
+
+                                        <p className="waiting-player-card__rr">
+                                            <span>ELO ACTUAL:</span>
+                                            <strong>{player ? `${player.rr} RR` : '--- RR'}</strong>
+                                        </p>
+
+                                        <div className="waiting-player-card__streak" aria-label={streakLabel}>
+                                            {historyPreview.map((result, resultIndex) => {
+                                                const tokenImage = getHistoryTokenImage(result, resultIndex)
+                                                if (!tokenImage) {
+                                                    return (
+                                                        <span
+                                                            key={`${index}-empty-${resultIndex}`}
+                                                            className="waiting-player-card__streak-empty"
+                                                            aria-label="Sin dato"
+                                                        >
+                                                            -
+                                                        </span>
+                                                    )
+                                                }
+
+                                                return (
+                                                    <img
+                                                        key={`${index}-token-${resultIndex}`}
+                                                        className="waiting-player-card__streak-token"
+                                                        src={tokenImage}
+                                                        alt={getHistoryTokenLabel(result)}
+                                                        title={getHistoryTokenLabel(result)}
+                                                    />
+                                                )
+                                            })}
+                                        </div>
+                                    </article>
+                                )
+                            })}
+                        </div>
+
+                        <article className="waiting-room__mode-note" aria-label="Modo de juego">
+                            <span className="waiting-room__mode-note-label">Modo de juego:</span>
+                            <strong className="waiting-room__mode-note-value">{modeLabel}</strong>
+                            <span className="waiting-room__mode-note-subtitle">Clasificatoria</span>
+                        </article>
+
+                        <p className="waiting-room__hint">{helperText}</p>
+                        {toast && <p className="waiting-room__toast">{toast}</p>}
+                    </div>
+                </section>
 
                 <div className="waiting-room__actions">
                     <button className="waiting-room__btn waiting-room__btn--leave" onClick={handleLeave}>
-                        Abandonar Sala
+                        <img className="waiting-room__btn-image" src={leaveButtonImage} alt="" aria-hidden="true" />
+                        <span className="waiting-room__btn-label">Abandonar sala</span>
                     </button>
+
                     <button
                         className={`waiting-room__btn waiting-room__btn--ready ${localPlayer?.is_ready ? 'waiting-room__btn--is-ready' : ''}`}
                         disabled={roomStatus === 'playing' || !localPlayer}
                         onClick={handleReady}
                     >
-                        {localPlayer?.is_ready ? 'Listo' : 'Estoy Listo'}
+                        <img className="waiting-room__btn-image" src={readyButtonImage} alt="" aria-hidden="true" />
+                        <span className="waiting-room__btn-label">{localPlayer?.is_ready ? 'Listo' : 'Estoy listo'}</span>
                     </button>
                 </div>
-            </div>
-
+            </main>
         </div>
     )
 }
