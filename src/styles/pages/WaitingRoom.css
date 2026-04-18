@@ -1,5 +1,6 @@
 .waiting-room {
     position: relative;
+    height: 100vh;
     min-height: 100vh;
     padding: clamp(0.75rem, 2vw, 1.4rem);
     display: flex;
@@ -128,7 +129,7 @@
 }
 
 .waiting-room__board--2 .waiting-room__status-pill {
-    top: 9.4%;
+    top: 8%;
 }
 
 .waiting-room__players {
@@ -252,6 +253,8 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 3px 7px rgba(14, 8, 4, 0.26);
+    border: 0.18rem solid rgba(85, 63, 43, 0.22);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .waiting-room__players--2 .waiting-player-card__photo {
@@ -260,24 +263,24 @@
 }
 
 .waiting-room__players--4 .waiting-player-card {
-    --photo-size: clamp(2.1rem, 3vw, 2.8rem);
-    width: clamp(7.8rem, 12.8vw, 9.2rem);
+    --photo-size: clamp(2.35rem, 3.2vw, 3.05rem);
+    width: clamp(8.9rem, 14.2vw, 10.6rem);
     display: grid;
-    grid-template-columns: clamp(2.1rem, 3vw, 2.8rem) minmax(0, 1fr);
+    grid-template-columns: var(--photo-size) minmax(0, 1fr);
     grid-template-areas:
         'photo name'
         'photo rr'
         'streak streak';
-    column-gap: clamp(0.2rem, 0.54vw, 0.38rem);
-    row-gap: clamp(0.02rem, 0.18vw, 0.12rem);
-    align-items: center;
+    column-gap: clamp(0.34rem, 0.72vw, 0.52rem);
+    row-gap: clamp(0.08rem, 0.26vw, 0.18rem);
+    align-items: start;
     justify-items: stretch;
     text-align: left;
 }
 
 .waiting-room__players--4 .waiting-player-card:nth-child(2),
 .waiting-room__players--4 .waiting-player-card:nth-child(4) {
-    grid-template-columns: minmax(0, 1fr) clamp(2.1rem, 3vw, 2.8rem);
+    grid-template-columns: minmax(0, 1fr) var(--photo-size);
     grid-template-areas:
         'name photo'
         'rr photo'
@@ -289,6 +292,7 @@
     width: var(--photo-size);
     margin-top: 0;
     justify-self: center;
+    align-self: start;
 }
 
 .waiting-player-card__avatar {
@@ -296,6 +300,14 @@
     height: 100%;
     object-fit: cover;
     display: block;
+}
+
+.waiting-player-card--ready .waiting-player-card__photo {
+    border-color: #2ca95d;
+    box-shadow:
+        0 0 0 0.16rem rgba(229, 255, 237, 0.9),
+        0 0 0 0.34rem rgba(44, 169, 93, 0.58),
+        0 7px 14px rgba(18, 78, 43, 0.28);
 }
 
 .waiting-player-card__avatar--placeholder {
@@ -308,17 +320,37 @@
 
 .waiting-player-card__ready-badge {
     position: absolute;
-    left: 50%;
-    bottom: 0.2rem;
-    transform: translateX(-50%);
-    padding: 0.1rem 0.36rem 0.08rem;
-    border-radius: 999px;
-    background: #1f8d4b;
+    right: 0.12rem;
+    bottom: 0.14rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(16, 114, 57, 0.96);
     color: #fff;
-    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-    font-size: clamp(0.5rem, 0.68vw, 0.58rem);
-    letter-spacing: 0.05em;
-    line-height: 1;
+    box-shadow: 0 3px 8px rgba(14, 8, 4, 0.28);
+}
+
+.waiting-player-card__ready-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 100%;
+    height: 100%;
+    color: #f4fff7;
+    font-size: 0.94rem;
+    font-weight: 900;
+}
+
+.waiting-room__players--4 .waiting-player-card__ready-badge {
+    right: -0.2rem;
+    bottom: -0.16rem;
+    width: 1.15rem;
+    height: 1.15rem;
 }
 
 .waiting-player-card__name {
@@ -372,26 +404,25 @@
 .waiting-room__players--4 .waiting-player-card__name {
     grid-area: name;
     width: 100%;
-    font-size: clamp(0.66rem, 0.95vw, 0.84rem);
-    line-height: 0.95;
+    font-size: clamp(0.78rem, 1.08vw, 0.98rem);
+    line-height: 1.02;
     text-align: left;
     margin: 0;
-    transform: translate(0.5rem, 0.1rem);
+    align-self: end;
 }
 
 .waiting-room__players--4 .waiting-player-card__rr {
     grid-area: rr;
     width: 100%;
-    font-size: clamp(0.42rem, 0.64vw, 0.56rem);
-    line-height: 0.92;
+    font-size: clamp(0.48rem, 0.74vw, 0.64rem);
+    line-height: 1;
     align-items: flex-start;
     text-align: left;
     margin: 0;
-    transform: translate(0.5rem, 0.1rem);
 }
 
 .waiting-room__players--4 .waiting-player-card__rr strong {
-    font-size: clamp(0.58rem, 0.9vw, 0.76rem);
+    font-size: clamp(0.7rem, 0.98vw, 0.9rem);
 }
 
 .waiting-room__players--4 .waiting-player-card:nth-child(2) .waiting-player-card__name,
@@ -546,7 +577,7 @@
 .waiting-room__hint {
     position: absolute;
     left: 50%;
-    bottom: 14.4%;
+    bottom: 34.4%;
     transform: translateX(-50%);
     margin: 0;
     width: clamp(14rem, 56vw, 34rem);
@@ -565,15 +596,17 @@
 }
 
 .waiting-room__board--2 .waiting-room__hint {
-    bottom: 17.1%;
+    bottom: 21%;
     white-space: pre-line;
 }
 
 .waiting-room__board--4 .waiting-room__hint {
-    bottom:19.4%;
-    width: clamp(15rem, 50vw, 31rem);
-    font-size: clamp(0.76rem, 1.08vw, 0.96rem);
-    line-height: 1.02;
+    left: 52.5%;
+    bottom: 23%;
+    width: clamp(18rem, 58vw, 36rem);
+    font-size: clamp(0.9rem, 1.35vw, 1.18rem);
+    line-height: 1.08;
+    white-space: pre-line;
 }
 
 .waiting-room__toast {
@@ -635,8 +668,8 @@
 
 .waiting-room__btn-label {
     position: absolute;
-    left: 50%;
-    top: 51%;
+    left: 54%;
+    top: 42%;
     transform: translate(-50%, -50%);
     width: 78%;
     text-align: center;
@@ -679,6 +712,7 @@
 }
 
 @keyframes waiting-room-float {
+
     0%,
     100% {
         transform: translateY(0) rotate(0deg);
@@ -716,11 +750,11 @@
     }
 
     .waiting-room__board--2 .waiting-room__hint {
-        bottom: 15.9%;
+        bottom: 21%;
     }
 
     .waiting-room__board--4 .waiting-room__hint {
-        bottom: 10.6%;
+        bottom: 23%;
     }
 
     .waiting-room__actions {
@@ -848,6 +882,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .waiting-room__question,
     .waiting-room__btn,
     .waiting-player-card {

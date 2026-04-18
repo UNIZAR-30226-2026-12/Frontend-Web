@@ -632,7 +632,6 @@ function Friends({ onNavigate }: FriendsProps) {
                                                     <div className="friend-card__details">
                                                         <div className="friend-card__name-row">
                                                             <span className="friend-card__name">Partida en pausa</span>
-                                                            <span className="friend-card__mode-tag">{pg.mode}</span>
                                                         </div>
                                                         <div className="friend-card__participants">
                                                             {participants.slice(0, 4).map((name) => (
@@ -648,6 +647,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                                         <p className="friend-card__waiting-text">{waitingText}</p>
                                                     </div>
                                                 </div>
+                                                <span className="friend-card__mode-tag friend-card__mode-tag--paused-corner">{pg.mode}</span>
                                                 <div className="friend-card__actions friend-card__actions--inline">
                                                     <button
                                                         className="friend-btn friend-btn--resume"
@@ -682,7 +682,6 @@ function Friends({ onNavigate }: FriendsProps) {
                     >
                         <img src={backToMenuButtonImage} alt="" />
                     </button>
-                    <p className="friends__credits">HuO Gomes Studio - Universidad de Zaragoza</p>
                 </footer>
             </div>
 

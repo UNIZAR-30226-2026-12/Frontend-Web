@@ -231,7 +231,7 @@ function applyGravity(board: BoardCell[][], direction: 'up' | 'down' | 'left' | 
 
     const rebuildSegment = (coords: Array<[number, number]>, towardStart: boolean) => {
         const items: Array<{ type: 'piece', piece: Piece } | { type: 'question' }> = []
-        
+
         coords.forEach(([r, c]) => {
             const key = `${r}-${c}`
             if (next[r][c].piece) {
@@ -346,6 +346,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [unreadCount, setUnreadCount] = useState(0)
     const playerPieceColorName = selectedPieceStyle1v1.sideAName
     const opponentPieceColorName = selectedPieceStyle1v1.sideBName
+    const isAiMatch = (matchData?.opponentName ?? '').trim().toUpperCase() === 'IA'
 
     const playerProfile = {
         ...PLAYER,
@@ -426,7 +427,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
     }, [finalScore.black, finalScore.white, gameOver, isOnlineMatch, onlineWinner, opponentProfile.name, opponentProfile.piece, playerProfile.name, playerProfile.piece])
 
-    const rrDelta = winnerInfo.isDraw ? 0 : winnerInfo.playerWon ? 30 : -30
+    const rrDelta = isAiMatch ? 0 : winnerInfo.isDraw ? 0 : winnerInfo.playerWon ? 30 : -30
     const abandonmentPenalty = -30
     const postGameScreen = matchData?.returnTo || (isOnlineMatch ? 'friends' : 'online-game')
 
@@ -500,10 +501,10 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     if (Array.isArray(payload.board)) {
                         const fixedPieces = Array.isArray(payload.fixed_pieces) ? payload.fixed_pieces : []
                         const fixedSet = new Set(fixedPieces.map((p: any) => `${p[0]}-${p[1]}`))
-                        
-                        setBoard(payload.board.map((row: any, r: number) => 
+
+                        setBoard(payload.board.map((row: any, r: number) =>
                             row.map((piece: any, c: number) => ({
-                                piece, 
+                                piece,
                                 fixed: fixedSet.has(`${r}-${c}`)
                             }))
                         ))
@@ -569,7 +570,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }, [isOnlineMatch, matchData?.gameId])
 
     useEffect(() => {
-        if (isOnlineMatch) {
+        if (isOnlineMatch || isAiMatch) {
             return
         }
 
@@ -604,7 +605,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }, [board, currentTurn, gameOver, inventories, isOnlineMatch, skipTurns])
 
     useEffect(() => {
-        if (isOnlineMatch) {
+        if (isOnlineMatch || isAiMatch) {
             return
         }
 
@@ -639,10 +640,10 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         return () => {
             cancelled = true
         }
-    }, [currentUserElo, gameOver, hasPersistedRank, isOnlineMatch, rrDelta])
+    }, [currentUserElo, gameOver, hasPersistedRank, isAiMatch, isOnlineMatch, rrDelta])
 
     useEffect(() => {
-        if (isOnlineMatch) {
+        if (isOnlineMatch || isAiMatch) {
             return
         }
 
@@ -680,6 +681,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         finalScore.white,
         gameOver,
         hasPersistedHistory,
+        isAiMatch,
         isOnlineMatch,
         opponentProfile.name,
         rrDelta,
@@ -1062,6 +1064,16 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             return
         }
 
+        if (isAiMatch) {
+            if (onlineWsRef.current) {
+                onlineWsRef.current.close()
+                onlineWsRef.current = null
+            }
+            setShowLeaveConfirm(false)
+            onNavigate(postGameScreen)
+            return
+        }
+
         if (isOnlineMatch) {
             if (onlineWsRef.current && onlineWsRef.current.readyState === WebSocket.OPEN) {
                 onlineWsRef.current.send(JSON.stringify({
@@ -1115,6 +1127,10 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }
 
     const handleSendChat = (message: string) => {
+        if (isAiMatch) {
+            return
+        }
+
         if (onlineWsRef.current && onlineWsRef.current.readyState === WebSocket.OPEN) {
             onlineWsRef.current.send(JSON.stringify({
                 action: 'chat',
@@ -1172,10 +1188,12 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
             <div className="duel__container">
                 <div style={{ display: 'flex', gap: '12px', position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
-                    <button className="ingame-chat-btn" onClick={toggleChat}>
-                        Chat
-                        {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-                    </button>
+                    {!isAiMatch && (
+                        <button className="ingame-chat-btn" onClick={toggleChat}>
+                            Chat
+                            {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                        </button>
+                    )}
                     {isOnlineMatch && matchData?.returnTo === 'friends' && (
                         <button className="duel__pause-btn" onClick={handleAttemptPause}>
                             Pausar
@@ -1190,59 +1208,59 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         <span className="duel__turn-label">Turno actual</span>
                         <span className="duel__turn-value">{turnLabel}</span>
                         {/* UI de Habilidad Pendiente o Direccion de Gravedad */}
-                    {(pendingAbility || selectingGravityDirection) && (
-                        <div className="duel__ability-pending-bar">
-                            <span className="duel__ability-pending-text">
-                                {pendingAbility 
-                                    ? `Usando: ${ABILITY_META[pendingAbility.id].name}` 
-                                    : 'Selecciona Direccion de Gravedad'}
-                            </span>
-                            <button 
-                                className="duel__ability-cancel-btn"
-                                onClick={() => {
-                                    setPendingAbility(null)
-                                    setSelectingGravityDirection(null)
-                                    setSystemMessage('Accion cancelada.')
-                                }}
-                            >
-                                Cancelar
-                            </button>
-                        </div>
-                    )}
-
-                    {selectingGravityDirection && (
-                        <div className="duel__gravity-direction-picker">
-                            {(['up', 'down', 'left', 'right'] as const).map((dir) => (
+                        {(pendingAbility || selectingGravityDirection) && (
+                            <div className="duel__ability-pending-bar">
+                                <span className="duel__ability-pending-text">
+                                    {pendingAbility
+                                        ? `Usando: ${ABILITY_META[pendingAbility.id].name}`
+                                        : 'Selecciona Direccion de Gravedad'}
+                                </span>
                                 <button
-                                    key={dir}
-                                    className={`duel__gravity-btn duel__gravity-btn--${dir}`}
+                                    className="duel__ability-cancel-btn"
                                     onClick={() => {
-                                        const { inventoryIndex } = selectingGravityDirection
-                                        if (isOnlineMatch) {
-                                            if (onlineWsRef.current?.readyState === WebSocket.OPEN) {
-                                                onlineWsRef.current.send(JSON.stringify({
-                                                    action: 'use_skill',
-                                                    type: 'gravity',
-                                                    direction: dir,
-                                                    inventory_index: inventoryIndex
-                                                }))
-                                            }
-                                        } else {
-                                            const { board: nextBoard, questionCells: nextQuestions } = applyGravity(board, dir, questionCells)
-                                            const nextInventories = JSON.parse(JSON.stringify(inventories))
-                                            nextInventories[currentTurn].splice(inventoryIndex, 1)
-                                            finishAction(nextBoard, nextQuestions, nextInventories, skipTurns, `Gravedad aplicada hacia ${dir}`)
-                                        }
+                                        setPendingAbility(null)
                                         setSelectingGravityDirection(null)
+                                        setSystemMessage('Accion cancelada.')
                                     }}
                                 >
-                                    {dir === 'up' ? '⬆️' : dir === 'down' ? '⬇️' : dir === 'left' ? '⬅️' : '➡️'}
+                                    Cancelar
                                 </button>
-                            ))}
-                        </div>
-                    )}
+                            </div>
+                        )}
 
-                    <div className="duel__board-container">
+                        {selectingGravityDirection && (
+                            <div className="duel__gravity-direction-picker">
+                                {(['up', 'down', 'left', 'right'] as const).map((dir) => (
+                                    <button
+                                        key={dir}
+                                        className={`duel__gravity-btn duel__gravity-btn--${dir}`}
+                                        onClick={() => {
+                                            const { inventoryIndex } = selectingGravityDirection
+                                            if (isOnlineMatch) {
+                                                if (onlineWsRef.current?.readyState === WebSocket.OPEN) {
+                                                    onlineWsRef.current.send(JSON.stringify({
+                                                        action: 'use_skill',
+                                                        type: 'gravity',
+                                                        direction: dir,
+                                                        inventory_index: inventoryIndex
+                                                    }))
+                                                }
+                                            } else {
+                                                const { board: nextBoard, questionCells: nextQuestions } = applyGravity(board, dir, questionCells)
+                                                const nextInventories = JSON.parse(JSON.stringify(inventories))
+                                                nextInventories[currentTurn].splice(inventoryIndex, 1)
+                                                finishAction(nextBoard, nextQuestions, nextInventories, skipTurns, `Gravedad aplicada hacia ${dir}`)
+                                            }
+                                            setSelectingGravityDirection(null)
+                                        }}
+                                    >
+                                        {dir === 'up' ? '⬆️' : dir === 'down' ? '⬇️' : dir === 'left' ? '⬅️' : '➡️'}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="duel__board-container">
                             {isOnlineMatch ? (onlineStatusMessage || 'Partida online en curso') : systemMessage}
                         </div>
                     </div>
@@ -1412,9 +1430,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 <div className="duel-leave-confirm">
                     <h2 className="duel-leave-confirm__title">Abandonar partida</h2>
                     <p className="duel-modal__text">
-                        {pausedUsernames.length > 0
-                            ? "Como la partida está pausada por el otro jugador, si abandonas ahora no perderás RR y la partida quedará invalidada."
-                            : "Si abandonas esta partida en curso, se contará como una derrota en tu historial y perderás puntos RR."
+                        {isAiMatch
+                            ? "Si abandonas esta partida contra la IA, no se contara como una derrota y no perderas puntos RR."
+                            : pausedUsernames.length > 0
+                                ? "Como la partida está pausada por el otro jugador, si abandonas ahora no perderás RR y la partida quedará invalidada."
+                                : "Si abandonas esta partida en curso, se contará como una derrota en tu historial y perderás puntos RR."
                         }
                     </p>
                     <div className="duel-leave-confirm__actions">
@@ -1460,15 +1480,18 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             </Modal>
 
 
-            <InGameChat
-                messages={chatMessages}
-                myUsername={playerProfile.name}
-                isOpen={isChatOpen}
-                onClose={() => setIsChatOpen(false)}
-                onSend={handleSendChat}
-            />
+            {!isAiMatch && (
+                <InGameChat
+                    messages={chatMessages}
+                    myUsername={playerProfile.name}
+                    isOpen={isChatOpen}
+                    onClose={() => setIsChatOpen(false)}
+                    onSend={handleSendChat}
+                />
+            )}
         </div>
     )
 }
 
 export default GameBoard1v1
+

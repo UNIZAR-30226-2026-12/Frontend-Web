@@ -66,12 +66,34 @@ const normalizeLobbyStatus = (status: string): 'waiting' | 'playing' | 'full' =>
 const formatLobbyMode = (mode: string) => (normalizeMode(mode) === '1vs1' ? '1V1' : '1V1V1V1')
 const formatHistoryMode = (mode: string) => (normalizeMode(mode) === '1vs1' ? '1v1' : '1v1v1v1')
 
-const normalizeResult = (result: string) =>
-    String(result || '')
+const normalizeHistoryText = (value: string) =>
+    String(value || '')
+        .replace(/Â/g, '')
+        .replace(/ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡/g, '')
         .replace(/ÃƒÆ’Ã¢â‚¬Å¡/g, '')
         .replace(/Ãƒâ€š/g, '')
-        .replace(/Ã‚/g, '')
         .trim()
+
+const normalizeResult = (result: string) => normalizeHistoryText(result)
+
+const extractPlacement = (value: string): number | null => {
+    const normalized = normalizeHistoryText(value).toLowerCase()
+
+    if (normalized.includes('1º') || normalized.includes('1o') || normalized.includes('1er') || normalized.includes('primero')) return 1
+    if (normalized.includes('2º') || normalized.includes('2o') || normalized.includes('segundo')) return 2
+    if (normalized.includes('3º') || normalized.includes('3o') || normalized.includes('tercero')) return 3
+    if (normalized.includes('4º') || normalized.includes('4o') || normalized.includes('cuarto')) return 4
+
+    const numericMatch = normalized.match(/\b([1-4])\b/)
+    return numericMatch ? Number(numericMatch[1]) : null
+}
+
+const extractPointsLabel = (value?: string) => {
+    const normalized = normalizeHistoryText(String(value || ''))
+    const pointsMatch = normalized.match(/(\d+)\s*pts?/i)
+    if (pointsMatch) return `${pointsMatch[1]}pts`
+    return normalized || '--'
+}
 
 const safeRrValue = (value: unknown) => {
     const numeric = Number(value)
@@ -86,7 +108,7 @@ const getLobbyStatusLabel = (status: 'waiting' | 'playing' | 'full') => {
 }
 
 const formatRankChange = (value?: string) => {
-    const cleaned = String(value || '').trim()
+    const cleaned = normalizeHistoryText(String(value || ''))
     if (!cleaned) return '-- RR'
     if (/rr/i.test(cleaned)) return cleaned.toUpperCase()
 
@@ -116,45 +138,34 @@ const formatHistoryDate = (value: string) => {
 
 const getHistoryOutcome = (entry: GameHistory): { tone: HistoryTone; label: string } => {
     const mode = normalizeMode(entry.mode)
-    const result = normalizeResult(entry.result).toLowerCase()
-    const score = String(entry.score || '').trim().toLowerCase()
+    const normalizedResult = normalizeResult(entry.result).toLowerCase()
 
     if (mode === '1vs1vs1vs1') {
-        const combinedText = `${result} ${score}`
-
-        let placement: number | null = null
-
-        if (combinedText.includes('1º') || combinedText.includes('1o') || combinedText.includes('1er') || combinedText.includes('primero')) {
-            placement = 1
-        } else if (combinedText.includes('2º') || combinedText.includes('2o') || combinedText.includes('segundo')) {
-            placement = 2
-        } else if (combinedText.includes('3º') || combinedText.includes('3o') || combinedText.includes('tercero')) {
-            placement = 3
-        } else if (combinedText.includes('4º') || combinedText.includes('4o') || combinedText.includes('cuarto')) {
-            placement = 4
-        } else {
-            const numericMatch = combinedText.match(/\b([1-4])\b/)
-            if (numericMatch) {
-                placement = Number(numericMatch[1])
-            }
-        }
+        const placement = extractPlacement(entry.result)
 
         if (placement === 1) return { tone: 'win', label: '1º PUESTO' }
         if (placement === 4) return { tone: 'loss', label: '4º PUESTO' }
         if (placement === 2) return { tone: 'neutral', label: '2º PUESTO' }
         if (placement === 3) return { tone: 'neutral', label: '3º PUESTO' }
 
-        return { tone: 'neutral', label: 'PUESTO --' }
+        return { tone: 'neutral', label: normalizeResult(entry.result) || 'PUESTO --' }
     }
 
-    if (result.includes('ganad') || result.includes('victoria')) {
+    if (normalizedResult === 'ganada' || normalizedResult.includes('victoria') || normalizedResult.includes('ganad')) {
         return { tone: 'win', label: 'GANADA' }
     }
-    if (result.includes('perdid') || result.includes('derrota')) {
+    if (normalizedResult === 'perdida' || normalizedResult.includes('derrota') || normalizedResult.includes('perdid')) {
         return { tone: 'loss', label: 'PERDIDA' }
     }
 
     return { tone: 'neutral', label: 'EMPATE' }
+}
+
+const getHistoryScoreValue = (entry: GameHistory) => {
+    if (normalizeMode(entry.mode) === '1vs1vs1vs1') {
+        return extractPointsLabel(entry.score)
+    }
+    return normalizeHistoryText(String(entry.score || '')) || '--'
 }
 
 function OnlineGame({ onNavigate }: OnlineGameProps) {
@@ -393,7 +404,7 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                                 history.slice(0, 7).map((entry, index) => {
                                     const outcome = getHistoryOutcome(entry)
                                     const rankChange = formatRankChange(entry.rankChange)
-                                    const scoreValue = entry.score || '--'
+                                    const scoreValue = getHistoryScoreValue(entry)
                                     const modeValue = formatHistoryMode(entry.mode)
 
                                     return (

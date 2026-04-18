@@ -54,23 +54,53 @@ function MainMenu({ onNavigate }: MainMenuProps) {
         onNavigate('home')
     }
 
-    const handleSelectAIMode = async () => {
+    const handleSelectAIMode = async (mode: '1vs1' | '1vs1vs1vs1') => {
         if (isCreatingAI) return
 
         try {
             setIsCreatingAI(true)
-            const res = await api.games.create('vs_ai')
             setShowIAModal(false)
 
-            onNavigate('game-1vs1', {
+            if (mode === '1vs1') {
+                const res = await api.games.create('vs_ai')
+                onNavigate('game-1vs1', {
+                    matchData: {
+                        online: true,
+                        gameId: String(res.game_id),
+                        playerName: user?.username || 'Jugador',
+                        playerRR: user?.elo ?? 1000,
+                        playerAvatarUrl: user?.avatar_url,
+                        opponentName: 'IA',
+                        opponentRR: 1000,
+                        returnTo: 'menu',
+                    },
+                })
+                return
+            }
+
+            const res = await api.games.create('1vs1vs1vs1')
+            const gameId = String(res.game_id)
+
+            await api.games.addBot(gameId)
+            await api.games.addBot(gameId)
+            await api.games.addBot(gameId)
+
+            onNavigate('game-1v1v1v1', {
                 matchData: {
                     online: true,
-                    gameId: String(res.game_id),
-                    playerName: user?.username || 'Jugador',
-                    playerRR: user?.elo ?? 1000,
-                    playerAvatarUrl: user?.avatar_url,
-                    opponentName: 'IA',
-                    opponentRR: 1000,
+                    gameId,
+                    myUsername: user?.username || 'Jugador',
+                    players: [
+                        {
+                            id: 0,
+                            name: user?.username || 'Jugador',
+                            rr: user?.elo ?? 1000,
+                            avatar_url: user?.avatar_url,
+                        },
+                        { id: -1, name: 'IA_1', rr: 1000, avatar_url: '' },
+                        { id: -2, name: 'IA_2', rr: 1000, avatar_url: '' },
+                        { id: -3, name: 'IA_3', rr: 1000, avatar_url: '' },
+                    ],
                     returnTo: 'menu',
                 },
             })
@@ -162,7 +192,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                 onClose={() => setShowIAModal(false)}
                 title="Jugar contra la IA"
                 subtitle="Selecciona el modo disponible contra IA"
-                availableModes={['1vs1']}
+                availableModes={['1vs1', '1vs1vs1vs1']}
                 onSelectMode={handleSelectAIMode}
                 isLoading={isCreatingAI}
             />

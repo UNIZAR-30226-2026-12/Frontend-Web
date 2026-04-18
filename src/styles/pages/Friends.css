@@ -1,8 +1,8 @@
 .friends {
     position: relative;
+    height: 100vh;
     min-height: 100vh;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -189,6 +189,10 @@
     padding-right: 0.2rem;
 }
 
+.friends__paused-list {
+    align-items: flex-end;
+}
+
 .friends__section--requests .friends__requests-list {
     margin-top: 1.35rem;
 }
@@ -325,6 +329,54 @@
 
 .friend-card--paused {
     background: rgba(244, 221, 188, 0.9);
+    width: 98%;
+    margin-left: auto;
+    position: relative;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.5rem 0.55rem 2.12rem;
+    min-height: 6rem;
+}
+
+.friend-card--paused .friend-card__info {
+    align-items: flex-start;
+}
+
+.friend-card--paused .friend-card__details {
+    padding-right: 4rem;
+}
+
+.friend-card--paused .friend-card__name-row {
+    justify-content: flex-start;
+}
+
+.friend-card--paused .friend-card__participants {
+    position: absolute;
+    top: 0.5rem;
+    right: 3.9rem;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.22rem;
+}
+
+.friend-card--paused .friend-card__waiting-text {
+    margin: 0.26rem 0 0;
+}
+
+.friend-card__mode-tag--paused-corner {
+    position: absolute;
+    top: 0.46rem;
+    right: 0.5rem;
+}
+
+.friend-card--paused .friend-card__actions {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.46rem;
+    width: auto;
+    margin: 0;
+    justify-content: flex-end;
 }
 
 .friend-card__info {

@@ -222,7 +222,7 @@ function Customization({ onNavigate }: CustomizationProps) {
                                         <span
                                             className="customization__piece-token"
                                             style={{
-                                                background: `conic-gradient(from 90deg, ${style.sideA} 0 50%, ${style.sideB} 50% 100%)`,
+                                                background: `linear-gradient(180deg, ${style.sideA} 0 50%, ${style.sideB} 50% 100%)`,
                                             }}
                                         />
                                     </button>

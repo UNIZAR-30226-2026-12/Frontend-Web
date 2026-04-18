@@ -1,7 +1,8 @@
 .online {
     position: relative;
+    height: 100vh;
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow: hidden;
     padding: clamp(0.7rem, 1.8vw, 1.3rem);
     font-family: 'Trebuchet MS', 'Arial Rounded MT Bold', sans-serif;
     color: #21140d;
@@ -107,7 +108,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(0.5rem, 1vw, 0.95rem);
+    gap: clamp(0.25rem, 0.7vw, 0.6rem);
 }
 
 .online__board {

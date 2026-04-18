@@ -218,6 +218,7 @@ function countPieces(board: BoardCell[][]) {
 
 function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const isOnlineMatch = Boolean(matchData?.online && matchData?.gameId)
+    const postGameScreen = matchData?.returnTo === 'menu' ? 'menu' : 'friends'
     const [selectedPieceStyle4p, setSelectedPieceStyle4p] = useState(PIECE_STYLES_4P[0])
     const [myUsername, setMyUsername] = useState(matchData?.myUsername ?? '')
     const [myAvatar, setMyAvatar] = useState<string | undefined>(undefined)
@@ -349,6 +350,23 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const currentTurnPlayer = playerByPiece[currentTurn]
     const arenaTheme = getArenaFromElo(myPlayer?.rr ?? myElo)
     const validMoves = isOnlineMatch ? onlineValidMoves : getValidMoves(board, currentTurn)
+    const isAiMatch = useMemo(() => {
+        if (!normalizedPlayers.length || !myPlayer) return false
+        const opponents = normalizedPlayers.filter(player => player.piece !== myPlayer.piece)
+        return opponents.length === 3 && opponents.every(player => player.name.startsWith('IA'))
+    }, [myPlayer, normalizedPlayers])
+    const rrDelta = useMemo(() => {
+        if (isAiMatch) return 0
+
+        const rrByRank: Record<number, number> = {
+            1: 50,
+            2: 25,
+            3: 0,
+            4: -25,
+        }
+
+        return rrByRank[localRank] ?? -25
+    }, [isAiMatch, localRank])
 
     useEffect(() => {
         let isMounted = true
@@ -592,7 +610,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
     const handleAttemptLeave = () => {
         if (gameOver) {
-            onNavigate('friends')
+            onNavigate(postGameScreen)
             return
         }
         setShowLeaveConfirm(true)
@@ -609,28 +627,30 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 // Ignore if already closed server-side.
             }
             setShowLeaveConfirm(false)
-            onNavigate('friends')
+            onNavigate(postGameScreen)
             return
         }
 
         setShowLeaveConfirm(false)
-        onNavigate('friends')
+        onNavigate(postGameScreen)
     }
 
     const handleAttemptPause = () => {
+        if (isAiMatch) return
         setShowPauseConfirm(true)
     }
 
     const handleConfirmPause = () => {
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
             wsRef.current.send(JSON.stringify({ action: 'pause' }))
-            onNavigate('friends')
+            onNavigate(postGameScreen)
         } else {
             setShowPauseConfirm(false)
         }
     }
 
     const handleSendChat = (message: string) => {
+        if (isAiMatch) return
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
             wsRef.current.send(JSON.stringify({
                 action: 'chat',
@@ -653,7 +673,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
     return (
         <div className="duel-quad">
-            {!gameOver && pausedUsernames.length > 0 && (
+            {!gameOver && !isAiMatch && pausedUsernames.length > 0 && (
                 <div className="duel__paused-status">
                     <p className="duel__paused-text">
                         Partida pausada: espera a que vuelvan {pausedUsernames.join(', ')}.
@@ -679,11 +699,13 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
             <div className="duel-quad__container">
                 <div style={{ display: 'flex', gap: '12px', position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
-                    <button className="ingame-chat-btn" onClick={toggleChat}>
-                         Chat
-                         {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-                    </button>
-                    {isOnlineMatch && matchData?.returnTo === 'friends' && (
+                    {!isAiMatch && (
+                        <button className="ingame-chat-btn" onClick={toggleChat}>
+                             Chat
+                             {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                        </button>
+                    )}
+                    {!isAiMatch && isOnlineMatch && matchData?.returnTo === 'friends' && (
                         <button className="duel-quad__pause-btn" onClick={handleAttemptPause}>
                             Pausar
                         </button>
@@ -888,16 +910,21 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 </main>
             </div>
 
-            <Modal isOpen={gameOver} onClose={() => onNavigate('friends')} maxWidth="600px" showCloseButton={false}>
+            <Modal isOpen={gameOver} onClose={() => onNavigate(postGameScreen)} maxWidth="600px" showCloseButton={false}>
                 <div className="duel-quad-result">
                     <div className="duel-quad-result__top">
                         <h2 className="duel-quad-result__title">Partida finalizada</h2>
-                        <p className="duel-quad-result__status">
-                            {winner ? `Ganador: ${playerByPiece[winner]?.name ?? winner}` : 'Sin ganador'}
+                        <p className={`duel-quad-result__rr duel-quad-result__rr--badge ${rrDelta > 0 ? 'duel-quad-result__rr--up' : rrDelta < 0 ? 'duel-quad-result__rr--down' : 'duel-quad-result__rr--neutral'}`}>
+                            {`${rrDelta >= 0 ? '+' : ''}${rrDelta} RR`}
                         </p>
                     </div>
 
-                    <p className="duel-quad-result__status">{`Has quedado en ${localRank}º puesto`}</p>
+                    <div className="duel-quad-result__top">
+                        <p className="duel-quad-result__status">
+                            {winner ? `Ganador: ${playerByPiece[winner]?.name ?? winner}` : 'Sin ganador'}
+                        </p>
+                        <p className="duel-quad-result__status">{`Has quedado en ${localRank}º puesto`}</p>
+                    </div>
 
                     <div className="duel-quad-result__scores">
                         {finalRankingRows.map((row, index) => (
@@ -914,8 +941,8 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                         </p>
                     )}
 
-                    <button className="duel-quad-result__back-btn" onClick={() => onNavigate('friends')}>
-                        Volver a amigos
+                    <button className="duel-quad-result__back-btn" onClick={() => onNavigate(postGameScreen)}>
+                        {postGameScreen === 'menu' ? 'Volver al menu' : 'Volver a amigos'}
                     </button>
                 </div>
             </Modal>
@@ -924,9 +951,11 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 <div className="duel-quad-leave-confirm">
                     <h2 className="duel-leave-confirm__title">Abandonar partida</h2>
                     <p className="duel-modal__text">
-                        {pausedUsernames.length > 0 
-                            ? "Como la partida está pausada por el otro jugador, si abandonas ahora no perderás RR y la partida quedará invalidada."
-                            : "Si abandonas la partida, se te registrará automáticamente como 4º puesto."
+                        {isAiMatch
+                            ? "Si abandonas esta partida contra la IA, no se contara como una derrota y no perderas puntos RR."
+                            : pausedUsernames.length > 0
+                                ? "Como la partida está pausada por el otro jugador, si abandonas ahora no perderás RR y la partida quedará invalidada."
+                                : "Si abandonas la partida, se te registrará automáticamente como 4º puesto."
                         }
                     </p>
                     <div className="duel-quad-leave-confirm__actions">
@@ -948,7 +977,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 </div>
             </Modal>
 
-            <Modal isOpen={showPauseConfirm} onClose={() => setShowPauseConfirm(false)} maxWidth="520px">
+            <Modal isOpen={!isAiMatch && showPauseConfirm} onClose={() => setShowPauseConfirm(false)} maxWidth="520px">
                 <div className="duel-quad-leave-confirm">
                     <h2 className="duel-quad-leave-confirm__title">Pausar partida</h2>
                     <p className="duel-quad-leave-confirm__text">
@@ -971,14 +1000,15 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 </div>
             </Modal>
 
-
-            <InGameChat 
-                messages={chatMessages} 
-                myUsername={myUsername}
-                isOpen={isChatOpen}
-                onClose={() => setIsChatOpen(false)}
-                onSend={handleSendChat}
-            />
+            {!isAiMatch && (
+                <InGameChat 
+                    messages={chatMessages} 
+                    myUsername={myUsername}
+                    isOpen={isChatOpen}
+                    onClose={() => setIsChatOpen(false)}
+                    onSend={handleSendChat}
+                />
+            )}
         </div>
     )
 }

@@ -1,8 +1,8 @@
 ﻿.rules {
   position: relative;
+  height: 100vh;
   min-height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   justify-content: center;
   padding: clamp(0.6rem, 1.8vw, 1.2rem) clamp(0.7rem, 2vw, 1.6rem) clamp(1rem, 2.4vw, 1.6rem);

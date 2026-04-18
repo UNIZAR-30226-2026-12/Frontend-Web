@@ -9,6 +9,14 @@ import blackWinTokenImage from '../assets/salaEspera/FichaNegraVictoria.png'
 import whiteWinTokenImage from '../assets/salaEspera/FichaVictoriaBlanco.png'
 import blackLossTokenImage from '../assets/salaEspera/FichaNegraDerrota.png'
 import whiteLossTokenImage from '../assets/salaEspera/FichaBlancaDerrota.png'
+import blackFirstPlaceTokenImage from '../assets/salaEspera/FichaNegra1Puesto.png'
+import whiteFirstPlaceTokenImage from '../assets/salaEspera/FichaBlanca1Puesto.png'
+import blackSecondPlaceTokenImage from '../assets/salaEspera/FichaNegra2Puesto.png'
+import whiteSecondPlaceTokenImage from '../assets/salaEspera/FichaBlanca2Puesto.png'
+import thirdPlaceTokenImage from '../assets/salaEspera/FichaNegra3Puesto.png'
+import whiteThirdPlaceTokenImage from '../assets/salaEspera/FichaBlanca3Puesto.png'
+import blackFourthPlaceTokenImage from '../assets/salaEspera/FichaNegra4Puesto.png'
+import whiteFourthPlaceTokenImage from '../assets/salaEspera/FichaBlanca4Puesto.png'
 import questionMarkImage from '../assets/elementosGenerales/interrogante.png'
 import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
 import leaveButtonImage from '../assets/elementosGenerales/fichaRoja.png'
@@ -98,7 +106,23 @@ const normalizePlayers = (incomingPlayers: Player[]) =>
         return a.username.localeCompare(b.username)
     })
 
-const getHistoryTokenImage = (symbol: HistoryPreviewSymbol, index: number) => {
+const getHistoryTokenImage = (symbol: HistoryPreviewSymbol, index: number, gameMode: GameModeNormalized) => {
+    if (gameMode === '1vs1vs1vs1') {
+        if (symbol === '1') {
+            return index % 2 === 0 ? blackFirstPlaceTokenImage : whiteFirstPlaceTokenImage
+        }
+        if (symbol === '2') {
+            return index % 2 === 0 ? blackSecondPlaceTokenImage : whiteSecondPlaceTokenImage
+        }
+        if (symbol === '3') {
+            return index % 2 === 0 ? thirdPlaceTokenImage : whiteThirdPlaceTokenImage
+        }
+        if (symbol === '4') {
+            return index % 2 === 0 ? blackFourthPlaceTokenImage : whiteFourthPlaceTokenImage
+        }
+        return null
+    }
+
     if (symbol === 'V' || symbol === '1') {
         return index % 2 === 0 ? blackWinTokenImage : whiteWinTokenImage
     }
@@ -382,9 +406,9 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
             return 'Recuperando estado de la partida pausada.'
         }
         if (normalizedGameMode === '1vs1') {
-            return 'Prepara tu estrategia.\nEsperando a que se una el rival.'
+            return 'Prepara tu estrategia'
         }
-        return 'Prepara tu estrategia. Esperando a que se unan todos los jugadores.'
+        return 'Prepara tu estrategia'
     }, [allReady, isResume, normalizedGameMode, roomStatus])
 
     const streakLabel = normalizedGameMode === '1vs1' ? 'Racha ultimas 5 partidas' : 'Top ultimas 5 partidas'
@@ -449,7 +473,9 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
 
                                             {player?.is_ready && (
                                                 <span className="waiting-player-card__ready-badge" aria-label="Jugador listo">
-                                                    LISTO
+                                                    <span className="waiting-player-card__ready-icon" aria-hidden="true">
+                                                        ✓
+                                                    </span>
                                                 </span>
                                             )}
                                         </div>
@@ -468,7 +494,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                                             aria-label={streakLabel}
                                         >
                                             {historyPreview.map((result, resultIndex) => {
-                                                const tokenImage = getHistoryTokenImage(result, resultIndex)
+                                                const tokenImage = getHistoryTokenImage(result, resultIndex, normalizedGameMode)
                                                 if (!tokenImage) {
                                                     return (
                                                         <span

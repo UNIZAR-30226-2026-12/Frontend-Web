@@ -415,6 +415,17 @@ export const api = {
             }
             return response.json();
         },
+        addBot: async (gameId: number | string) => {
+            const response = await interceptedFetch(`${BASE_URL}/games/${gameId}/add_bot`, {
+                method: 'POST',
+                headers: getHeaders(),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error al añadir bot');
+            }
+            return response.json();
+        },
     }
 };
 
