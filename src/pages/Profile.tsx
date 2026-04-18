@@ -8,6 +8,7 @@ import winRateCard from '../assets/estadisticas/winRate.png'
 import picoRRCard from '../assets/estadisticas/picoRR.png'
 import rachaCard from '../assets/estadisticas/racha.png'
 import estadisticasCard from '../assets/estadisticas/estadisticas.png'
+import estadisticas4pCard from '../assets/estadisticas/estadisticas4p.png'
 import nemesisCard from '../assets/estadisticas/nemesis.png'
 import victimaCard from '../assets/estadisticas/victima.png'
 
@@ -196,18 +197,21 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
     const peakElo = modeStats.peak_elo ?? stats?.peak_elo ?? stats?.elo ?? 1000
     const nemesisHits = modeStats.nemesis_losses ?? 0
     const victimWins = modeStats.victim_wins ?? 0
-    const other4PPlacements = (modeStats.second_place ?? 0) + (modeStats.third_place ?? 0)
+
+    const other4PPlacements =
+        (modeStats.second_place ?? 0) +
+        (modeStats.third_place ?? 0) +
+        (modeStats.fourth_place ?? 0)
+
     const statsCardValues = isFourPlayersMode
-        ? [modeStats.total_games ?? 0, modeStats.first_place ?? 0, modeStats.fourth_place ?? 0, other4PPlacements]
+        ? [modeStats.total_games ?? 0, modeStats.first_place ?? 0, other4PPlacements]
         : [modeStats.total_games ?? 0, modeStats.wins ?? 0, modeStats.losses ?? 0, modeStats.draws ?? 0]
 
     const statsRows = isFourPlayersMode
         ? [
             { label: 'Partidas jugadas', value: modeStats.total_games ?? 0 },
-            { label: '1o puesto', value: modeStats.first_place ?? 0 },
-            { label: '2o puesto', value: modeStats.second_place ?? 0 },
-            { label: '3o puesto', value: modeStats.third_place ?? 0 },
-            { label: '4o puesto', value: modeStats.fourth_place ?? 0 },
+            { label: '1º puesto', value: modeStats.first_place ?? 0 },
+            { label: '2º, 3º o 4º puestos', value: other4PPlacements },
         ]
         : [
             { label: 'Partidas jugadas', value: modeStats.total_games ?? 0 },
@@ -365,9 +369,9 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
 
                                             <div className="profile__winrate-legend">
                                                 <span className="profile__legend-dot profile__legend-dot--win" />
-                                                <span>{isFourPlayersMode ? '1o puesto' : 'Victorias'}</span>
+                                                <span>{isFourPlayersMode ? '1º puesto' : 'Victorias'}</span>
                                                 <span className="profile__legend-dot profile__legend-dot--loss" />
-                                                <span>{isFourPlayersMode ? '4o puesto' : 'Derrotas'}</span>
+                                                <span>{isFourPlayersMode ? '2º, 3º o 4º puesto' : 'Derrotas'}</span>
                                             </div>
                                         </div>
                                     </article>
@@ -388,15 +392,17 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                     </article>
 
                                     <article className="profile__proto-card profile__proto-card--stats">
-                                        <img className="profile__proto-bg" src={estadisticasCard} alt="" aria-hidden="true" />
+                                        <img
+                                            className="profile__proto-bg"
+                                            src={isFourPlayersMode ? estadisticas4pCard : estadisticasCard}
+                                            alt=""
+                                            aria-hidden="true"
+                                        />
                                         <div className="profile__proto-content profile__proto-content--stats">
                                             {statsCardValues.map((value, index) => (
                                                 <span key={index} className="profile__proto-stats-value">{value}</span>
                                             ))}
                                         </div>
-                                        {isFourPlayersMode && (
-                                            <span className="profile__proto-note">Victorias=1o Derrotas=4o Empates=2o+3o</span>
-                                        )}
                                     </article>
 
                                     <article className="profile__proto-card profile__proto-card--nemesis">
@@ -426,30 +432,37 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                             </section>
                         ) : (
                             <section className="profile__friend-grid">
-                                <article className="profile__paper-card">
+                                <article className="profile__paper-card profile__paper-card--friend-winrate">
                                     <h3 className="profile__paper-title">Win Rate</h3>
-                                    <div className="profile__winrate-circle">
-                                        <svg viewBox="0 0 80 80" className="profile__winrate-svg">
-                                            <circle cx="40" cy="40" r={circleRadius} className="profile__winrate-track" />
-                                            <circle
-                                                cx="40"
-                                                cy="40"
-                                                r={circleRadius}
-                                                className="profile__winrate-fill profile__winrate-fill--loss"
-                                                strokeDasharray={`${circleCircumference} ${circleCircumference}`}
-                                            />
-                                            <circle
-                                                cx="40"
-                                                cy="40"
-                                                r={circleRadius}
-                                                className="profile__winrate-fill profile__winrate-fill--win"
-                                                strokeDasharray={`${winStroke} ${circleCircumference}`}
-                                            />
-                                        </svg>
-                                        <span className="profile__winrate-label">{winRate}%</span>
+                                    <div className="profile__friend-winrate-body">
+                                        <div className="profile__winrate-circle">
+                                            <svg viewBox="0 0 80 80" className="profile__winrate-svg">
+                                                <circle cx="40" cy="40" r={circleRadius} className="profile__winrate-track" />
+                                                <circle
+                                                    cx="40"
+                                                    cy="40"
+                                                    r={circleRadius}
+                                                    className="profile__winrate-fill profile__winrate-fill--loss"
+                                                    strokeDasharray={`${circleCircumference} ${circleCircumference}`}
+                                                />
+                                                <circle
+                                                    cx="40"
+                                                    cy="40"
+                                                    r={circleRadius}
+                                                    className="profile__winrate-fill profile__winrate-fill--win"
+                                                    strokeDasharray={`${winStroke} ${circleCircumference}`}
+                                                />
+                                            </svg>
+                                            <span className="profile__winrate-label">{winRate}%</span>
+                                        </div>
+                                        <div className="profile__winrate-legend profile__winrate-legend--friend">
+                                            <span className="profile__legend-dot profile__legend-dot--win" />
+                                            <span>{isFourPlayersMode ? '1º puesto' : 'Victorias'}</span>
+                                            <span className="profile__legend-dot profile__legend-dot--loss" />
+                                            <span>{isFourPlayersMode ? '2º, 3º o 4º puesto' : 'Derrotas'}</span>
+                                        </div>
                                     </div>
                                 </article>
-
                                 <article className="profile__paper-card">
                                     <h3 className="profile__paper-title">Estadisticas</h3>
                                     <ul className="profile__simple-list">
@@ -477,8 +490,8 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                                 ) : (
                                                     <>
                                                         <li className="profile__simple-row"><span>Partidas juntos</span><strong>{h2h.total_matches_4p ?? 0}</strong></li>
-                                                        <li className="profile__simple-row"><span>Tus 1o puestos</span><strong>{h2h.first_places_4p ?? 0}</strong></li>
-                                                        <li className="profile__simple-row"><span>2o-4o puestos</span><strong>{h2h.other_places_4p ?? 0}</strong></li>
+                                                        <li className="profile__simple-row"><span>Tus 1º puestos</span><strong>{h2h.first_places_4p ?? 0}</strong></li>
+                                                        <li className="profile__simple-row"><span>2º, 3º o 4º puestos</span><strong>{h2h.other_places_4p ?? 0}</strong></li>
                                                     </>
                                                 )}
                                             </ul>

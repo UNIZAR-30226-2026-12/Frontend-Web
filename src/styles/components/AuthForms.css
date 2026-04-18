@@ -417,7 +417,7 @@
 .auth-form--login .auth-form__fields {
   margin-top: 0;
   gap: 0.34rem;
-  width: min(92%, 34rem);
+  width: min(78%, 28rem);
   align-self: center;
 }
 
@@ -427,7 +427,7 @@
 
 .auth-form--register .auth-form__fields {
   gap: 0.38rem;
-  width: min(91%, 32rem);
+  width: min(78%, 27rem);
   align-self: center;
 }
 
