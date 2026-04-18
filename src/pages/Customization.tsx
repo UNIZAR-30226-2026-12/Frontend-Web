@@ -162,6 +162,50 @@ function Customization({ onNavigate }: CustomizationProps) {
                     <section className="customization__card customization__card--pieces">
                         <img className="customization__card-image" src={piecesSheetImage} alt="" aria-hidden="true" />
 
+                        <div className="customization__boards-preview">
+                            <div className="customization__board-slot customization__board-slot--1v1">
+                                <div className="customization__board-preview customization__board-preview--1v1">
+                                    <span
+                                        className="customization__board-piece"
+                                        style={{ background: PIECE_STYLES_1V1[selectedPiece1v1].sideA }}
+                                    />
+                                    <span
+                                        className="customization__board-piece"
+                                        style={{ background: PIECE_STYLES_1V1[selectedPiece1v1].sideB }}
+                                    />
+                                    <span
+                                        className="customization__board-piece"
+                                        style={{ background: PIECE_STYLES_1V1[selectedPiece1v1].sideB }}
+                                    />
+                                    <span
+                                        className="customization__board-piece"
+                                        style={{ background: PIECE_STYLES_1V1[selectedPiece1v1].sideA }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="customization__board-slot customization__board-slot--4p">
+                                <div className="customization__board-preview customization__board-preview--4p">
+                                    <span
+                                        className="customization__board-piece"
+                                        style={{ background: PIECE_STYLES_4P[selectedPiece4p].p1 }}
+                                    />
+                                    <span
+                                        className="customization__board-piece"
+                                        style={{ background: PIECE_STYLES_4P[selectedPiece4p].p2 }}
+                                    />
+                                    <span
+                                        className="customization__board-piece"
+                                        style={{ background: PIECE_STYLES_4P[selectedPiece4p].p3 }}
+                                    />
+                                    <span
+                                        className="customization__board-piece"
+                                        style={{ background: PIECE_STYLES_4P[selectedPiece4p].p4 }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="customization__piece-groups">
                             <div className="customization__piece-group" role="listbox" aria-label="Estilo de fichas para 1 contra 1">
                                 {PIECE_STYLES_1V1.map((style, index) => (

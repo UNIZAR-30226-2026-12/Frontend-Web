@@ -54,12 +54,6 @@ const normalizeMode = (rawMode: unknown): '1vs1' | '1vs1vs1vs1' => {
     return '1vs1'
 }
 
-const formatStatus = (status: Friend['status']) => {
-    if (status === 'online') return 'En linea'
-    if (status === 'playing') return 'Jugando'
-    return 'Desconectado'
-}
-
 const toInitial = (name: string) => {
     const trimmed = name.trim()
     return trimmed ? trimmed.charAt(0).toUpperCase() : '?'
@@ -449,9 +443,6 @@ function Friends({ onNavigate }: FriendsProps) {
                                                         <span className="friend-card__name">{friend.name}</span>
                                                         <span className="friend-card__rr">{friend.rr} RR</span>
                                                     </div>
-                                                    <p className={`friend-card__status friend-card__status--${friend.status}`}>
-                                                        {formatStatus(friend.status)}
-                                                    </p>
                                                 </div>
                                             </div>
                                             <div className="friend-card__actions">
@@ -584,7 +575,6 @@ function Friends({ onNavigate }: FriendsProps) {
                                                     </div>
                                                     <p className="friend-card__invite-text">Te invita a una partida</p>
                                                     <div className="friend-card__game-info">
-                                                        <span className="friend-card__mode-tag">{request.gameMode}</span>
                                                         {request.playersCount !== undefined && (
                                                             <span className="friend-card__players-count">{request.playersCount}/4 jugadores</span>
                                                         )}
@@ -607,6 +597,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                                     Rechazar
                                                 </button>
                                             </div>
+                                            <span className="friend-card__mode-tag friend-card__mode-tag--corner">{request.gameMode}</span>
                                         </div>
                                     ))
                                 )}

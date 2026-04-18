@@ -37,7 +37,7 @@ interface GameHistory {
     rankChange?: string
 }
 
-type HistoryTone = 'win' | 'loss' | 'draw'
+type HistoryTone = 'win' | 'loss' | 'neutral'
 
 const PUBLICATION_SLOTS = [
     { top: '22%', left: '28%', rotate: -5 },
@@ -63,8 +63,8 @@ const normalizeLobbyStatus = (status: string): 'waiting' | 'playing' | 'full' =>
     return 'waiting'
 }
 
-const formatLobbyMode = (mode: string) => (normalizeMode(mode) === '1vs1' ? '1V1' : '4P')
-const formatHistoryMode = (mode: string) => (normalizeMode(mode) === '1vs1' ? '1v1' : '4P')
+const formatLobbyMode = (mode: string) => (normalizeMode(mode) === '1vs1' ? '1V1' : '1V1V1V1')
+const formatHistoryMode = (mode: string) => (normalizeMode(mode) === '1vs1' ? '1v1' : '1v1v1v1')
 
 const normalizeResult = (result: string) =>
     String(result || '')
@@ -114,24 +114,47 @@ const formatHistoryDate = (value: string) => {
     return `${year}-${month}-${day}`
 }
 
-const getHistoryOutcome = (entry: GameHistory): { tone: HistoryTone; label: string; symbol: string } => {
+const getHistoryOutcome = (entry: GameHistory): { tone: HistoryTone; label: string } => {
     const mode = normalizeMode(entry.mode)
     const result = normalizeResult(entry.result).toLowerCase()
+    const score = String(entry.score || '').trim().toLowerCase()
 
     if (mode === '1vs1vs1vs1') {
-        const placement = Number((result.match(/\d+/) || [])[0])
-        if (placement === 1) return { tone: 'win', label: 'GANADA', symbol: 'OK' }
-        if (placement === 4) return { tone: 'loss', label: 'PERDIDA', symbol: 'X' }
-        return { tone: 'draw', label: 'EMPATE', symbol: '-' }
+        const combinedText = `${result} ${score}`
+
+        let placement: number | null = null
+
+        if (combinedText.includes('1º') || combinedText.includes('1o') || combinedText.includes('1er') || combinedText.includes('primero')) {
+            placement = 1
+        } else if (combinedText.includes('2º') || combinedText.includes('2o') || combinedText.includes('segundo')) {
+            placement = 2
+        } else if (combinedText.includes('3º') || combinedText.includes('3o') || combinedText.includes('tercero')) {
+            placement = 3
+        } else if (combinedText.includes('4º') || combinedText.includes('4o') || combinedText.includes('cuarto')) {
+            placement = 4
+        } else {
+            const numericMatch = combinedText.match(/\b([1-4])\b/)
+            if (numericMatch) {
+                placement = Number(numericMatch[1])
+            }
+        }
+
+        if (placement === 1) return { tone: 'win', label: '1º PUESTO' }
+        if (placement === 4) return { tone: 'loss', label: '4º PUESTO' }
+        if (placement === 2) return { tone: 'neutral', label: '2º PUESTO' }
+        if (placement === 3) return { tone: 'neutral', label: '3º PUESTO' }
+
+        return { tone: 'neutral', label: 'PUESTO --' }
     }
 
     if (result.includes('ganad') || result.includes('victoria')) {
-        return { tone: 'win', label: 'GANADA', symbol: 'OK' }
+        return { tone: 'win', label: 'GANADA' }
     }
     if (result.includes('perdid') || result.includes('derrota')) {
-        return { tone: 'loss', label: 'PERDIDA', symbol: 'X' }
+        return { tone: 'loss', label: 'PERDIDA' }
     }
-    return { tone: 'draw', label: 'EMPATE', symbol: '-' }
+
+    return { tone: 'neutral', label: 'EMPATE' }
 }
 
 function OnlineGame({ onNavigate }: OnlineGameProps) {
@@ -381,18 +404,17 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                                             <span className="online-history-row__accent" aria-hidden="true"></span>
 
                                             <div className="online-history-row__main">
-                                                <div className="online-history-row__top">
-                                                    <span className="online-history-row__result">
-                                                        {outcome.label}
-                                                        <span className="online-history-row__symbol">{outcome.symbol}</span>
-                                                    </span>
-                                                    <span className="online-history-row__date">{formatHistoryDate(entry.date)}</span>
-                                                </div>
+                                                <span className="online-history-row__result">
+                                                    {outcome.label}
+                                                </span>
+
                                                 <div className="online-history-row__bottom">
                                                     <span className="online-history-row__score">{scoreValue}</span>
                                                     <span className="online-history-row__mode">{modeValue}</span>
                                                 </div>
                                             </div>
+
+                                            <span className="online-history-row__date">{formatHistoryDate(entry.date)}</span>
                                             <span className="online-history-row__rr">{rankChange}</span>
                                         </article>
                                     )

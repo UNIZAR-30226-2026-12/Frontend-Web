@@ -159,25 +159,41 @@
     position: absolute;
     left: 8.4%;
     right: 8.4%;
-    bottom: 8.2%;
+    bottom: 4.4%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: clamp(0.52rem, 1.1vw, 1.2rem);
+    gap: clamp(0.6rem, 1.1vw, 1.1rem);
     align-items: start;
-    --piece-token-size: clamp(2rem, 3.5vw, 3.15rem);
+    --piece-token-size: clamp(1.55rem, 2.7vw, 2.35rem);
 }
 
 .customization__piece-group {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     justify-items: center;
     align-items: center;
-    gap: clamp(0.22rem, 0.78vw, 0.7rem);
-    padding-inline: clamp(0.08rem, 0.35vw, 0.38rem);
+    gap: clamp(0.16rem, 0.55vw, 0.42rem);
+    padding-inline: clamp(0.1rem, 0.4vw, 0.3rem);
 }
 
-.customization__piece-group .customization__piece-option:last-child {
+.customization__piece-group .customization__piece-option:nth-child(1) {
+    grid-column: 1 / span 2;
+}
+
+.customization__piece-group .customization__piece-option:nth-child(2) {
+    grid-column: 3 / span 2;
+}
+
+.customization__piece-group .customization__piece-option:nth-child(3) {
+    grid-column: 5 / span 2;
+}
+
+.customization__piece-group .customization__piece-option:nth-child(4) {
     grid-column: 2 / span 2;
+}
+
+.customization__piece-group .customization__piece-option:nth-child(5) {
+    grid-column: 4 / span 2;
 }
 
 .customization__piece-option {
@@ -262,6 +278,64 @@
     outline-offset: 2px;
 }
 
+.customization__boards-preview {
+    position: absolute;
+    left: 8.4%;
+    right: 8.4%;
+    top: 25.5%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(0.52rem, 1.1vw, 1.2rem);
+    pointer-events: none;
+}
+
+.customization__board-slot {
+    position: relative;
+    height: clamp(7rem, 13vw, 10.5rem);
+}
+
+.customization__board-preview {
+    position: absolute;
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: clamp(0.22rem, 0.42vw, 0.42rem);
+}
+
+.customization__board-preview--1v1 {
+    left: 47%;
+    top: 74%;
+    transform: translate(-50%, -50%);
+}
+
+.customization__board-preview--4p {
+    left: 44%;
+    top: 82%;
+    transform: translate(-50%, -50%);
+}
+
+.customization__board-piece {
+    width: clamp(1.35rem, 2.35vw, 2rem);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 2px solid rgba(31, 19, 12, 0.84);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.58),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.24),
+        0 2px 0 rgba(45, 28, 18, 0.4);
+    position: relative;
+}
+
+.customization__board-piece::before {
+    content: '';
+    position: absolute;
+    left: 16%;
+    top: 10%;
+    width: 45%;
+    height: 30%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0));
+}
+
 @media (max-width: 1220px) {
     .customization__cards {
         grid-template-columns: 1fr;
@@ -314,12 +388,13 @@
     .customization__piece-groups {
         left: 7.1%;
         right: 7.1%;
-        bottom: 6.7%;
-        gap: 0.44rem;
+        bottom: 5.2%;
+        gap: 0.3rem;
+        --piece-token-size: clamp(1.2rem, 5.2vw, 1.8rem);
     }
 
-    .customization__piece-groups {
-        --piece-token-size: clamp(1.5rem, 6.4vw, 2.3rem);
+    .customization__piece-group {
+        gap: 0.16rem;
     }
 
     .customization__back-button {
@@ -329,16 +404,33 @@
 
 @media (max-width: 560px) {
     .customization__piece-group {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.28rem;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 0.2rem;
     }
 
-    .customization__piece-group .customization__piece-option:last-child {
-        grid-column: auto;
+    .customization__piece-group .customization__piece-option:nth-child(1) {
+        grid-column: 1 / span 2;
+    }
+
+    .customization__piece-group .customization__piece-option:nth-child(2) {
+        grid-column: 3 / span 2;
+    }
+
+    .customization__piece-group .customization__piece-option:nth-child(3) {
+        grid-column: 5 / span 2;
+    }
+
+    .customization__piece-group .customization__piece-option:nth-child(4) {
+        grid-column: 2 / span 2;
+    }
+
+    .customization__piece-group .customization__piece-option:nth-child(5) {
+        grid-column: 4 / span 2;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .customization__avatar-option,
     .customization__piece-option,
     .customization__back-button {
