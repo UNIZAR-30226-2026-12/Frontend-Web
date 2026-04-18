@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, WS_BASE_URL } from '../services/api'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import boardImage from '../assets/salaEspera/Pizarra.png'
+import boardImage1v1 from '../assets/salaEspera/Pizarra.png'
+import boardImage4Players from '../assets/salaEspera/Pizarra4Jugadores.png'
 import titleImage from '../assets/salaEspera/titulo.png'
 import drawTokenImage from '../assets/salaEspera/empate.png'
 import blackWinTokenImage from '../assets/salaEspera/FichaNegraVictoria.png'
@@ -381,13 +382,13 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
             return 'Recuperando estado de la partida pausada.'
         }
         if (normalizedGameMode === '1vs1') {
-            return 'Prepara tu estrategia. Esperando a que se una el rival.'
+            return 'Prepara tu estrategia.\nEsperando a que se una el rival.'
         }
         return 'Prepara tu estrategia. Esperando a que se unan todos los jugadores.'
     }, [allReady, isResume, normalizedGameMode, roomStatus])
 
-    const modeLabel = normalizedGameMode === '1vs1' ? '1 VS 1' : '1 VS 1 VS 1 VS 1'
     const streakLabel = normalizedGameMode === '1vs1' ? 'Racha ultimas 5 partidas' : 'Top ultimas 5 partidas'
+    const boardImage = normalizedGameMode === '1vs1' ? boardImage1v1 : boardImage4Players
 
     return (
         <div className="waiting-room">
@@ -400,7 +401,10 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
             <main className="waiting-room__layout">
                 <img className="waiting-room__title-image" src={titleImage} alt="Sala de espera" />
 
-                <section className="waiting-room__board" aria-label="Sala de espera">
+                <section
+                    className={`waiting-room__board waiting-room__board--${maxPlayers}`}
+                    aria-label="Sala de espera"
+                >
                     <img className="waiting-room__board-image" src={boardImage} alt="" aria-hidden="true" />
 
                     <div className="waiting-room__board-content">
@@ -459,7 +463,10 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                                             <strong>{player ? `${player.rr} RR` : '--- RR'}</strong>
                                         </p>
 
-                                        <div className="waiting-player-card__streak" aria-label={streakLabel}>
+                                        <div
+                                            className={`waiting-player-card__streak waiting-player-card__streak--slot-${index + 1}`}
+                                            aria-label={streakLabel}
+                                        >
                                             {historyPreview.map((result, resultIndex) => {
                                                 const tokenImage = getHistoryTokenImage(result, resultIndex)
                                                 if (!tokenImage) {
@@ -489,12 +496,6 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                                 )
                             })}
                         </div>
-
-                        <article className="waiting-room__mode-note" aria-label="Modo de juego">
-                            <span className="waiting-room__mode-note-label">Modo de juego:</span>
-                            <strong className="waiting-room__mode-note-value">{modeLabel}</strong>
-                            <span className="waiting-room__mode-note-subtitle">Clasificatoria</span>
-                        </article>
 
                         <p className="waiting-room__hint">{helperText}</p>
                         {toast && <p className="waiting-room__toast">{toast}</p>}

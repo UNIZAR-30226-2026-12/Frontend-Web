@@ -76,10 +76,17 @@
 }
 
 .waiting-room__board {
+    --board-width: 755;
+    --board-height: 423;
     position: relative;
     width: min(100%, 1050px);
-    aspect-ratio: 598 / 325;
+    aspect-ratio: var(--board-width) / var(--board-height);
     isolation: isolate;
+}
+
+.waiting-room__board--4 {
+    --board-width: 753;
+    --board-height: 414;
 }
 
 .waiting-room__board-image {
@@ -101,18 +108,18 @@
 
 .waiting-room__status-pill {
     position: absolute;
-    top: 10.1%;
+    top: 12.8%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(-2.3deg);
     margin: 0;
-    width: clamp(13rem, 33vw, 22rem);
+    width: clamp(13rem, 31vw, 21.5rem);
     text-align: center;
     border: 0;
     background: transparent;
     box-shadow: none;
     padding: 0;
     font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-    font-size: clamp(0.92rem, 1.7vw, 1.5rem);
+    font-size: clamp(0.82rem, 1.52vw, 1.32rem);
     letter-spacing: 0.045em;
     text-transform: uppercase;
     line-height: 0.92;
@@ -120,63 +127,102 @@
     text-shadow: 0 1px 0 rgba(255, 249, 233, 0.8);
 }
 
+.waiting-room__board--2 .waiting-room__status-pill {
+    top: 9.4%;
+}
+
 .waiting-room__players {
     position: absolute;
-    left: 8.4%;
-    right: 8.4%;
-    top: 24.8%;
-    bottom: 25.4%;
+    left: 8.8%;
+    right: 8.8%;
+    top: 23.7%;
+    bottom: 24.2%;
     z-index: 3;
+}
+
+.waiting-room__board--2 .waiting-room__players {
+    left: 10.2%;
+    right: 10.2%;
+    top: 24.4%;
+    bottom: 21.2%;
+}
+
+.waiting-room__board--4 .waiting-room__players {
+    left: 0.02%;
+    right: 0.2%;
+    top: 14.2%;
+    bottom: 15.2%;
+}
+
+.waiting-room__board--4 .waiting-room__status-pill {
+    top: 4.9%;
+    width: clamp(12rem, 28vw, 18rem);
+    font-size: clamp(0.74rem, 1.22vw, 1.02rem);
 }
 
 .waiting-room__players--2 {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: clamp(0.78rem, 1.9vw, 1.55rem);
+    gap: clamp(0.52rem, 1.4vw, 1rem);
+    padding-inline: clamp(0.14rem, 0.8vw, 0.45rem);
 }
 
 .waiting-room__players--4 {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
     align-content: start;
-    gap: clamp(0.35rem, 0.9vw, 0.65rem);
+    align-items: start;
+    justify-items: center;
+    column-gap: clamp(0.95rem, 2.2vw, 1.6rem);
+    row-gap: clamp(0.62rem, 1.3vw, 0.95rem);
+    padding-inline: clamp(0.1rem, 0.8vw, 0.45rem);
 }
 
 .waiting-player-card {
     position: relative;
-    width: clamp(9.25rem, 18.2vw, 12.4rem);
+    width: clamp(8.1rem, 14.8vw, 10rem);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(0.2rem, 0.58vw, 0.36rem);
+    gap: clamp(0.12rem, 0.42vw, 0.26rem);
     color: #16100d;
     text-shadow: 0 1px 0 rgba(255, 245, 216, 0.72);
     transition: transform 0.2s ease;
 }
 
+.waiting-room__players--2 .waiting-player-card {
+    width: clamp(9.2rem, 17vw, 12rem);
+    gap: clamp(0.22rem, 0.64vw, 0.46rem);
+}
+
 .waiting-room__players--2 .waiting-player-card:nth-child(1) {
-    transform: rotate(-6.8deg) translateX(-0.12rem);
+    transform: rotate(-12deg) translate(0.05rem, 0.36rem);
 }
 
 .waiting-room__players--2 .waiting-player-card:nth-child(2) {
-    transform: rotate(6.8deg) translateX(0.12rem);
+    transform: rotate(12deg) translate(2.15rem, 0.4rem);
 }
 
 .waiting-room__players--4 .waiting-player-card:nth-child(1) {
-    transform: rotate(-2.6deg);
+    --photo-size: clamp(4rem, 3vw, 2.8rem);
+    transform: rotate(-8deg) translate(-1.56rem, 1.16rem);
 }
 
 .waiting-room__players--4 .waiting-player-card:nth-child(2) {
-    transform: rotate(2deg);
+    --photo-size: clamp(4rem, 3vw, 2.8rem);
+    transform: rotate(8deg) translate(5.44rem, 1.16rem);
 }
 
 .waiting-room__players--4 .waiting-player-card:nth-child(3) {
-    transform: rotate(-1.4deg);
+    --photo-size: clamp(4rem, 3vw, 2.8rem);
+    transform: rotate(-8.0deg) translate(-0.52rem, 1.06rem);
 }
 
 .waiting-room__players--4 .waiting-player-card:nth-child(4) {
-    transform: rotate(2.8deg);
+    --photo-size: clamp(4rem, 3vw, 2.8rem);
+    transform: rotate(8.0deg) translate(4.14rem, 0.16rem);
 }
 
 .waiting-player-card--active {
@@ -196,16 +242,53 @@
 }
 
 .waiting-player-card__photo {
-    width: 66%;
+    width: 59%;
     aspect-ratio: 1;
-    border-radius: 12px;
-    margin-top: clamp(0.16rem, 0.55vw, 0.38rem);
+    border-radius: 10px;
+    margin-top: clamp(0.08rem, 0.3vw, 0.2rem);
     position: relative;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 3px 7px rgba(14, 8, 4, 0.26);
+}
+
+.waiting-room__players--2 .waiting-player-card__photo {
+    width: 64%;
+    margin-top: clamp(0.16rem, 0.52vw, 0.34rem);
+}
+
+.waiting-room__players--4 .waiting-player-card {
+    --photo-size: clamp(2.1rem, 3vw, 2.8rem);
+    width: clamp(7.8rem, 12.8vw, 9.2rem);
+    display: grid;
+    grid-template-columns: clamp(2.1rem, 3vw, 2.8rem) minmax(0, 1fr);
+    grid-template-areas:
+        'photo name'
+        'photo rr'
+        'streak streak';
+    column-gap: clamp(0.2rem, 0.54vw, 0.38rem);
+    row-gap: clamp(0.02rem, 0.18vw, 0.12rem);
+    align-items: center;
+    justify-items: stretch;
+    text-align: left;
+}
+
+.waiting-room__players--4 .waiting-player-card:nth-child(2),
+.waiting-room__players--4 .waiting-player-card:nth-child(4) {
+    grid-template-columns: minmax(0, 1fr) clamp(2.1rem, 3vw, 2.8rem);
+    grid-template-areas:
+        'name photo'
+        'rr photo'
+        'streak streak';
+}
+
+.waiting-room__players--4 .waiting-player-card__photo {
+    grid-area: photo;
+    width: var(--photo-size);
+    margin-top: 0;
+    justify-self: center;
 }
 
 .waiting-player-card__avatar {
@@ -245,7 +328,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-    font-size: clamp(0.98rem, 1.6vw, 1.42rem);
+    font-size: clamp(0.8rem, 1.3vw, 1.18rem);
     line-height: 1.02;
     letter-spacing: 0.008em;
 }
@@ -258,7 +341,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.03rem;
-    font-size: clamp(0.76rem, 1.18vw, 1.02rem);
+    font-size: clamp(0.56rem, 0.9vw, 0.74rem);
     line-height: 1;
     letter-spacing: 0.02em;
     text-transform: uppercase;
@@ -269,26 +352,116 @@
 }
 
 .waiting-player-card__rr strong {
-    font-size: clamp(0.94rem, 1.44vw, 1.28rem);
+    font-size: clamp(0.76rem, 1.14vw, 0.98rem);
     letter-spacing: 0.015em;
 }
 
+.waiting-room__players--2 .waiting-player-card__name {
+    font-size: clamp(0.94rem, 1.55vw, 1.34rem);
+    margin-top: clamp(0.18rem, 0.42vw, 0.3rem);
+}
+
+.waiting-room__players--2 .waiting-player-card__rr {
+    font-size: clamp(0.64rem, 1.08vw, 0.88rem);
+}
+
+.waiting-room__players--2 .waiting-player-card__rr strong {
+    font-size: clamp(0.88rem, 1.36vw, 1.16rem);
+}
+
+.waiting-room__players--4 .waiting-player-card__name {
+    grid-area: name;
+    width: 100%;
+    font-size: clamp(0.66rem, 0.95vw, 0.84rem);
+    line-height: 0.95;
+    text-align: left;
+    margin: 0;
+    transform: translate(0.5rem, 0.1rem);
+}
+
+.waiting-room__players--4 .waiting-player-card__rr {
+    grid-area: rr;
+    width: 100%;
+    font-size: clamp(0.42rem, 0.64vw, 0.56rem);
+    line-height: 0.92;
+    align-items: flex-start;
+    text-align: left;
+    margin: 0;
+    transform: translate(0.5rem, 0.1rem);
+}
+
+.waiting-room__players--4 .waiting-player-card__rr strong {
+    font-size: clamp(0.58rem, 0.9vw, 0.76rem);
+}
+
+.waiting-room__players--4 .waiting-player-card:nth-child(2) .waiting-player-card__name,
+.waiting-room__players--4 .waiting-player-card:nth-child(4) .waiting-player-card__name {
+    text-align: right;
+}
+
+.waiting-room__players--4 .waiting-player-card:nth-child(2) .waiting-player-card__rr,
+.waiting-room__players--4 .waiting-player-card:nth-child(4) .waiting-player-card__rr {
+    align-items: flex-end;
+    text-align: right;
+}
+
 .waiting-room__players--2 .waiting-player-card:nth-child(1) .waiting-player-card__photo {
-    transform: translate(0.14rem, -0.1rem) rotate(3.1deg);
+    transform: translate(0.16rem, -0.08rem) rotate(4.5deg);
 }
 
 .waiting-room__players--2 .waiting-player-card:nth-child(2) .waiting-player-card__photo {
-    transform: translate(-0.14rem, -0.1rem) rotate(-3.1deg);
+    transform: translate(-0.12rem, -0.08rem) rotate(-4.5deg);
 }
 
 .waiting-room__players--2 .waiting-player-card:nth-child(1) .waiting-player-card__name,
 .waiting-room__players--2 .waiting-player-card:nth-child(1) .waiting-player-card__rr {
-    transform: translate(0.09rem, -0.05rem) rotate(2.2deg);
+    transform: translate(0.1rem, -0.02rem) rotate(5deg);
 }
 
 .waiting-room__players--2 .waiting-player-card:nth-child(2) .waiting-player-card__name,
 .waiting-room__players--2 .waiting-player-card:nth-child(2) .waiting-player-card__rr {
-    transform: translate(-0.09rem, -0.05rem) rotate(-2.2deg);
+    transform: translate(-0.1rem, -0.02rem) rotate(-5deg);
+}
+
+.waiting-room__players--4 .waiting-player-card__streak {
+    grid-area: streak;
+    width: 100%;
+    justify-content: flex-start;
+    gap: clamp(0.03rem, 0.2vw, 0.08rem);
+    min-height: clamp(0.52rem, 0.86vw, 0.72rem);
+    margin-top: clamp(0.16rem, 0.46vw, 0.34rem);
+    --streak-offset-x: 0rem;
+    --streak-offset-y: 0rem;
+    --streak-scale: 1;
+    --streak-token-size: clamp(0.52rem, 0.84vw, 0.74rem);
+    --streak-empty-size: clamp(0.56rem, 0.9vw, 0.78rem);
+    --streak-empty-font-size: clamp(0.34rem, 0.5vw, 0.42rem);
+    transform: translate(var(--streak-offset-x), var(--streak-offset-y)) scale(var(--streak-scale));
+    transform-origin: left center;
+}
+
+.waiting-room__players--4 .waiting-player-card__streak--slot-1 {
+    --streak-offset-x: -2rem;
+    --streak-offset-y: 3.75rem;
+    --streak-scale: 2;
+}
+
+.waiting-room__players--4 .waiting-player-card__streak--slot-2 {
+    --streak-offset-x: 1rem;
+    --streak-offset-y: 3.75rem;
+    --streak-scale: 2;
+}
+
+.waiting-room__players--4 .waiting-player-card__streak--slot-3 {
+    --streak-offset-x: 0rem;
+    --streak-offset-y: 2.04rem;
+    --streak-scale: 2;
+}
+
+.waiting-room__players--4 .waiting-player-card__streak--slot-4 {
+    --streak-offset-x: 0rem;
+    --streak-offset-y: 2.04rem;
+    --streak-scale: 2;
 }
 
 .waiting-player-card__streak {
@@ -297,81 +470,77 @@
     justify-content: center;
     align-items: center;
     gap: clamp(0.08rem, 0.36vw, 0.22rem);
-    min-height: clamp(1.05rem, 2vw, 1.3rem);
+    min-height: clamp(0.82rem, 1.48vw, 1.05rem);
 }
 
 .waiting-room__players--2 .waiting-player-card__streak {
     position: absolute;
     left: 50%;
-    top: 174%;
-    transform: translateX(-50%) scale(1.1);
+    top: 136%;
+    transform: translateX(-50%) scale(1);
     transform-origin: center top;
     width: max-content;
-    gap: clamp(0.1rem, 0.3vw, 0.18rem);
+    gap: clamp(0.14rem, 0.42vw, 0.24rem);
 }
 
 .waiting-room__players--2 .waiting-player-card:nth-child(1) .waiting-player-card__streak {
-    top: 141%;
-    transform: translateX(-50%) scale(1.24);
+    top: 140.5%;
+    transform: translateX(-50%) rotate(6deg) scale(1.12);
 }
 
 .waiting-room__players--2 .waiting-player-card:nth-child(2) .waiting-player-card__streak {
-    top: 138%;
-    transform: translateX(-50%) scale(1.27);
+    top: 130.2%;
+    transform: translateX(-50%) rotate(-6deg) scale(1.12);
 }
 
 .waiting-player-card__streak-token {
-    width: clamp(0.86rem, 2vw, 1.45rem);
+    width: clamp(0.66rem, 1.34vw, 0.96rem);
     height: auto;
     object-fit: contain;
     filter: drop-shadow(0 1px 1px rgba(9, 4, 1, 0.28));
+}
+
+.waiting-room__players--2 .waiting-player-card__streak-token {
+    width: clamp(0.94rem, 1.9vw, 1.42rem);
+}
+
+.waiting-room__players--4 .waiting-player-card__streak-token {
+    width: var(--streak-token-size);
 }
 
 .waiting-player-card__streak-empty {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: clamp(0.9rem, 2.08vw, 1.5rem);
-    height: clamp(0.9rem, 2.08vw, 1.5rem);
+    width: clamp(0.68rem, 1.38vw, 1rem);
+    height: clamp(0.68rem, 1.38vw, 1rem);
     border-radius: 50%;
     border: 1px dashed rgba(41, 25, 15, 0.62);
     background: rgba(248, 240, 217, 0.8);
     color: rgba(41, 25, 15, 0.8);
-    font-size: clamp(0.56rem, 0.92vw, 0.76rem);
+    font-size: clamp(0.42rem, 0.72vw, 0.6rem);
     line-height: 1;
 }
 
-.waiting-room__mode-note {
-    position: absolute;
-    top: 50.7%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-0.9deg);
-    width: clamp(12.1rem, 27.2vw, 18.5rem);
-    padding: clamp(0.2rem, 0.44vw, 0.34rem) clamp(0.5rem, 1vw, 0.84rem);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.08rem;
-    z-index: 5;
+.waiting-room__players--2 .waiting-player-card__streak-empty {
+    width: clamp(0.98rem, 1.96vw, 1.44rem);
+    height: clamp(0.98rem, 1.96vw, 1.44rem);
+    font-size: clamp(0.56rem, 0.96vw, 0.76rem);
 }
 
-.waiting-room__mode-note-label,
-.waiting-room__mode-note-subtitle {
-    font-family: 'Arial Black', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-    font-size: clamp(0.64rem, 1.08vw, 0.95rem);
-    text-transform: uppercase;
-    letter-spacing: 0.045em;
-    line-height: 1.04;
-    text-shadow: 0 1px 0 rgba(255, 248, 221, 0.75);
+.waiting-room__players--4 .waiting-player-card__streak-empty {
+    width: var(--streak-empty-size);
+    height: var(--streak-empty-size);
+    font-size: var(--streak-empty-font-size);
 }
 
-.waiting-room__mode-note-value {
-    font-family: 'Arial Black', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-    font-size: clamp(2.08rem, 4.76vw, 3.82rem);
-    line-height: 0.94;
-    letter-spacing: 0.025em;
-    text-shadow: 0 2px 0 rgba(255, 246, 216, 0.82), 0 4px 8px rgba(23, 14, 9, 0.22);
+.waiting-room__players--4 .waiting-player-card--empty .waiting-player-card__rr {
+    display: none;
+}
+
+.waiting-room__players--4 .waiting-player-card--empty .waiting-player-card__name {
+    margin-top: 0;
+    font-size: clamp(0.72rem, 1vw, 0.9rem);
 }
 
 .waiting-room__hint {
@@ -389,10 +558,22 @@
     font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
     font-size: clamp(0.86rem, 1.45vw, 1.24rem);
     letter-spacing: 0.03em;
-    line-height: 1;
+    line-height: 1.08;
     color: #20130c;
     text-shadow: 0 1px 0 rgba(255, 249, 233, 0.75);
     z-index: 4;
+}
+
+.waiting-room__board--2 .waiting-room__hint {
+    bottom: 17.1%;
+    white-space: pre-line;
+}
+
+.waiting-room__board--4 .waiting-room__hint {
+    bottom:19.4%;
+    width: clamp(15rem, 50vw, 31rem);
+    font-size: clamp(0.76rem, 1.08vw, 0.96rem);
+    line-height: 1.02;
 }
 
 .waiting-room__toast {
@@ -524,13 +705,22 @@
         bottom: 27%;
     }
 
-    .waiting-room__mode-note {
-        width: clamp(10.1rem, 30vw, 14.1rem);
+    .waiting-room__board--4 .waiting-room__players {
+        top: 24.8%;
+        bottom: 32%;
     }
 
     .waiting-room__hint {
         bottom: 13.8%;
         width: clamp(12rem, 62vw, 28rem);
+    }
+
+    .waiting-room__board--2 .waiting-room__hint {
+        bottom: 15.9%;
+    }
+
+    .waiting-room__board--4 .waiting-room__hint {
+        bottom: 10.6%;
     }
 
     .waiting-room__actions {
@@ -564,7 +754,6 @@
 
     .waiting-room__status-pill,
     .waiting-room__players,
-    .waiting-room__mode-note,
     .waiting-room__hint,
     .waiting-room__toast {
         position: static;
@@ -603,10 +792,6 @@
     .waiting-room__players--4 .waiting-player-card {
         width: 100%;
         transform: none;
-    }
-
-    .waiting-room__mode-note {
-        width: min(100%, 17rem);
     }
 
     .waiting-room__players--2 .waiting-player-card__streak {
