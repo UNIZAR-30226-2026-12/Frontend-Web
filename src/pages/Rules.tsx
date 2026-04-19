@@ -116,15 +116,15 @@ function Rules({ onNavigate }: RulesProps) {
               </details>
               <details>
                 <summary>Robar habilidad</summary>
-                <p>Robas una habilidad aleatoria de un rival. Si nadie tiene habilidades, no se puede usar.</p>
+                <p>Robas una habilidad aleatoria de un rival. Si los rivales no tienen habilidades, no se puede usar.</p>
               </details>
               <details>
                 <summary>Intercambiar habilidad</summary>
-                <p>Das una habilidad tuya y recibes una del rival. Si no hay habilidades en origen o destino, no se puede usar.</p>
+                <p>Das una habilidad aleatoria tuya y recibes una aleatoria del rival. Si no hay habilidades en origen o destino, no se puede usar.</p>
               </details>
               <details>
                 <summary>Dar habilidad</summary>
-                <p>Entregas una habilidad de tu mano a otro jugador. Si no tienes ninguna, no se puede usar.</p>
+                <p>Entregas una habilidad aleatoria de tu mano a otro jugador. Si no tienes ninguna, no se puede usar.</p>
               </details>
             </div>
           </article>

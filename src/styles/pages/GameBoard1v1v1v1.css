@@ -189,14 +189,128 @@
     border: 1px dashed rgba(255, 255, 255, 0.16);
     border-radius: 10px;
     background: rgba(0, 0, 0, 0.2);
-    padding: 0.6rem;
+    padding: 0.75rem;
     flex: 1;
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.6rem;
     overflow-y: auto;
+}
+
+.duel-quad__skill-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem;
+    align-items: start;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 0.55rem 0.6rem;
+    width: 100%;
+}
+
+.duel-quad__skill-card--active {
+    border-color: rgba(251, 191, 36, 0.8);
+    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.55) inset;
+}
+
+.duel-quad__skill-card--expanded {
+    border-color: rgba(125, 211, 252, 0.35);
+    background: rgba(15, 23, 42, 0.75);
+}
+
+.duel-quad__skill-card--opponent-view .duel-quad__skill-main {
+    opacity: 0.58;
+    cursor: not-allowed;
+}
+
+.duel-quad__skill-card--opponent-view .duel-quad__skill-main:hover .duel-quad__skill-name {
+    color: #fff;
+}
+
+.duel-quad__skill-main {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.duel-quad__skill-main:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.duel-quad__skill-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0a0a0a;
+    background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
+    flex-shrink: 0;
+}
+
+.duel-quad__skill-text {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.duel-quad__skill-name {
+    font-size: 0.88rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.duel-quad__skill-info-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fcd34d;
+    border-radius: 999px;
+    padding: 0.28rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.duel-quad__skill-info-toggle:hover {
+    background: rgba(250, 204, 21, 0.16);
+    border-color: rgba(250, 204, 21, 0.36);
+    color: #fde68a;
+}
+
+.duel-quad__skill-info-toggle--open {
+    background: rgba(125, 211, 252, 0.14);
+    border-color: rgba(125, 211, 252, 0.4);
+    color: #bae6fd;
+}
+
+.duel-quad__skill-description {
+    grid-column: 1 / -1;
+    margin-top: 0.1rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.8rem;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.duel-quad__skill-main:hover:not(:disabled) .duel-quad__skill-name {
+    color: #fde68a;
 }
 
 .duel-quad__skill-btn {
@@ -231,6 +345,24 @@
 
 .duel-quad-piece--fixed {
     box-shadow: 0 0 0 2px #fbbf24, inset 0 4px 6px rgba(255, 255, 255, 0.22), inset 0 -6px 8px rgba(0, 0, 0, 0.33), 0 3px 8px rgba(0, 0, 0, 0.45) !important;
+}
+
+.duel-quad-piece-lock {
+    position: absolute;
+    right: 12%;
+    bottom: 10%;
+    z-index: 5;
+    width: 1.2rem;
+    height: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(17, 24, 39, 0.92);
+    border: 1px solid rgba(251, 191, 36, 0.85);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    font-size: 0.72rem;
+    line-height: 1;
 }
 
 .duel-quad__empty-skills {
@@ -292,6 +424,7 @@
 }
 
 .duel-quad__board-area {
+    position: relative;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
@@ -306,6 +439,121 @@
     background-position: center;
     background-repeat: no-repeat;
     min-height: 0;
+}
+
+.duel-quad__skill-announcement {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 70;
+    width: min(620px, calc(100% - 2rem));
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem 1.35rem;
+    border-radius: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: linear-gradient(135deg, rgba(6, 10, 20, 0.96), rgba(25, 33, 54, 0.94));
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(18px);
+    pointer-events: none;
+    animation: duel-quad-skill-announcement 2s ease-in-out both;
+}
+
+.duel-quad__skill-announcement::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent 35%, transparent 65%, rgba(255, 255, 255, 0.08));
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.duel-quad__skill-announcement-icon {
+    position: relative;
+    z-index: 1;
+    width: 68px;
+    height: 68px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    background: rgba(255, 255, 255, 0.09);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    flex-shrink: 0;
+}
+
+.duel-quad__skill-announcement-copy {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+    min-width: 0;
+}
+
+.duel-quad__skill-announcement-actor {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.duel-quad__skill-announcement-name {
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.duel-quad__skill-announcement--self {
+    border-color: rgba(96, 165, 250, 0.4);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(96, 165, 250, 0.12);
+}
+
+.duel-quad__skill-announcement--opponent {
+    border-color: rgba(248, 113, 113, 0.4);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(248, 113, 113, 0.12);
+}
+
+.duel-quad__skill-announcement--bomb .duel-quad__skill-announcement-icon {
+    background: linear-gradient(135deg, rgba(248, 113, 113, 0.38), rgba(251, 146, 60, 0.26));
+}
+
+.duel-quad__skill-announcement--gravity .duel-quad__skill-announcement-icon {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(99, 102, 241, 0.26));
+}
+
+.duel-quad__skill-announcement--trick .duel-quad__skill-announcement-icon {
+    background: linear-gradient(135deg, rgba(192, 132, 252, 0.32), rgba(244, 114, 182, 0.24));
+}
+
+.duel-quad__skill-announcement--control .duel-quad__skill-announcement-icon {
+    background: linear-gradient(135deg, rgba(74, 222, 128, 0.28), rgba(250, 204, 21, 0.24));
+}
+
+.duel-quad__ability-error {
+    position: fixed;
+    top: 6.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 72;
+    width: min(720px, calc(100% - 2rem));
+    padding: 1rem 1.2rem;
+    border-radius: 18px;
+    border: 1px solid rgba(248, 113, 113, 0.45);
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.96), rgba(185, 28, 28, 0.92));
+    color: #fff5f5;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    box-shadow: 0 22px 50px rgba(127, 29, 29, 0.45);
+    pointer-events: none;
 }
 
 .duel-quad__board {
@@ -593,6 +841,10 @@
     .duel-quad__question::after {
         animation: none;
     }
+
+    .duel-quad__skill-announcement {
+        animation: none;
+    }
 }
 
 @media (max-width: 1320px) {
@@ -760,5 +1012,27 @@
     50% { transform: scale(1.05); opacity: 1; }
     70% { transform: scale(0.9); }
     100% { transform: scale(1); }
+}
+
+@keyframes duel-quad-skill-announcement {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, calc(-50% - 18px)) scale(0.96);
+    }
+
+    12% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    78% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, calc(-50% - 8px)) scale(0.985);
+    }
 }
 

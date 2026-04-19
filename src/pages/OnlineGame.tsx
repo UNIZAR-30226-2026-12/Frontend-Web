@@ -52,7 +52,8 @@ const PUBLICATION_SLOTS = [
 
 const normalizeMode = (mode: string): '1vs1' | '1vs1vs1vs1' => {
     const cleanedMode = String(mode || '').toLowerCase()
-    if (cleanedMode === '1v1' || cleanedMode === '1vs1') return '1vs1'
+    if (cleanedMode.includes('vs1vs1') || cleanedMode.includes('v1v1')) return '1vs1vs1vs1'
+    if (cleanedMode.startsWith('1v1') || cleanedMode.startsWith('1vs1')) return '1vs1'
     return '1vs1vs1vs1'
 }
 
@@ -256,7 +257,8 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
 
     const handleCreateGame = async (mode: string) => {
         try {
-            const res = await api.games.create(mode)
+            const backendMode = mode === '1vs1' ? '1vs1_skills' : '1vs1vs1vs1_skills'
+            const res = await api.games.create(backendMode)
             setShowCreateModal(false)
             onNavigate('waiting-room', {
                 gameId: res.game_id,

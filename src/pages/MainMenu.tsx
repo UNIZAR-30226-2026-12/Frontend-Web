@@ -62,7 +62,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
             setShowIAModal(false)
 
             if (mode === '1vs1') {
-                const res = await api.games.create('vs_ai')
+                const res = await api.games.create('vs_ai_skills')
                 onNavigate('game-1vs1', {
                     matchData: {
                         online: true,
@@ -78,7 +78,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                 return
             }
 
-            const res = await api.games.create('1vs1vs1vs1')
+            const res = await api.games.create('1vs1vs1vs1_skills')
             const gameId = String(res.game_id)
 
             await api.games.addBot(gameId)

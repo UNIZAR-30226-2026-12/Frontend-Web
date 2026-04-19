@@ -54,7 +54,9 @@ const EMPTY_HISTORY_PREVIEW: HistoryPreviewSymbol[] = ['-', '-', '-', '-', '-']
 
 const normalizeGameMode = (mode: WaitingRoomProps['gameMode']): GameModeNormalized => {
     const cleanedMode = String(mode || '').toLowerCase()
-    if (cleanedMode === '1vs1' || cleanedMode === '1v1') return '1vs1'
+    // Check 4-player modes first so '1vs1vs1vs1' is not captured by the '1vs1' prefix check
+    if (cleanedMode.includes('vs1vs1') || cleanedMode.includes('v1v1')) return '1vs1vs1vs1'
+    if (cleanedMode.startsWith('1vs1') || cleanedMode.startsWith('1v1')) return '1vs1'
     return '1vs1vs1vs1'
 }
 

@@ -50,7 +50,8 @@ interface PausedGame {
 }
 
 const normalizeMode = (rawMode: unknown): '1vs1' | '1vs1vs1vs1' => {
-    if (rawMode === '1vs1vs1vs1' || rawMode === '1v1v1v1') return '1vs1vs1vs1'
+    const cleanedMode = String(rawMode || '').toLowerCase()
+    if (cleanedMode.startsWith('1vs1vs1vs1') || cleanedMode.startsWith('1v1v1v1')) return '1vs1vs1vs1'
     return '1vs1'
 }
 
@@ -281,7 +282,8 @@ function Friends({ onNavigate }: FriendsProps) {
     }
 
     const sendInvite = async (mode: string, friendIds: number[]) => {
-        const response = await api.games.invite(friendIds, mode)
+        const backendMode = mode
+        const response = await api.games.invite(friendIds, backendMode)
         showToast(`Invitacion enviada`, 'info')
         onNavigate('waiting-room', {
             mode,

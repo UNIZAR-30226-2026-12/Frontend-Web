@@ -62,11 +62,22 @@ interface PendingAbility {
     inventoryIndex: number
 }
 
+type GravityDirection = 'up' | 'down' | 'left' | 'right'
+
+interface SkillAnnouncement {
+    actorLabel: string
+    abilityLabel: string
+    icon: string
+    tone: 'self' | 'opponent'
+    theme: 'bomb' | 'gravity' | 'trick' | 'control'
+}
+
 const BOARD_SIZE = 8
 const QUESTION_COUNT = 8
 const ABILITY_PENALTY = 2
 // Enable mechanics for online matches or testing
 const ENABLE_SPECIAL_MECHANICS_1V1 = true
+const ANNOUNCEMENT_DURATION_MS = 2000
 
 const PLAYER = {
     name: 'Jugador',
@@ -88,14 +99,75 @@ const ABILITY_META: Record<string, { name: string; icon: string; needsTarget: bo
     place_free: { name: 'Poner ficha libre', icon: '➕', needsTarget: true },
     skip_rival: { name: 'Saltar turno rival', icon: '⏭️', needsTarget: false },
     steal_skill: { name: 'Robar habilidad', icon: '🕵️', needsTarget: false },
-    exchange_skill: { name: 'Intercambiar habilidad', icon: '💱', needsTarget: false },
+    exchange_skill: { name: 'Intercambiar habilidad', icon: '🔀', needsTarget: false },
     give_skill: { name: 'Regalar habilidad', icon: '🎁', needsTarget: false },
     swap_colors: { name: 'Cambiar colores', icon: '🎨', needsTarget: false },
     lose_turn: { name: 'Perder turno', icon: '🚫', needsTarget: false },
     gravity: { name: 'Gravedad', icon: '🌌', needsTarget: false },
 }
 
+const ABILITY_DESCRIPTIONS: Record<AbilityId, string> = {
+    gravity: 'Desplaza todas las fichas del tablero hacia la direccion elegida, excepto las fichas fijas.',
+    gravity_up: 'Desplaza todas las fichas del tablero hacia la direccion elegida, excepto las fichas fijas.',
+    gravity_down: 'Desplaza todas las fichas del tablero hacia la direccion elegida, excepto las fichas fijas.',
+    gravity_left: 'Desplaza todas las fichas del tablero hacia la direccion elegida, excepto las fichas fijas.',
+    gravity_right: 'Desplaza todas las fichas del tablero hacia la direccion elegida, excepto las fichas fijas.',
+    bomb: 'En el area 3x3 seleccionada, todas las fichas se voltean sin importar su dueño.',
+    fix_piece: 'Convierte una ficha propia colocada en una ficha fija que no puede moverse ni voltearse.',
+    unfix_piece: 'Libera una ficha fija para que vuelva a ser normal. Si no hay fichas fijas, no se puede usar.',
+    place_free: 'Permite colocar una ficha propia en cualquier casilla vacia sin necesidad de capturar.',
+    skip_rival: 'El siguiente rival pierde su turno.',
+    lose_turn: 'Al usarla, pierdes tu turno actual.',
+    flip_rival: 'Convierte una ficha rival elegida a tu color.',
+    swap_colors: 'Intercambia todas tus fichas del tablero con las del rival seleccionado.',
+    steal_skill: 'Robas una habilidad aleatoria de un rival. Si los rivales no tienen habilidades, no se puede usar.',
+    exchange_skill: 'Das una habilidad aleatoria tuya y recibes una aleatoria del rival. Si no hay habilidades en origen o destino, no se puede usar.',
+    give_skill: 'Entregas una habilidad aleatoria de tu mano a otro jugador. Si no tienes ninguna, no se puede usar.',
+}
+
 const ABILITY_POOL = Object.keys(ABILITY_META) as AbilityId[]
+const GRAVITY_DIRECTION_LABELS: Record<GravityDirection, string> = {
+    up: 'arriba',
+    down: 'abajo',
+    left: 'izquierda',
+    right: 'derecha',
+}
+
+const ABILITY_RULE_NAMES: Record<AbilityId, string> = {
+    gravity: 'Gravedad',
+    gravity_up: 'Gravedad (arriba)',
+    gravity_down: 'Gravedad (abajo)',
+    gravity_left: 'Gravedad (izquierda)',
+    gravity_right: 'Gravedad (derecha)',
+    bomb: 'Bomba 3x3',
+    fix_piece: 'Poner ficha fija',
+    unfix_piece: 'Quitar ficha fija',
+    place_free: 'Poner ficha libre',
+    skip_rival: 'Saltar turno del rival',
+    lose_turn: 'Pierdes tu turno',
+    flip_rival: 'Voltear una ficha rival',
+    swap_colors: 'Cambiar colores',
+    steal_skill: 'Robar habilidad',
+    exchange_skill: 'Intercambiar habilidad',
+    give_skill: 'Dar habilidad',
+}
+
+const ANNOUNCEMENT_PRIORITY: AbilityId[] = [
+    'give_skill',
+    'exchange_skill',
+    'steal_skill',
+    'skip_rival',
+    'swap_colors',
+    'lose_turn',
+    'gravity',
+    'bomb',
+    'fix_piece',
+    'unfix_piece',
+    'flip_rival',
+    'place_free',
+]
+
+const getAbilityDisplayName = (ability: AbilityId) => ABILITY_RULE_NAMES[ability] ?? ABILITY_META[ability]?.name ?? 'Habilidad'
 
 const DIRECTIONS = [
     [-1, -1], [-1, 0], [-1, 1],
@@ -304,6 +376,67 @@ function applyGravity(board: BoardCell[][], direction: 'up' | 'down' | 'left' | 
     return { board: next, questionCells: nextQuestions }
 }
 
+function normalizeAbilityForAnnouncement(ability: AbilityId): AbilityId {
+    if (ability === 'gravity_up' || ability === 'gravity_down' || ability === 'gravity_left' || ability === 'gravity_right') {
+        return 'gravity'
+    }
+
+    return ability
+}
+
+function getRemovedAbilities(previous: AbilityId[], next: AbilityId[]) {
+    const nextCounts = new Map<AbilityId, number>()
+    next.forEach(ability => {
+        nextCounts.set(ability, (nextCounts.get(ability) ?? 0) + 1)
+    })
+
+    const removed: AbilityId[] = []
+    previous.forEach(ability => {
+        const remaining = nextCounts.get(ability) ?? 0
+        if (remaining > 0) {
+            nextCounts.set(ability, remaining - 1)
+            return
+        }
+
+        removed.push(ability)
+    })
+
+    return removed
+}
+
+function inferAnnouncementAbility(previous: AbilityId[], next: AbilityId[], preferred?: AbilityId) {
+    const removed = getRemovedAbilities(previous, next)
+    if (removed.length === 0) {
+        return null
+    }
+
+    if (preferred && removed.includes(preferred)) {
+        return preferred
+    }
+
+    if (removed.length === 1) {
+        return removed[0]
+    }
+
+    return ANNOUNCEMENT_PRIORITY.find(ability => removed.includes(ability)) ?? removed[0]
+}
+
+function getAnnouncementTheme(ability: AbilityId): SkillAnnouncement['theme'] {
+    if (ability === 'bomb') {
+        return 'bomb'
+    }
+
+    if (ability === 'gravity') {
+        return 'gravity'
+    }
+
+    if (ability === 'steal_skill' || ability === 'exchange_skill' || ability === 'give_skill') {
+        return 'trick'
+    }
+
+    return 'control'
+}
+
 function canApplyBombKeepingBothColors(board: BoardCell[][], row: number, col: number) {
     const simulated = cloneBoard(board)
 
@@ -365,6 +498,52 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const playerNameByPiece = (piece: Piece) => (piece === playerProfile.piece ? playerProfile.name : opponentProfile.name)
     const arenaTheme = getArenaFromElo(playerProfile.rr)
 
+    const clearSkillAnnouncement = () => {
+        if (skillAnnouncementTimeoutRef.current !== null) {
+            window.clearTimeout(skillAnnouncementTimeoutRef.current)
+            skillAnnouncementTimeoutRef.current = null
+        }
+    }
+
+    const showAbilityError = (message: string) => {
+        if (abilityErrorTimeoutRef.current !== null) {
+            window.clearTimeout(abilityErrorTimeoutRef.current)
+            abilityErrorTimeoutRef.current = null
+        }
+
+        setAbilityError(message)
+        setSystemMessage(message)
+        abilityErrorTimeoutRef.current = window.setTimeout(() => {
+            setAbilityError(null)
+            abilityErrorTimeoutRef.current = null
+        }, 2600)
+    }
+
+    const showSkillAnnouncement = (actor: Piece, ability: AbilityId, direction?: GravityDirection) => {
+        const normalizedAbility = normalizeAbilityForAnnouncement(ability)
+        const abilityMeta = ABILITY_META[normalizedAbility] ?? { name: 'Habilidad', icon: '❓', needsTarget: false }
+        const isSelf = actor === localPieceRef.current
+        const tone: SkillAnnouncement['tone'] = isSelf ? 'self' : 'opponent'
+        const actorLabel = isSelf ? 'Has usado' : `${matchData?.opponentName ?? opponentProfile.name} ha usado`
+        const abilityLabel =
+            normalizedAbility === 'gravity' && direction
+                ? `Gravedad hacia ${GRAVITY_DIRECTION_LABELS[direction]}`
+                : getAbilityDisplayName(normalizedAbility)
+
+        clearSkillAnnouncement()
+        setSkillAnnouncement({
+            actorLabel,
+            abilityLabel,
+            icon: abilityMeta.icon,
+            tone,
+            theme: getAnnouncementTheme(normalizedAbility),
+        })
+        skillAnnouncementTimeoutRef.current = window.setTimeout(() => {
+            setSkillAnnouncement(null)
+            skillAnnouncementTimeoutRef.current = null
+        }, ANNOUNCEMENT_DURATION_MS)
+    }
+
     const [board, setBoard] = useState<BoardCell[][]>(() => createInitialBoard())
     const [questionCells, setQuestionCells] = useState<Set<string>>(() =>
         ENABLE_SPECIAL_MECHANICS_1V1 ? createQuestionCells(createInitialBoard()) : new Set<string>(),
@@ -376,10 +555,17 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [selectingGravityDirection, setSelectingGravityDirection] = useState<{ inventoryIndex: number } | null>(null)
     const [gameOver, setGameOver] = useState(false)
     const [systemMessage, setSystemMessage] = useState('Haz una jugada o usa una habilidad.')
+    const [abilityError, setAbilityError] = useState<string | null>(null)
+    const [skillAnnouncement, setSkillAnnouncement] = useState<SkillAnnouncement | null>(null)
+    const [expandedSkillKey, setExpandedSkillKey] = useState<string | null>(null)
     const validMoves = useMemo(
         () => (isOnlineMatch ? onlineValidMoves : getValidMoves(board, currentTurn)),
         [board, currentTurn, isOnlineMatch, onlineValidMoves],
     )
+    const skillAnnouncementTimeoutRef = useRef<number | null>(null)
+    const abilityErrorTimeoutRef = useRef<number | null>(null)
+    const pendingOnlineSkillRef = useRef<{ actor: Piece; ability: AbilityId; direction?: GravityDirection } | null>(null)
+    const previousOnlineInventoriesRef = useRef<Record<Piece, AbilityId[]>>({ black: [], white: [] })
 
     const rawScore = useMemo(() => countPieces(board), [board])
     const penaltyScore = useMemo(
@@ -462,6 +648,17 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         localPieceRef.current = localPiece
     }, [localPiece])
 
+    useEffect(() => () => {
+        if (skillAnnouncementTimeoutRef.current !== null) {
+            window.clearTimeout(skillAnnouncementTimeoutRef.current)
+            skillAnnouncementTimeoutRef.current = null
+        }
+        if (abilityErrorTimeoutRef.current !== null) {
+            window.clearTimeout(abilityErrorTimeoutRef.current)
+            abilityErrorTimeoutRef.current = null
+        }
+    }, [])
+
     useEffect(() => {
         if (!isOnlineMatch || !matchData?.gameId) {
             return
@@ -498,6 +695,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
                 if (data?.type === 'game_state_update' && data?.payload) {
                     const payload = data.payload
+                    let nextOnlineInventories = previousOnlineInventoriesRef.current
+
                     if (Array.isArray(payload.board)) {
                         const fixedPieces = Array.isArray(payload.fixed_pieces) ? payload.fixed_pieces : []
                         const fixedSet = new Set(fixedPieces.map((p: any) => `${p[0]}-${p[1]}`))
@@ -516,10 +715,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         setQuestionCells(new Set(payload.skill_tiles.map((p: any) => `${p[0]}-${p[1]}`)))
                     }
                     if (payload.skills_inventory) {
-                        setInventories({
+                        nextOnlineInventories = {
                             black: payload.skills_inventory.black || [],
                             white: payload.skills_inventory.white || []
-                        })
+                        }
+                        setInventories(nextOnlineInventories)
                     }
                     setGameOver(Boolean(payload.game_over))
                     setOnlineWinner(payload.winner === 'black' || payload.winner === 'white' ? payload.winner : null)
@@ -537,10 +737,43 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     if (Array.isArray(payload.paused_usernames)) {
                         setPausedUsernames(payload.paused_usernames)
                     }
+
+                    if (payload.skills_inventory) {
+                        const previousInventories = previousOnlineInventoriesRef.current
+                        const pendingSkill = pendingOnlineSkillRef.current
+
+                        if (pendingSkill) {
+                            const resolvedAbility = inferAnnouncementAbility(
+                                previousInventories[pendingSkill.actor] ?? [],
+                                nextOnlineInventories[pendingSkill.actor] ?? [],
+                                pendingSkill.ability,
+                            )
+                            showSkillAnnouncement(
+                                pendingSkill.actor,
+                                resolvedAbility ?? pendingSkill.ability,
+                                pendingSkill.direction,
+                            )
+                            pendingOnlineSkillRef.current = null
+                        } else {
+                            const opponentPiece = getOpponent(localPieceRef.current)
+                            const inferredOpponentAbility = inferAnnouncementAbility(
+                                previousInventories[opponentPiece] ?? [],
+                                nextOnlineInventories[opponentPiece] ?? [],
+                            )
+
+                            if (inferredOpponentAbility) {
+                                showSkillAnnouncement(opponentPiece, inferredOpponentAbility)
+                            }
+                        }
+
+                        previousOnlineInventoriesRef.current = nextOnlineInventories
+                    }
                 }
 
                 if (data?.type === 'error' && data?.payload?.message) {
                     setOnlineStatusMessage(data.payload.message)
+                    showAbilityError(data.payload.message)
+                    pendingOnlineSkillRef.current = null
                 }
 
                 if (data?.type === 'chat_message' && data?.payload) {
@@ -563,6 +796,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         return () => {
             ws.close()
             onlineWsRef.current = null
+            pendingOnlineSkillRef.current = null
         }
         // Solo depende de datos estables: si gameId o localPiece cambian se reconecta correctamente,
         // pero localPiece ya no causa re-montados porque se lee via localPieceRef en los handlers.
@@ -704,7 +938,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         nextQuestions.delete(key)
         const reward = ABILITY_POOL[randomInt(ABILITY_POOL.length)]
         nextInventories[player] = [...nextInventories[player], reward]
-        return `${playerNameByPiece(player)} obtuvo habilidad: ${ABILITY_META[reward].name}.`
+        return `${playerNameByPiece(player)} obtuvo habilidad: ${getAbilityDisplayName(reward)}.`
     }
 
     const finishAction = (
@@ -728,6 +962,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             if (!onlineWsRef.current || onlineWsRef.current.readyState !== WebSocket.OPEN) return
             if (currentTurn !== playerProfile.piece) return
 
+            pendingOnlineSkillRef.current = { actor: playerProfile.piece, ability }
             onlineWsRef.current.send(JSON.stringify({
                 action: 'use_skill',
                 type: ability,
@@ -752,7 +987,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
         nextInventories[player].splice(inventoryIndex, 1)
 
-        let message = `${playerNameByPiece(player)} usó ${ABILITY_META[ability].name}.`
+        let message = `${playerNameByPiece(player)} usó ${getAbilityDisplayName(ability)}.`
 
         if (ability === 'skip_rival') {
             nextSkipTurns[opponent] += 1
@@ -812,28 +1047,33 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
         if (ability === 'gravity_up') {
             const { board: gravityBoard, questionCells: gravityQuestions } = applyGravity(nextBoard, 'up', nextQuestions)
+            showSkillAnnouncement(player, 'gravity', 'up')
             finishAction(gravityBoard, gravityQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia arriba.')
             return
         }
 
         if (ability === 'gravity_down') {
             const { board: gravityBoard, questionCells: gravityQuestions } = applyGravity(nextBoard, 'down', nextQuestions)
+            showSkillAnnouncement(player, 'gravity', 'down')
             finishAction(gravityBoard, gravityQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia abajo.')
             return
         }
 
         if (ability === 'gravity_left') {
             const { board: gravityBoard, questionCells: gravityQuestions } = applyGravity(nextBoard, 'left', nextQuestions)
+            showSkillAnnouncement(player, 'gravity', 'left')
             finishAction(gravityBoard, gravityQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia la izquierda.')
             return
         }
 
         if (ability === 'gravity_right') {
             const { board: gravityBoard, questionCells: gravityQuestions } = applyGravity(nextBoard, 'right', nextQuestions)
+            showSkillAnnouncement(player, 'gravity', 'right')
             finishAction(gravityBoard, gravityQuestions, nextInventories, nextSkipTurns, 'Se aplico gravedad hacia la derecha.')
             return
         }
 
+        showSkillAnnouncement(player, ability)
         finishAction(nextBoard, nextQuestions, nextInventories, nextSkipTurns, message)
     }
 
@@ -865,13 +1105,13 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
         const targetCell = nextBoard[row][col]
         let validTarget = false
-        let message = `${playerNameByPiece(player)} usó ${ABILITY_META[ability].name}.`
+        let message = `${playerNameByPiece(player)} usó ${getAbilityDisplayName(ability)}.`
 
         if (ability === 'bomb') {
             validTarget = targetCell.piece !== null && !targetCell.fixed
             if (validTarget) {
                 if (!canApplyBombKeepingBothColors(nextBoard, row, col)) {
-                    setSystemMessage('Bomba invalida: debe quedar al menos una ficha de cada color.')
+                    showAbilityError('No puedes usar Bomba 3x3 aqui: debe quedar al menos una ficha de cada color.')
                     return
                 }
 
@@ -925,11 +1165,12 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
 
         if (!validTarget) {
-            setSystemMessage('Objetivo invalido para esa habilidad.')
+            showAbilityError(`No puedes usar ${getAbilityDisplayName(ability)} sobre esa casilla.`)
             return
         }
 
         nextInventories[player].splice(inventoryIndex, 1)
+        showSkillAnnouncement(player, ability)
         finishAction(nextBoard, nextQuestions, nextInventories, nextSkipTurns, message)
     }
 
@@ -945,7 +1186,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
         if (ABILITY_META[ability].needsTarget) {
             setPendingAbility({ id: ability, inventoryIndex })
-            setSystemMessage(`Selecciona casilla para ${ABILITY_META[ability].name}.`)
+            setSystemMessage(`Selecciona casilla para ${getAbilityDisplayName(ability)}.`)
             return
         }
 
@@ -959,6 +1200,9 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }
 
     const handleOpponentUseAbility = (ability: AbilityId, inventoryIndex: number) => {
+        // In online matches the opponent is a real remote player; local user must never control their skills
+        if (isOnlineMatch) return
+
         if (!ENABLE_SPECIAL_MECHANICS_1V1 || gameOver || currentTurn !== opponentProfile.piece) {
             return
         }
@@ -970,7 +1214,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
         if (ABILITY_META[ability].needsTarget) {
             setPendingAbility({ id: ability, inventoryIndex })
-            setSystemMessage(`Selecciona casilla para ${ABILITY_META[ability].name}.`)
+            setSystemMessage(`Selecciona casilla para ${getAbilityDisplayName(ability)}.`)
             return
         }
 
@@ -988,6 +1232,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 if (!onlineWsRef.current || onlineWsRef.current.readyState !== WebSocket.OPEN) return
                 if (currentTurn !== playerProfile.piece) return
 
+                pendingOnlineSkillRef.current = { actor: playerProfile.piece, ability: pendingAbility.id }
                 onlineWsRef.current.send(JSON.stringify({
                     action: 'use_skill',
                     type: pendingAbility.id,
@@ -1137,7 +1382,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 message
             }))
         } else {
-            // Local fallback for testing or just ignore
             setChatMessages(prev => [...prev, { sender: playerProfile.name, message }])
         }
     }
@@ -1160,6 +1404,54 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const playerScoreFinal = playerProfile.piece === 'black' ? finalScore.black : finalScore.white
     const opponentScoreFinal = playerProfile.piece === 'black' ? finalScore.white : finalScore.black
 
+    const renderSkillCard = (
+        ability: AbilityId,
+        index: number,
+        owner: Piece,
+        onUse: (ability: AbilityId, inventoryIndex: number) => void,
+        forceDisabled?: boolean,
+    ) => {
+        const skillKey = `${owner}-${ability}-${index}`
+        const isExpanded = expandedSkillKey === skillKey
+        const isActive = !forceDisabled && pendingAbility?.inventoryIndex === index && currentTurn === owner
+        const meta = ABILITY_META[ability] || { icon: '❓', name: 'Desconocida', needsTarget: false }
+        const displayName = getAbilityDisplayName(ability)
+        const description = ABILITY_DESCRIPTIONS[ability] || 'Sin descripcion disponible.'
+
+        return (
+            <div
+                key={skillKey}
+                className={`duel__skill-card ${isActive ? 'duel__skill-card--active' : ''} ${isExpanded ? 'duel__skill-card--expanded' : ''} ${forceDisabled ? 'duel__skill-card--opponent-view' : ''}`}
+            >
+                <button
+                    className="duel__skill-main"
+                    onClick={() => onUse(ability, index)}
+                    type="button"
+                    disabled={forceDisabled || gameOver || currentTurn !== owner}
+                >
+                    <span className="duel__skill-icon">{meta.icon}</span>
+                    <div className="duel__skill-text">
+                        <span className="duel__skill-name">{displayName}</span>
+                    </div>
+                </button>
+                <button
+                    className={`duel__skill-info-toggle ${isExpanded ? 'duel__skill-info-toggle--open' : ''}`}
+                    type="button"
+                    onClick={() => setExpandedSkillKey(current => (current === skillKey ? null : skillKey))}
+                    aria-expanded={isExpanded}
+                    aria-label={`Ver descripcion de ${displayName}`}
+                >
+                    Info
+                </button>
+                {isExpanded && (
+                    <div className="duel__skill-description">
+                        {description}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
     return (
         <div className="duel">
             {!gameOver && pausedUsernames.length > 0 && (
@@ -1167,6 +1459,23 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     <p className="duel__paused-text">
                         Partida pausada: espera a que vuelva {pausedUsernames.join(', ')}.
                     </p>
+                </div>
+            )}
+            {skillAnnouncement && (
+                <div
+                    className={`duel__skill-announcement duel__skill-announcement--${skillAnnouncement.tone} duel__skill-announcement--${skillAnnouncement.theme}`}
+                    aria-live="polite"
+                >
+                    <span className="duel__skill-announcement-icon">{skillAnnouncement.icon}</span>
+                    <div className="duel__skill-announcement-copy">
+                        <span className="duel__skill-announcement-actor">{skillAnnouncement.actorLabel}</span>
+                        <span className="duel__skill-announcement-name">{skillAnnouncement.abilityLabel}</span>
+                    </div>
+                </div>
+            )}
+            {abilityError && (
+                <div className="duel__ability-error" aria-live="assertive" role="alert">
+                    {abilityError}
                 </div>
             )}
             <div className="home__bg">
@@ -1212,7 +1521,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                             <div className="duel__ability-pending-bar">
                                 <span className="duel__ability-pending-text">
                                     {pendingAbility
-                                        ? `Usando: ${ABILITY_META[pendingAbility.id].name}`
+                                        ? `Usando: ${getAbilityDisplayName(pendingAbility.id)}`
                                         : 'Selecciona Direccion de Gravedad'}
                                 </span>
                                 <button
@@ -1238,6 +1547,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                             const { inventoryIndex } = selectingGravityDirection
                                             if (isOnlineMatch) {
                                                 if (onlineWsRef.current?.readyState === WebSocket.OPEN) {
+                                                    pendingOnlineSkillRef.current = { actor: playerProfile.piece, ability: 'gravity', direction: dir }
                                                     onlineWsRef.current.send(JSON.stringify({
                                                         action: 'use_skill',
                                                         type: 'gravity',
@@ -1249,6 +1559,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                                 const { board: nextBoard, questionCells: nextQuestions } = applyGravity(board, dir, questionCells)
                                                 const nextInventories = JSON.parse(JSON.stringify(inventories))
                                                 nextInventories[currentTurn].splice(inventoryIndex, 1)
+                                                showSkillAnnouncement(currentTurn, 'gravity', dir)
                                                 finishAction(nextBoard, nextQuestions, nextInventories, skipTurns, `Gravedad aplicada hacia ${dir}`)
                                             }
                                             setSelectingGravityDirection(null)
@@ -1287,7 +1598,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                 <h2 className="duel__panel-title">Habilidades</h2>
                                 <div className="duel__skills">
                                     {inventories[playerProfile.piece].length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
-                                    {inventories[playerProfile.piece].map((ability, index) => (
+                                    {inventories[playerProfile.piece].map((ability, index) => false ? (
                                         <button
                                             key={`${ability}-${index}-${playerProfile.piece}`}
                                             className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === playerProfile.piece ? 'duel__skill-card--active' : ''}`}
@@ -1301,7 +1612,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                                 <span className="duel__skill-uses">1 uso</span>
                                             </div>
                                         </button>
-                                    ))}
+                                    ) : renderSkillCard(ability, index, playerProfile.piece, handleUseAbility))}
                                 </div>
                             </>
                         )}
@@ -1311,6 +1622,18 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         className="duel__board-area"
                         style={{ '--duel-board-area-bg': `url(${arenaTheme.background})` } as CSSProperties}
                     >
+                        {skillAnnouncement && (
+                            <div
+                                className={`duel__skill-announcement duel__skill-announcement--${skillAnnouncement.tone} duel__skill-announcement--${skillAnnouncement.theme}`}
+                                aria-live="polite"
+                            >
+                                <span className="duel__skill-announcement-icon">{skillAnnouncement.icon}</span>
+                                <div className="duel__skill-announcement-copy">
+                                    <span className="duel__skill-announcement-actor">{skillAnnouncement.actorLabel}</span>
+                                    <span className="duel__skill-announcement-name">{skillAnnouncement.abilityLabel}</span>
+                                </div>
+                            </div>
+                        )}
                         <div
                             className="duel__board"
                             style={{ backgroundImage: `url(${arenaTheme.board})` }}
@@ -1334,14 +1657,17 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                     >
                                         {hasQuestion && <span className="duel__question">?</span>}
                                         {cell.piece && (
-                                            <span
-                                                className={`duel-piece ${cell.piece === 'black' ? 'duel-piece--black' : 'duel-piece--white'} ${cell.fixed ? 'duel-piece--fixed' : ''}`}
-                                                style={{
-                                                    background: cell.piece === 'black'
-                                                        ? selectedPieceStyle1v1.sideA
-                                                        : selectedPieceStyle1v1.sideB,
-                                                }}
-                                            />
+                                            <>
+                                                <span
+                                                    className={`duel-piece ${cell.piece === 'black' ? 'duel-piece--black' : 'duel-piece--white'} ${cell.fixed ? 'duel-piece--fixed' : ''}`}
+                                                    style={{
+                                                        background: cell.piece === 'black'
+                                                            ? selectedPieceStyle1v1.sideA
+                                                            : selectedPieceStyle1v1.sideB,
+                                                    }}
+                                                />
+                                                {cell.fixed && <span className="duel-piece-lock">🔒</span>}
+                                            </>
                                         )}
                                     </button>
                                 )
@@ -1369,21 +1695,10 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                 <h2 className="duel__panel-title">Habilidades</h2>
                                 <div className="duel__skills">
                                     {inventories[opponentProfile.piece].length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
-                                    {inventories[opponentProfile.piece].map((ability, index) => (
-                                        <button
-                                            key={`${ability}-${index}-${opponentProfile.piece}`}
-                                            className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === opponentProfile.piece ? 'duel__skill-card--active' : ''}`}
-                                            onClick={() => handleOpponentUseAbility(ability, index)}
-                                            type="button"
-                                            disabled={gameOver || currentTurn !== opponentProfile.piece}
-                                        >
-                                            <span className="duel__skill-icon">{(ABILITY_META[ability] || { icon: '❓' }).icon}</span>
-                                            <div className="duel__skill-text">
-                                                <span className="duel__skill-name">{(ABILITY_META[ability] || { name: 'Desconocida' }).name}</span>
-                                                <span className="duel__skill-uses">1 uso</span>
-                                            </div>
-                                        </button>
-                                    ))}
+                                    {inventories[opponentProfile.piece].map((ability, index) =>
+                                        // forceDisabled=isOnlineMatch: use-button blocked for local player, Info button stays functional
+                                        renderSkillCard(ability, index, opponentProfile.piece, handleOpponentUseAbility, isOnlineMatch)
+                                    )}
                                 </div>
                             </>
                         )}
