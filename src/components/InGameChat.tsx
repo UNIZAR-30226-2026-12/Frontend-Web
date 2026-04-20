@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import '../styles/components/InGameChat.css';
 
 export interface ChatMessage {
@@ -17,6 +17,10 @@ interface InGameChatProps {
 const InGameChat: React.FC<InGameChatProps> = ({ messages, myUsername, isOpen, onClose, onSend }) => {
     const [text, setText] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const previousFocusedElementRef = useRef<HTMLElement | null>(null);
+    const titleId = 'ingame-chat-title';
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -27,6 +31,68 @@ const InGameChat: React.FC<InGameChatProps> = ({ messages, myUsername, isOpen, o
             scrollToBottom();
         }
     }, [messages, isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        previousFocusedElementRef.current = document.activeElement as HTMLElement | null;
+        const focusableElements = modalRef.current?.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+
+        window.requestAnimationFrame(() => {
+            if (focusableElements && focusableElements.length > 0) {
+                focusableElements[0].focus();
+            } else {
+                closeButtonRef.current?.focus();
+            }
+        });
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (!modalRef.current) return;
+
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                onClose();
+                return;
+            }
+
+            if (event.key !== 'Tab') return;
+
+            const focusable = Array.from(
+                modalRef.current.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                )
+            );
+
+            if (focusable.length === 0) {
+                event.preventDefault();
+                modalRef.current.focus();
+                return;
+            }
+
+            const firstElement = focusable[0];
+            const lastElement = focusable[focusable.length - 1];
+            const activeElement = document.activeElement as HTMLElement | null;
+
+            if (event.shiftKey) {
+                if (activeElement === firstElement || !modalRef.current.contains(activeElement)) {
+                    event.preventDefault();
+                    lastElement.focus();
+                }
+            } else if (activeElement === lastElement) {
+                event.preventDefault();
+                firstElement.focus();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            previousFocusedElementRef.current?.focus?.();
+        };
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -46,15 +112,23 @@ const InGameChat: React.FC<InGameChatProps> = ({ messages, myUsername, isOpen, o
 
     return (
         <div className="ingame-chat-overlay" onClick={onClose}>
-            <div className="ingame-chat-modal" onClick={e => e.stopPropagation()}>
+            <div
+                className="ingame-chat-modal"
+                onClick={e => e.stopPropagation()}
+                ref={modalRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                tabIndex={-1}
+            >
                 <div className="ingame-chat-header">
-                    <h3>Chat de partida</h3>
-                    <button className="ingame-chat-close" onClick={onClose}>Cerrar</button>
+                    <h3 id={titleId}>Chat de partida</h3>
+                    <button type="button" className="ingame-chat-close" onClick={onClose} ref={closeButtonRef}>Cerrar</button>
                 </div>
 
-                <div className="ingame-chat-messages">
+                <div className="ingame-chat-messages" role="log" aria-live="polite" aria-relevant="additions text">
                     {messages.length === 0 ? (
-                        <div className="ingame-chat-empty">No hay mensajes todavía.</div>
+                        <div className="ingame-chat-empty">No hay mensajes todavÃ­a.</div>
                     ) : (
                         messages.map((msg, index) => {
                             const isMine = msg.sender === myUsername;
@@ -72,7 +146,9 @@ const InGameChat: React.FC<InGameChatProps> = ({ messages, myUsername, isOpen, o
                 </div>
 
                 <div className="ingame-chat-input-area">
+                    <label htmlFor="ingame-chat-input" className="sr-only">Escribe un mensaje</label>
                     <input
+                        id="ingame-chat-input"
                         type="text"
                         className="ingame-chat-input"
                         placeholder="Escribe un mensaje..."
@@ -81,8 +157,9 @@ const InGameChat: React.FC<InGameChatProps> = ({ messages, myUsername, isOpen, o
                         onKeyDown={handleKeyPress}
                         autoFocus
                     />
-                    <button 
-                        className="ingame-chat-send" 
+                    <button
+                        type="button"
+                        className="ingame-chat-send"
                         onClick={handleSend}
                         disabled={text.trim() === ''}
                     >

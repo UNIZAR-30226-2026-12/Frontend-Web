@@ -1036,3 +1036,17 @@
     }
 }
 
+.duel-quad__leave-btn:focus-visible,
+.duel-quad__pause-btn:focus-visible,
+.duel-quad__ability-cancel-btn:focus-visible,
+.duel-quad__gravity-btn:focus-visible,
+.duel-quad__skill-main:focus-visible,
+.duel-quad__skill-info-toggle:focus-visible,
+.duel-quad__cell:focus-visible,
+.duel-quad-result__back-btn:focus-visible,
+.duel-quad-leave-confirm__btn:focus-visible,
+.ingame-chat-btn:focus-visible {
+    outline: 3px solid #facc15;
+    outline-offset: 2px;
+}
+

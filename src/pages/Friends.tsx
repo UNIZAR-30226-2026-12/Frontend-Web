@@ -117,6 +117,11 @@ function Friends({ onNavigate }: FriendsProps) {
     const [chatSending, setChatSending] = useState(false)
     const toastTimer = useRef<number | null>(null)
     const chatListRef = useRef<HTMLDivElement | null>(null)
+    const addFriendModalTitleId = 'friends-add-modal-title'
+    const addFriendModalDescId = 'friends-add-modal-desc'
+    const groupInviteModalTitleId = 'friends-group-modal-title'
+    const groupInviteModalDescId = 'friends-group-modal-desc'
+    const chatModalTitleId = 'friends-chat-modal-title'
 
     const fetchFriends = async () => {
         try {
@@ -457,16 +462,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                     sortedFriends.map(friend => (
                                         <div
                                             key={friend.id}
-                                            className="friend-card friend-card--friend friend-card--clickable"
-                                            role="button"
-                                            tabIndex={0}
-                                            onClick={() => navigateToProfile(friend.id, friend.name)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault()
-                                                    navigateToProfile(friend.id, friend.name)
-                                                }
-                                            }}
+                                            className="friend-card friend-card--friend"
                                         >
                                             <div className="friend-card__info">
                                                 <div className={`friend-card__avatar-ring ${friend.status === 'online' ? 'friend-card__avatar-ring--online' : ''}`}>
@@ -474,7 +470,13 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 </div>
                                                 <div className="friend-card__details">
                                                     <div className="friend-card__name-row">
-                                                        <span className="friend-card__name">{friend.name}</span>
+                                                        <button
+                                                            type="button"
+                                                            className="friend-card__name friend-card__name--link"
+                                                            onClick={() => navigateToProfile(friend.id, friend.name)}
+                                                        >
+                                                            {friend.name}
+                                                        </button>
                                                         <span className="friend-card__rr">{friend.rr} RR</span>
                                                     </div>
                                                     <p className={`friend-card__status friend-card__status--${friend.status}`}>
@@ -485,10 +487,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                             <div className="friend-card__actions">
                                                 <button
                                                     className="friend-btn friend-btn--invite"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        handleInvite(friend)
-                                                    }}
+                                                    onClick={() => handleInvite(friend)}
                                                     disabled={friend.status === 'offline'}
                                                     title="Invitar a jugar"
                                                 >
@@ -496,10 +495,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 </button>
                                                 <button
                                                     className="friend-btn friend-btn--chat"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        handleOpenChat(friend)
-                                                    }}
+                                                    onClick={() => handleOpenChat(friend)}
                                                     title={`Chatear con ${friend.name}`}
                                                 >
                                                     Chat
@@ -511,10 +507,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 </button>
                                                 <button
                                                     className="friend-btn friend-btn--remove"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        handleRemove(friend.id)
-                                                    }}
+                                                    onClick={() => handleRemove(friend.id)}
                                                     title="Eliminar amigo"
                                                 >
                                                     Eliminar
@@ -722,7 +715,12 @@ function Friends({ onNavigate }: FriendsProps) {
                 </footer>
             </div>
 
-            <div className={`popup-toast popup-toast--${toast.type} ${toast.visible ? 'popup-toast--visible' : ''}`}>
+            <div
+                className={`popup-toast popup-toast--${toast.type} ${toast.visible ? 'popup-toast--visible' : ''}`}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+            >
                 <span className="popup-toast__icon">
                     {toast.type === 'success' && 'OK'}
                     {toast.type === 'info' && 'i'}
@@ -737,18 +735,23 @@ function Friends({ onNavigate }: FriendsProps) {
                 overlayClassName="popup-overlay"
                 boxClassName="popup-box popup-box--compact"
                 closeButtonClassName="popup-close"
+                ariaLabelledBy={addFriendModalTitleId}
+                ariaDescribedBy={addFriendModalDescId}
             >
                 <div className="friends-modal popup-surface">
-                    <h3 className="friends-modal__title">Anadir nuevo amigo</h3>
-                    <p className="friends-modal__subtitle">Escribe su nombre de usuario para enviarle una solicitud de amistad</p>
+                    <h3 className="friends-modal__title" id={addFriendModalTitleId}>Anadir nuevo amigo</h3>
+                    <p className="friends-modal__subtitle" id={addFriendModalDescId}>Escribe su nombre de usuario para enviarle una solicitud de amistad</p>
                     <form className="friends-modal__form" onSubmit={handleAddFriend}>
+                        <label htmlFor="friends-add-input" className="sr-only">Nombre de usuario</label>
                         <input
+                            id="friends-add-input"
                             type="text"
                             className="friends__input"
                             placeholder="Nombre de usuario"
                             value={newFriendName}
                             onChange={(e) => setNewFriendName(e.target.value)}
                             autoFocus
+                            required
                         />
                         <button type="submit" className="friends__add-btn">
                             Enviar solicitud
@@ -775,10 +778,12 @@ function Friends({ onNavigate }: FriendsProps) {
                 overlayClassName="popup-overlay"
                 boxClassName="popup-box popup-box--compact"
                 closeButtonClassName="popup-close"
+                ariaLabelledBy={groupInviteModalTitleId}
+                ariaDescribedBy={groupInviteModalDescId}
             >
                 <div className="friends-group-invite popup-surface">
-                    <h3 className="friends-group-invite__title">Selecciona 2 amigos extra</h3>
-                    <p className="friends-group-invite__subtitle">
+                    <h3 className="friends-group-invite__title" id={groupInviteModalTitleId}>Selecciona 2 amigos extra</h3>
+                    <p className="friends-group-invite__subtitle" id={groupInviteModalDescId}>
                         Para iniciar 1vs1vs1vs1 con {selectedFriend?.name}, elige dos jugadores mas.
                     </p>
 
@@ -827,6 +832,7 @@ function Friends({ onNavigate }: FriendsProps) {
                 overlayClassName="popup-overlay"
                 boxClassName="popup-box popup-box--chat"
                 closeButtonClassName="popup-close"
+                ariaLabelledBy={chatModalTitleId}
             >
                 <div className="friends-chat popup-surface">
                     <div className="friends-chat__header">
@@ -836,12 +842,12 @@ function Friends({ onNavigate }: FriendsProps) {
                             alt={`Avatar de ${activeChatFriend?.name || 'amigo'}`}
                         />
                         <div className="friends-chat__header-info">
-                            <h3 className="friends-chat__title">Chat con {activeChatFriend?.name}</h3>
+                            <h3 className="friends-chat__title" id={chatModalTitleId}>Chat con {activeChatFriend?.name}</h3>
                             <p className="friends-chat__subtitle">Mensajes privados entre amigos</p>
                         </div>
                     </div>
 
-                    <div className="friends-chat__messages" ref={chatListRef}>
+                    <div className="friends-chat__messages" ref={chatListRef} role="log" aria-live="polite" aria-relevant="additions text">
                         {chatLoading ? (
                             <p className="friends__empty">Cargando mensajes...</p>
                         ) : chatMessages.length === 0 ? (
@@ -867,7 +873,9 @@ function Friends({ onNavigate }: FriendsProps) {
                     </div>
 
                     <form className="friends-chat__composer" onSubmit={handleSendChatMessage}>
+                        <label htmlFor="friends-chat-input" className="sr-only">Escribe un mensaje</label>
                         <input
+                            id="friends-chat-input"
                             type="text"
                             className="friends-chat__input"
                             placeholder="Escribe un mensaje..."

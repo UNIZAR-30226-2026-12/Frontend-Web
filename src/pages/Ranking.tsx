@@ -75,6 +75,7 @@ function Ranking({ onNavigate }: RankingProps) {
             </div>
 
             <main className="ranking__stage">
+                <h1 className="sr-only">Ranking global</h1>
                 <header className="ranking__header">
                     <img className="ranking__title-image" src={rankingTitle} alt="Ranking global" />
                     <button
@@ -91,11 +92,11 @@ function Ranking({ onNavigate }: RankingProps) {
                     <img className="ranking__sheet-bg" src={rankingSheet} alt="" aria-hidden="true" />
 
                     {isLoading ? (
-                        <p className="ranking__state">Cargando ranking...</p>
+                        <p className="ranking__state" role="status">Cargando ranking...</p>
                     ) : error ? (
-                        <p className="ranking__state ranking__state--error">{error}</p>
+                        <p className="ranking__state ranking__state--error" role="alert">{error}</p>
                     ) : ranking.length === 0 ? (
-                        <p className="ranking__state">No hay jugadores para mostrar.</p>
+                        <p className="ranking__state" role="status">No hay jugadores para mostrar.</p>
                     ) : (
                         <div className="ranking__table">
                             {ranking.map((entry, index) => (

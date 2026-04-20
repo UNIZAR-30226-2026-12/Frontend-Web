@@ -40,6 +40,11 @@
   color: var(--color-text);
 }
 
+.modal-close:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
 /* ===== Animaciones ===== */
 @keyframes fadeIn {
   from { opacity: 0; }

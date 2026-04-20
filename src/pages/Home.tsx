@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import LoginModal from '../components/LoginModal'
 import RegisterModal from '../components/RegisterModal'
 import ForgotPasswordModal from '../components/ForgotPasswordModal'
@@ -41,6 +41,7 @@ function Home({ onNavigate }: HomeProps) {
       </div>
 
       <main className="home__content">
+        <h1 className="sr-only">Random Reversi</h1>
         <img className="home__logo" src={logoReversi} alt="Random Reversi" />
 
         <section className="home__message" aria-label="Descripcion del juego">
@@ -97,4 +98,7 @@ function Home({ onNavigate }: HomeProps) {
 }
 
 export default Home
+
+
+
 

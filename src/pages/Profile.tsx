@@ -302,12 +302,17 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                             <span className="profile__rr-badge">{stats?.elo ?? 1000} RR</span>
                         </div>
 
-                        <nav className="profile__tabs">
+                        <nav className="profile__tabs" role="tablist" aria-label="Secciones del perfil">
                             {tabs.map((tab) => (
                                 <button
                                     key={tab.key}
                                     className={`profile__tab profile__tab--${tab.key}${activeTab === tab.key ? ' profile__tab--active' : ''}`}
                                     onClick={() => setActiveTab(tab.key)}
+                                    type="button"
+                                    role="tab"
+                                    id={`profile-tab-${tab.key}`}
+                                    aria-selected={activeTab === tab.key}
+                                    aria-controls={`profile-panel-${tab.key}`}
                                 >
                                     <span className="profile__tab-icon">{tab.icon}</span>
                                     <span>{tab.label}</span>
@@ -317,12 +322,14 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                     </div>
 
                     {activeTab === 'resumen' && (
-                        <nav className="profile__mode-tabs">
+                        <nav className="profile__mode-tabs" aria-label="Modo de estadisticas">
                             {statsModeTabs.map((tab) => (
                                 <button
                                     key={tab.key}
                                     className={`profile__mode-tab${activeStatsMode === tab.key ? ' profile__mode-tab--active' : ''}`}
                                     onClick={() => setActiveStatsMode(tab.key)}
+                                    type="button"
+                                    aria-pressed={activeStatsMode === tab.key}
                                 >
                                     {tab.label}
                                 </button>
@@ -333,15 +340,20 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
 
                 <main className="profile__content">
                     {loading ? (
-                        <div className="profile__state-card">
+                        <div className="profile__state-card" role="status">
                             <div className="profile__spinner" />
                             <span>Cargando datos...</span>
                         </div>
                     ) : error ? (
-                        <div className="profile__state-card profile__state-card--error">{error}</div>
+                        <div className="profile__state-card profile__state-card--error" role="alert">{error}</div>
                     ) : activeTab === 'resumen' ? (
                         isOwnProfile ? (
-                            <section className="profile__summary-stage">
+                            <section
+                                className="profile__summary-stage"
+                                id="profile-panel-resumen"
+                                role="tabpanel"
+                                aria-labelledby="profile-tab-resumen"
+                            >
                                 <div className="profile__proto-grid">
                                     <article className="profile__proto-card profile__proto-card--winrate">
                                         <img className="profile__proto-bg" src={winRateCard} alt="" aria-hidden="true" />
@@ -431,7 +443,12 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                 </div>
                             </section>
                         ) : (
-                            <section className="profile__friend-grid">
+                            <section
+                                className="profile__friend-grid"
+                                id="profile-panel-resumen"
+                                role="tabpanel"
+                                aria-labelledby="profile-tab-resumen"
+                            >
                                 <article className="profile__paper-card profile__paper-card--friend-winrate">
                                     <h3 className="profile__paper-title">Win Rate</h3>
                                     <div className="profile__friend-winrate-body">
@@ -504,7 +521,12 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                         )
                     ) : (
                         isOwnProfile && (
-                            <section className="profile__settings-stage">
+                            <section
+                                className="profile__settings-stage"
+                                id="profile-panel-ajustes"
+                                role="tabpanel"
+                                aria-labelledby="profile-tab-ajustes"
+                            >
                                 <div className="profile__paper-card profile__paper-card--settings">
                                     <h3 className="profile__paper-title">Ajustes de cuenta</h3>
 
@@ -565,10 +587,10 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                         </label>
                                     </div>
 
-                                    {settingsError && <p className="profile__form-msg profile__form-msg--error">{settingsError}</p>}
-                                    {settingsSuccess && <p className="profile__form-msg profile__form-msg--ok">{settingsSuccess}</p>}
+                                    {settingsError && <p className="profile__form-msg profile__form-msg--error" role="alert">{settingsError}</p>}
+                                    {settingsSuccess && <p className="profile__form-msg profile__form-msg--ok" role="status">{settingsSuccess}</p>}
 
-                                    <button className="profile__save-btn" onClick={handleSaveSettings} disabled={savingSettings}>
+                                    <button type="button" className="profile__save-btn" onClick={handleSaveSettings} disabled={savingSettings}>
                                         {savingSettings ? 'Guardando...' : 'Guardar cambios'}
                                     </button>
                                 </div>

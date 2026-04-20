@@ -1057,3 +1057,17 @@
     color: #fff;
 }
 
+.duel__leave-btn:focus-visible,
+.duel__pause-btn:focus-visible,
+.duel__ability-cancel-btn:focus-visible,
+.duel__gravity-btn:focus-visible,
+.duel__skill-main:focus-visible,
+.duel__skill-info-toggle:focus-visible,
+.duel__cell:focus-visible,
+.duel-result__back-btn:focus-visible,
+.duel-leave-confirm__btn:focus-visible,
+.ingame-chat-btn:focus-visible {
+    outline: 3px solid #facc15;
+    outline-offset: 2px;
+}
+

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+﻿import { useState, type FormEvent } from 'react'
 import { api } from '../services/api'
 import Modal from './Modal'
 import loginPostit from '../assets/inicio/positIniciarSesion.png'
@@ -50,6 +50,8 @@ function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword }: LoginModa
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const titleId = 'login-modal-title'
+  const errorId = 'login-modal-error'
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
@@ -76,16 +78,18 @@ function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword }: LoginModa
       showCloseButton={false}
       overlayClassName="auth-modal-overlay"
       boxClassName="auth-modal-box auth-modal-box--login"
+      ariaLabelledBy={titleId}
+      ariaDescribedBy={error ? errorId : undefined}
     >
       <div className="auth-form auth-form--prototype auth-form--login">
         <img className="auth-form__paper" src={loginPostit} alt="" aria-hidden="true" />
         <img className="auth-form__mascot auth-form__mascot--login" src={loginMascot} alt="" aria-hidden="true" />
 
         <div className="auth-form__content">
-          <h2 className="auth-form__sr-title">Iniciar Sesión</h2>
+          <h2 className="auth-form__sr-title" id={titleId}>Iniciar Sesión</h2>
 
           <form className="auth-form__fields" onSubmit={handleLogin}>
-            {error && <div className="auth-form__error">{error}</div>}
+            {error && <div className="auth-form__error" id={errorId} role="alert">{error}</div>}
 
             <label className="auth-form__label">
               Usuario o Correo
@@ -95,6 +99,9 @@ function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword }: LoginModa
                 placeholder="Tu Usuario o Correo"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                aria-invalid={!!error}
+                aria-describedby={error ? errorId : undefined}
+                autoComplete="username"
                 required
               />
             </label>
@@ -105,9 +112,12 @@ function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword }: LoginModa
                 <input
                   type={showPassword ? 'text' : 'password'}
                   className="auth-form__input auth-form__input--password"
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={!!error}
+                  aria-describedby={error ? errorId : undefined}
+                  autoComplete="current-password"
                   required
                 />
                 <button
@@ -123,7 +133,7 @@ function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword }: LoginModa
             </label>
 
             <button type="submit" className="auth-form__image-submit" aria-label="Entrar">
-              <img src={enterButton} alt="" />
+              <img src={enterButton} alt="" aria-hidden="true" />
             </button>
 
             <button
@@ -144,3 +154,4 @@ function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword }: LoginModa
 }
 
 export default LoginModal
+

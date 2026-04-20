@@ -34,6 +34,7 @@ function Rules({ onNavigate }: RulesProps) {
       </header>
 
       <main className="rules__stage">
+        <h1 className="sr-only">Reglas del juego</h1>
         <img className="rules__title-image" src={rulesTitleImage} alt="Reglas del Random Reversi" />
 
         <section className="rules__sheet">
@@ -139,4 +140,6 @@ function Rules({ onNavigate }: RulesProps) {
 }
 
 export default Rules
+
+
 

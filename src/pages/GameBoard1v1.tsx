@@ -1454,6 +1454,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
     return (
         <div className="duel">
+            <h1 className="sr-only">Partida 1 contra 1</h1>
             {!gameOver && pausedUsernames.length > 0 && (
                 <div className="duel__paused-status">
                     <p className="duel__paused-text">
@@ -1478,7 +1479,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     {abilityError}
                 </div>
             )}
-            <div className="home__bg">
+            <div className="home__bg" aria-hidden="true">
                 <span className="home__chip home__chip--1">⚫</span>
                 <span className="home__chip home__chip--2">⚪</span>
                 <span className="home__chip home__chip--3">🔴</span>
@@ -1498,17 +1499,17 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
             <div className="duel__container">
                 <div style={{ display: 'flex', gap: '12px', position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
                     {!isAiMatch && (
-                        <button className="ingame-chat-btn" onClick={toggleChat}>
+                        <button type="button" className="ingame-chat-btn" onClick={toggleChat}>
                             Chat
                             {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
                         </button>
                     )}
                     {isOnlineMatch && matchData?.returnTo === 'friends' && (
-                        <button className="duel__pause-btn" onClick={handleAttemptPause}>
+                        <button type="button" className="duel__pause-btn" onClick={handleAttemptPause}>
                             Pausar
                         </button>
                     )}
-                    <button className="duel__leave-btn" style={{ position: 'static' }} onClick={handleAttemptLeave}>
+                    <button type="button" className="duel__leave-btn" style={{ position: 'static' }} onClick={handleAttemptLeave}>
                         Abandonar partida
                     </button>
                 </div>
@@ -1526,6 +1527,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                 </span>
                                 <button
                                     className="duel__ability-cancel-btn"
+                                    type="button"
                                     onClick={() => {
                                         setPendingAbility(null)
                                         setSelectingGravityDirection(null)
@@ -1543,6 +1545,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                     <button
                                         key={dir}
                                         className={`duel__gravity-btn duel__gravity-btn--${dir}`}
+                                        type="button"
                                         onClick={() => {
                                             const { inventoryIndex } = selectingGravityDirection
                                             if (isOnlineMatch) {
@@ -1654,6 +1657,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                         onClick={() => handleCellClick(row, col)}
                                         disabled={gameOver || pausedUsernames.length > 0}
                                         type="button"
+                                        aria-label={`Casilla ${row + 1}-${col + 1}`}
+                                        tabIndex={isPlayable ? 0 : -1}
                                     >
                                         {hasQuestion && <span className="duel__question">?</span>}
                                         {cell.piece && (
@@ -1706,10 +1711,16 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 </main>
             </div>
 
-            <Modal isOpen={gameOver} onClose={() => onNavigate(postGameScreen)} maxWidth="560px" showCloseButton={false}>
+            <Modal
+                isOpen={gameOver}
+                onClose={() => onNavigate(postGameScreen)}
+                maxWidth="560px"
+                showCloseButton={false}
+                ariaLabelledBy="duel-result-title"
+            >
                 <div className="duel-result">
                     <div className="duel-result__top">
-                        <h2 className="duel-result__title">Partida finalizada</h2>
+                        <h2 className="duel-result__title" id="duel-result-title">Partida finalizada</h2>
                         <p className={`duel-result__rr duel-result__rr--badge ${rrDelta > 0 ? 'duel-result__rr--up' : rrDelta < 0 ? 'duel-result__rr--down' : 'duel-result__rr--neutral'}`}>
                             {`${rrDelta >= 0 ? '+' : ''}${rrDelta} RR`}
                         </p>
@@ -1735,15 +1746,20 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         </p>
                     )}
 
-                    <button className="duel-result__back-btn" onClick={() => onNavigate(postGameScreen)}>
+                    <button type="button" className="duel-result__back-btn" onClick={() => onNavigate(postGameScreen)}>
                         {matchData?.returnTo === 'online-game' ? 'Volver a partidas' : isOnlineMatch ? 'Volver a amigos' : 'Volver al menú'}
                     </button>
                 </div>
             </Modal>
 
-            <Modal isOpen={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} maxWidth="520px">
+            <Modal
+                isOpen={showLeaveConfirm}
+                onClose={() => setShowLeaveConfirm(false)}
+                maxWidth="520px"
+                ariaLabelledBy="duel-leave-confirm-title"
+            >
                 <div className="duel-leave-confirm">
-                    <h2 className="duel-leave-confirm__title">Abandonar partida</h2>
+                    <h2 className="duel-leave-confirm__title" id="duel-leave-confirm-title">Abandonar partida</h2>
                     <p className="duel-modal__text">
                         {isAiMatch
                             ? "Si abandonas esta partida contra la IA, no se contara como una derrota y no perderas puntos RR."
@@ -1771,9 +1787,14 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 </div>
             </Modal>
 
-            <Modal isOpen={showPauseConfirm} onClose={() => setShowPauseConfirm(false)} maxWidth="520px">
+            <Modal
+                isOpen={showPauseConfirm}
+                onClose={() => setShowPauseConfirm(false)}
+                maxWidth="520px"
+                ariaLabelledBy="duel-pause-confirm-title"
+            >
                 <div className="duel-leave-confirm">
-                    <h2 className="duel-leave-confirm__title">Pausar partida</h2>
+                    <h2 className="duel-leave-confirm__title" id="duel-pause-confirm-title">Pausar partida</h2>
                     <p className="duel-leave-confirm__text">
                         ¿Estás seguro de que quieres pausar la partida? Podrás reanudarla en cualquier momento desde la sección de Amigos.
                     </p>

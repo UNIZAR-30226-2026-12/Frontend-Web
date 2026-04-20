@@ -277,6 +277,7 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
             <div className="online__overlay" aria-hidden="true"></div>
 
             <main className="online__layout">
+                <h1 className="sr-only">Jugar online</h1>
                 <header className="online__header">
                     <img className="online__title-image" src={titleImage} alt="Jugar online" />
 
@@ -438,7 +439,12 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
                 </div>
             </main>
 
-            <div className={`popup-toast popup-toast--${toast.type} ${toast.visible ? 'popup-toast--visible' : ''}`}>
+            <div
+                className={`popup-toast popup-toast--${toast.type} ${toast.visible ? 'popup-toast--visible' : ''}`}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+            >
                 <span className="popup-toast__icon">
                     {toast.type === 'success' && 'OK'}
                     {toast.type === 'info' && 'i'}

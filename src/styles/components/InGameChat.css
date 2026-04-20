@@ -186,3 +186,11 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+.ingame-chat-close:focus-visible,
+.ingame-chat-send:focus-visible,
+.ingame-chat-btn:focus-visible,
+.ingame-chat-input:focus-visible {
+    outline: 2px solid #a78bfa;
+    outline-offset: 2px;
+}

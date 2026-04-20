@@ -57,6 +57,9 @@ function App() {
   const [profileData, setProfileData] = useState<{ userId?: number, username?: string, returnTo?: string }>(() => JSON.parse(localStorage.getItem('profileData') || '{}'))
   const [notification, setNotification] = useState<string | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
+  const notificationCloseButtonRef = useRef<HTMLButtonElement | null>(null)
+  const notificationTitleId = 'popup-notification-title'
+  const notificationDescriptionId = 'popup-notification-description'
 
   const wsNotificationsUrl = useMemo(() => {
     const token = localStorage.getItem('token')
@@ -110,6 +113,53 @@ function App() {
     }
   }, [currentScreen, waitingRoomData.gameId, wsNotificationsUrl])
 
+  useEffect(() => {
+    const titlesByScreen: Record<string, string> = {
+      home: 'Inicio',
+      menu: 'Menu principal',
+      rules: 'Reglas',
+      customization: 'Personalizacion',
+      friends: 'Amigos',
+      profile: 'Perfil',
+      'online-game': 'Jugar online',
+      ranking: 'Ranking',
+      'waiting-room': 'Sala de espera',
+      'game-1vs1': 'Partida 1 vs 1',
+      'game-1v1v1v1': 'Partida 4 jugadores',
+    }
+
+    const screenTitle = titlesByScreen[currentScreen] || 'Random Reversi'
+    document.title = `${screenTitle} | Random Reversi`
+  }, [currentScreen])
+
+  useEffect(() => {
+    if (!notification) return
+
+    const previousFocusedElement = document.activeElement as HTMLElement | null
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setNotification(null)
+        return
+      }
+
+      if (event.key === 'Tab') {
+        event.preventDefault()
+        notificationCloseButtonRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    window.requestAnimationFrame(() => {
+      notificationCloseButtonRef.current?.focus()
+    })
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      previousFocusedElement?.focus?.()
+    }
+  }, [notification])
+
   // Persistencia de estados críticos en cada cambio
   useEffect(() => {
     localStorage.setItem('currentScreen', currentScreen)
@@ -155,41 +205,52 @@ function App() {
 
   return (
     <>
-      {currentScreen === 'home' && <Home onNavigate={navigateTo} />}
-      {currentScreen === 'menu' && <MainMenu onNavigate={navigateTo} />}
-      {currentScreen === 'rules' && <Rules onNavigate={navigateTo} />}
-      {currentScreen === 'customization' && <Customization onNavigate={navigateTo} />}
-      {currentScreen === 'friends' && <Friends onNavigate={navigateTo} />}
-      {currentScreen === 'profile' && <Profile onNavigate={navigateTo} userId={profileData.userId} username={profileData.username} returnTo={profileData.returnTo} />}
-      {currentScreen === 'online-game' && <OnlineGame onNavigate={navigateTo} />}
-      {currentScreen === 'ranking' && <Ranking onNavigate={navigateTo} />}
-      {currentScreen === 'waiting-room' && (
-        <WaitingRoom
-          gameMode={activeGameMode}
-          gameId={waitingRoomData.gameId}
-          returnScreen={waitingRoomReturnScreen}
-          isResume={waitingRoomData.isResume}
-          onNavigate={navigateTo}
-        />
-      )}
-      {currentScreen === 'game-1vs1' && <GameBoard1v1 onNavigate={navigateTo} matchData={activeMatchData} />}
-      {currentScreen === 'game-1v1v1v1' && <GameBoard1v1v1v1 onNavigate={navigateTo} matchData={activeMatchData4Players} />}
+      <a className="skip-link" href="#app-main">Saltar al contenido principal</a>
+
+      <div id="app-main" tabIndex={-1}>
+        {currentScreen === 'home' && <Home onNavigate={navigateTo} />}
+        {currentScreen === 'menu' && <MainMenu onNavigate={navigateTo} />}
+        {currentScreen === 'rules' && <Rules onNavigate={navigateTo} />}
+        {currentScreen === 'customization' && <Customization onNavigate={navigateTo} />}
+        {currentScreen === 'friends' && <Friends onNavigate={navigateTo} />}
+        {currentScreen === 'profile' && <Profile onNavigate={navigateTo} userId={profileData.userId} username={profileData.username} returnTo={profileData.returnTo} />}
+        {currentScreen === 'online-game' && <OnlineGame onNavigate={navigateTo} />}
+        {currentScreen === 'ranking' && <Ranking onNavigate={navigateTo} />}
+        {currentScreen === 'waiting-room' && (
+          <WaitingRoom
+            gameMode={activeGameMode}
+            gameId={waitingRoomData.gameId}
+            returnScreen={waitingRoomReturnScreen}
+            isResume={waitingRoomData.isResume}
+            onNavigate={navigateTo}
+          />
+        )}
+        {currentScreen === 'game-1vs1' && <GameBoard1v1 onNavigate={navigateTo} matchData={activeMatchData} />}
+        {currentScreen === 'game-1v1v1v1' && <GameBoard1v1v1v1 onNavigate={navigateTo} matchData={activeMatchData4Players} />}
+      </div>
 
       {notification && (
-        <div className="popup-notification-overlay" role="alertdialog" aria-modal="true">
-          <div className="popup-notification-card">
+        <div
+          className="popup-notification-overlay"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby={notificationTitleId}
+          aria-describedby={notificationDescriptionId}
+        >
+          <div className="popup-notification-card" tabIndex={-1}>
             <div className="popup-notification-header">
-              <span className="popup-notification-title">NOTIFICACION</span>
+              <span className="popup-notification-title" id={notificationTitleId}>NOTIFICACION</span>
               <button
                 type="button"
                 onClick={() => setNotification(null)}
                 className="popup-notification-close"
                 aria-label="Cerrar"
+                ref={notificationCloseButtonRef}
               >
                 x
               </button>
             </div>
-            <p className="popup-notification-text">{notification}</p>
+            <p className="popup-notification-text" id={notificationDescriptionId}>{notification}</p>
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import { resolveUserAvatar } from '../config/avatarOptions'
@@ -138,6 +138,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                     className="menu__profile-sticker"
                     onClick={() => onNavigate('profile')}
                     title="Ver mi perfil"
+                    aria-label={`Ver perfil de ${user?.username || 'Jugador'}`}
                 >
                     <span className="menu__tape menu__tape--left"></span>
                     <span className="menu__tape menu__tape--right"></span>
@@ -157,6 +158,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
             </div>
 
             <main className="menu__stage">
+                <h1 className="sr-only">Menu principal</h1>
                 <div className="menu__header">
                     <img className="menu__logo" src={logoReversi} alt="Random Reversi" />
                     <p className="menu__subtitle">Elige tu jugada</p>
@@ -203,3 +205,5 @@ function MainMenu({ onNavigate }: MainMenuProps) {
 }
 
 export default MainMenu
+
+

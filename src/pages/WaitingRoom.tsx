@@ -426,6 +426,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
             <img className="waiting-room__question waiting-room__question--right" src={questionMarkImage} alt="" aria-hidden="true" />
 
             <main className="waiting-room__layout">
+                <h1 className="sr-only">Sala de espera</h1>
                 <img className="waiting-room__title-image" src={titleImage} alt="Sala de espera" />
 
                 <section
@@ -435,7 +436,12 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                     <img className="waiting-room__board-image" src={boardImage} alt="" aria-hidden="true" />
 
                     <div className="waiting-room__board-content">
-                        <p className={`waiting-room__status-pill ${isWaitingForPlayers ? 'waiting-room__status-pill--animated' : ''}`}>
+                        <p
+                            className={`waiting-room__status-pill ${isWaitingForPlayers ? 'waiting-room__status-pill--animated' : ''}`}
+                            role="status"
+                            aria-live="polite"
+                            aria-atomic="true"
+                        >
                             <span>{statusText}</span>
                             {isWaitingForPlayers && (
                                 <span className="waiting-room__dots" aria-hidden="true">
@@ -543,7 +549,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                         </div>
 
                         <p className="waiting-room__hint">{helperText}</p>
-                        {toast && <p className="waiting-room__toast">{toast}</p>}
+                        {toast && <p className="waiting-room__toast" role="alert">{toast}</p>}
                     </div>
                 </section>
 

@@ -1260,6 +1260,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
     return (
         <div className="duel-quad">
+            <h1 className="sr-only">Partida de cuatro jugadores</h1>
             {!gameOver && !isAiMatch && pausedUsernames.length > 0 && (
                 <div className="duel__paused-status">
                     <p className="duel__paused-text">
@@ -1284,7 +1285,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     {abilityError}
                 </div>
             )}
-            <div className="home__bg">
+            <div className="home__bg" aria-hidden="true">
                 <span className="home__chip home__chip--1">⚫</span>
                 <span className="home__chip home__chip--2">⚪</span>
                 <span className="home__chip home__chip--3">🔴</span>
@@ -1304,17 +1305,17 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             <div className="duel-quad__container">
                 <div style={{ display: 'flex', gap: '12px', position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
                     {!isAiMatch && (
-                        <button className="ingame-chat-btn" onClick={toggleChat}>
+                        <button type="button" className="ingame-chat-btn" onClick={toggleChat}>
                             Chat
                             {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
                         </button>
                     )}
                     {!isAiMatch && isOnlineMatch && matchData?.returnTo === 'friends' && (
-                        <button className="duel-quad__pause-btn" onClick={handleAttemptPause}>
+                        <button type="button" className="duel-quad__pause-btn" onClick={handleAttemptPause}>
                             Pausar
                         </button>
                     )}
-                    <button className="duel-quad__leave-btn" style={{ position: 'static' }} onClick={handleAttemptLeave}>
+                    <button type="button" className="duel-quad__leave-btn" style={{ position: 'static' }} onClick={handleAttemptLeave}>
                         Abandonar partida
                     </button>
                 </div>
@@ -1335,6 +1336,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                 </span>
                                 <button
                                     className="duel-quad__ability-cancel-btn"
+                                    type="button"
                                     onClick={() => {
                                         setPendingAbility(null)
                                         setSelectingGravityDirection(null)
@@ -1352,6 +1354,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                     <button
                                         key={dir}
                                         className={`duel-quad__gravity-btn duel-quad__gravity-btn--${dir}`}
+                                        type="button"
                                         onClick={() => {
                                             const { inventoryIndex } = selectingGravityDirection
                                             if (isOnlineMatch) {
@@ -1453,6 +1456,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                         aria-label={`Casilla ${row + 1}-${col + 1}`}
                                         onClick={() => handleCellClick(row, col)}
                                         disabled={gameOver || pausedUsernames.length > 0}
+                                        tabIndex={isPlayable ? 0 : -1}
                                     >
                                         {hasQuestion && <span className="duel-quad__question">?</span>}
                                         {cell.piece && (
@@ -1522,10 +1526,16 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 </main>
             </div>
 
-            <Modal isOpen={gameOver} onClose={() => onNavigate(postGameScreen)} maxWidth="600px" showCloseButton={false}>
+            <Modal
+                isOpen={gameOver}
+                onClose={() => onNavigate(postGameScreen)}
+                maxWidth="600px"
+                showCloseButton={false}
+                ariaLabelledBy="duel-quad-result-title"
+            >
                 <div className="duel-quad-result">
                     <div className="duel-quad-result__top">
-                        <h2 className="duel-quad-result__title">Partida finalizada</h2>
+                        <h2 className="duel-quad-result__title" id="duel-quad-result-title">Partida finalizada</h2>
                         <p className={`duel-quad-result__rr duel-quad-result__rr--badge ${rrDelta > 0 ? 'duel-quad-result__rr--up' : rrDelta < 0 ? 'duel-quad-result__rr--down' : 'duel-quad-result__rr--neutral'}`}>
                             {`${rrDelta >= 0 ? '+' : ''}${rrDelta} RR`}
                         </p>
@@ -1553,7 +1563,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                         </p>
                     )}
 
-                    <button className="duel-quad-result__back-btn" onClick={() => onNavigate(postGameScreen)}>
+                    <button type="button" className="duel-quad-result__back-btn" onClick={() => onNavigate(postGameScreen)}>
                         {postGameScreen === 'menu'
                             ? 'Volver al menu'
                             : postGameScreen === 'friends'
@@ -1563,9 +1573,14 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 </div>
             </Modal>
 
-            <Modal isOpen={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} maxWidth="520px">
+            <Modal
+                isOpen={showLeaveConfirm}
+                onClose={() => setShowLeaveConfirm(false)}
+                maxWidth="520px"
+                ariaLabelledBy="duel-quad-leave-confirm-title"
+            >
                 <div className="duel-quad-leave-confirm">
-                    <h2 className="duel-leave-confirm__title">Abandonar partida</h2>
+                    <h2 className="duel-leave-confirm__title" id="duel-quad-leave-confirm-title">Abandonar partida</h2>
                     <p className="duel-modal__text">
                         {isAiMatch
                             ? "Si abandonas esta partida contra la IA, no se contara como una derrota y no perderas puntos RR."
@@ -1593,9 +1608,14 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 </div>
             </Modal>
 
-            <Modal isOpen={!isAiMatch && showPauseConfirm} onClose={() => setShowPauseConfirm(false)} maxWidth="520px">
+            <Modal
+                isOpen={!isAiMatch && showPauseConfirm}
+                onClose={() => setShowPauseConfirm(false)}
+                maxWidth="520px"
+                ariaLabelledBy="duel-quad-pause-confirm-title"
+            >
                 <div className="duel-quad-leave-confirm">
-                    <h2 className="duel-quad-leave-confirm__title">Pausar partida</h2>
+                    <h2 className="duel-quad-leave-confirm__title" id="duel-quad-pause-confirm-title">Pausar partida</h2>
                     <p className="duel-quad-leave-confirm__text">
                         ¿Estás seguro de que quieres pausar la partida? Podrás reanudarla después desde la sección de Amigos.
                     </p>

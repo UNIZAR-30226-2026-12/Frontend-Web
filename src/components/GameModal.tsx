@@ -24,6 +24,8 @@ function GameModal({
 }: GameModalProps) {
     const showOneVsOne = availableModes.includes('1vs1')
     const showFourPlayers = availableModes.includes('1vs1vs1vs1')
+    const titleId = 'game-modal-title'
+    const subtitleId = 'game-modal-subtitle'
 
     return (
         <Modal
@@ -33,14 +35,16 @@ function GameModal({
             overlayClassName="popup-overlay"
             boxClassName="popup-box popup-box--game"
             closeButtonClassName="popup-close"
+            ariaLabelledBy={titleId}
+            ariaDescribedBy={subtitleId}
         >
             <div className="game-modal popup-surface">
-                <h2 className="game-modal__title">{title}</h2>
-                <p className="game-modal__subtitle">{subtitle}</p>
+                <h2 className="game-modal__title" id={titleId}>{title}</h2>
+                <p className="game-modal__subtitle" id={subtitleId}>{subtitle}</p>
 
                 <div className="game-modal__options">
                     {showOneVsOne && (
-                        <button className="game-modal__option" onClick={() => onSelectMode?.('1vs1')} disabled={isLoading}>
+                        <button type="button" className="game-modal__option" onClick={() => onSelectMode?.('1vs1')} disabled={isLoading}>
                             <div className="game-modal__option-icon">
                                 <div className="board-preview board-preview--8">
                                     {/* Casillas especiales */}
@@ -63,7 +67,7 @@ function GameModal({
                     )}
 
                     {showFourPlayers && (
-                        <button className="game-modal__option" onClick={() => onSelectMode?.('1vs1vs1vs1')} disabled={isLoading}>
+                        <button type="button" className="game-modal__option" onClick={() => onSelectMode?.('1vs1vs1vs1')} disabled={isLoading}>
                             <div className="game-modal__option-icon">
                                 <div className="board-preview board-preview--16">
                                     {/* Casillas especiales */}
