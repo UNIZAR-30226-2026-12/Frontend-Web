@@ -1,11 +1,12 @@
 .home {
   position: relative;
-  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100dvh;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(0.8rem, 2vw, 1.8rem);
+  padding: clamp(0.45rem, 1.6vh, 1.25rem);
   isolation: isolate;
   color: #17120f;
   font-family: 'Trebuchet MS', 'Arial Rounded MT Bold', 'Segoe UI', sans-serif;
@@ -132,30 +133,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(0.7rem, 2vw, 1.4rem);
+  justify-content: center;
+  max-height: 100%;
+  gap: clamp(0.45rem, 1.7vh, 1.1rem);
   text-align: center;
-  padding: clamp(0.35rem, 1.4vw, 0.9rem) 0;
+  padding: clamp(0.2rem, 1vh, 0.7rem) 0;
 }
 
 .home__logo {
-  width: min(88vw, 29rem);
+  width: min(88vw, 29rem, 56vh);
   display: block;
   filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.3));
 }
 
 .home__message {
   position: relative;
-  width: min(90vw, 32.5rem);
+  width: min(92vw, 36rem, 74vh);
   background: #efe6d2;
   border: 3px solid #171411;
   border-radius: 6px;
   box-shadow: 0 7px 0 #171411;
   transform: rotate(-1.3deg);
-  padding: 1rem 1rem 0.95rem;
+  padding: clamp(0.76rem, 2vh, 1.08rem) clamp(0.9rem, 2.2vw, 1.15rem) clamp(0.72rem, 1.8vh, 1rem);
 }
 
 .home__subtitle {
-  font-size: clamp(1rem, 2.2vw, 1.95rem);
+  font-size: clamp(1rem, 2.2vh, 1.78rem);
   line-height: 1.2;
   font-weight: 900;
   letter-spacing: -0.01em;
@@ -186,8 +189,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
-  width: min(92vw, 24rem);
+  gap: clamp(0.32rem, 0.9vh, 0.6rem);
+  width: min(92vw, 24rem, 45vh);
 }
 
 .home__image-button {
@@ -212,28 +215,28 @@
 }
 
 .home__image-button--create {
-  width: min(86%, 20rem);
+  width: min(86%, 20rem, 35vh);
   transform: rotate(0.5deg);
 }
 
 .home__footer {
-  margin-top: 0.3rem;
+  margin-top: 0.1rem;
   background: rgba(245, 239, 222, 0.95);
   border: 2px solid #171411;
   border-radius: 10px;
   box-shadow: 0 4px 0 #171411;
-  padding: 0.25rem 0.6rem;
+  padding: 0.18rem 0.52rem;
 }
 
 .home__footer p {
-  font-size: clamp(0.7rem, 1.5vw, 0.82rem);
+  font-size: clamp(0.68rem, 1.2vh, 0.8rem);
   line-height: 1.1;
   font-weight: 700;
 }
 
 .home__mascot {
   z-index: 1;
-  width: clamp(9rem, 19vw, 15.8rem);
+  width: clamp(10.5rem, 23vw, 18.8rem);
   left: -1.1rem;
   bottom: -0.95rem;
   animation: home-float-mascot 8.5s ease-in-out infinite;
@@ -297,7 +300,28 @@
   }
 
   .home__mascot {
-    width: clamp(7.4rem, 24vw, 11rem);
+    width: clamp(8.4rem, 27vw, 12.8rem);
+  }
+}
+
+@media (max-height: 780px) {
+  .home__question--3,
+  .home__question--4 {
+    opacity: 0.7;
+  }
+
+  .home__mascot {
+    width: clamp(8.1rem, 17vh, 12.6rem);
+  }
+}
+
+@media (max-height: 690px) {
+  .home__footer {
+    display: none;
+  }
+
+  .home__message {
+    transform: rotate(-0.8deg);
   }
 }
 
@@ -311,7 +335,7 @@
   }
 
   .home__message {
-    width: min(92vw, 23.5rem);
+    width: min(94vw, 25.2rem);
     padding: 0.82rem 0.72rem 0.78rem;
   }
 
@@ -342,7 +366,7 @@
   }
 
   .home__mascot {
-    width: clamp(6.2rem, 20vw, 8.5rem);
+    width: clamp(7.2rem, 23vw, 9.8rem);
     left: -1.7rem;
     bottom: -0.85rem;
   }
