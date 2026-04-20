@@ -918,6 +918,97 @@
     }
 }
 
+@media (max-height: 860px) and (min-width: 901px) {
+    .friends {
+        padding: clamp(0.4rem, 1vh, 0.7rem) clamp(0.6rem, 1.4vw, 1rem) clamp(0.5rem, 1vh, 0.75rem);
+    }
+
+    .friends__container {
+        height: 100%;
+        min-height: 0;
+        gap: clamp(0.28rem, 0.6vh, 0.56rem);
+    }
+
+    .friends__header {
+        padding: 0 0.2rem;
+    }
+
+    .friends__title {
+        font-size: clamp(1.9rem, 3.1vw, 2.8rem);
+    }
+
+    .friends__subtitle {
+        font-size: clamp(0.95rem, 1.3vw, 1.2rem);
+    }
+
+    .friends__image-btn--add {
+        width: clamp(9.2rem, 14.5vw, 11.2rem);
+    }
+
+    .friends__content {
+        flex: 1;
+        min-height: 0;
+        gap: clamp(0.36rem, 0.7vw, 0.75rem);
+    }
+
+    .friends__section {
+        min-height: 0;
+    }
+
+    .friends__section-inner {
+        padding: clamp(1.28rem, 2.1vh, 1.56rem) clamp(0.64rem, 1vw, 0.86rem) clamp(0.64rem, 1vh, 0.84rem);
+    }
+
+    .friends__section--friends .friends__section-inner {
+        padding-top: clamp(1.72rem, 2.9vh, 2.08rem);
+        padding-left: clamp(0.76rem, 1.2vw, 0.96rem);
+        padding-right: clamp(0.52rem, 0.82vw, 0.68rem);
+    }
+
+    .friends__section--requests .friends__section-inner,
+    .friends__section--game-requests .friends__section-inner,
+    .friends__section--paused-games .friends__section-inner {
+        padding-top: clamp(1.42rem, 2.35vh, 1.76rem);
+    }
+
+    .friends__section-title {
+        font-size: clamp(1.14rem, 1.4vw, 1.5rem);
+        padding-bottom: 0.32rem;
+    }
+
+    .friends__section--requests .friends__requests-list {
+        margin-top: 0.9rem;
+    }
+
+    .friends__list,
+    .friends__requests-list,
+    .friends__paused-list {
+        margin-top: 0.3rem;
+    }
+
+    .friends__image-btn--back {
+        width: clamp(10rem, 16vw, 13rem);
+    }
+
+    .friends__footer {
+        margin-top: 0;
+    }
+}
+
+@media (max-height: 740px) and (min-width: 901px) {
+    .friends__title {
+        font-size: clamp(1.62rem, 2.65vw, 2.3rem);
+    }
+
+    .friends__subtitle {
+        font-size: clamp(0.86rem, 1.08vw, 1.02rem);
+    }
+
+    .friends__image-btn--back {
+        width: clamp(8.8rem, 14vw, 11.6rem);
+    }
+}
+
 @media (max-width: 1320px) {
     .friends__content {
         grid-template-columns: repeat(2, minmax(0, 1fr));

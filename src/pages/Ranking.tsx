@@ -7,8 +7,6 @@ import trophyIcon from '../assets/ranking/Trofeo.png'
 import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
 import questionMark from '../assets/elementosGenerales/interrogante.png'
 import backToMenuButtonImage from '../assets/elementosGenerales/botonVolverMenu.png'
-import rulesButton from '../assets/homeScreenMenu/botonReglas.png'
-import logoutSticker from '../assets/homeScreenMenu/cerrarSesion.png'
 import '../styles/pages/Ranking.css'
 
 interface RankingProps {
@@ -24,9 +22,6 @@ interface RankingEntry {
 
 interface CurrentUser {
     id: number
-    username: string
-    elo: number
-    avatar_url?: string
 }
 
 function Ranking({ onNavigate }: RankingProps) {
@@ -61,23 +56,11 @@ function Ranking({ onNavigate }: RankingProps) {
     useEffect(() => {
         fetchRanking()
         api.users.getMe()
-            .then((me) => {
-                setMyUser({
-                    id: me.id,
-                    username: me.username || 'Jugador',
-                    elo: me.elo ?? 1000,
-                    avatar_url: me.avatar_url,
-                })
-            })
+            .then((me) => setMyUser({ id: me.id }))
             .catch(() => setMyUser(null))
     }, [])
 
     const myUserId = myUser?.id ?? null
-
-    const handleLogout = () => {
-        localStorage.removeItem('token')
-        onNavigate('home')
-    }
 
     return (
         <div className="ranking">
@@ -89,36 +72,6 @@ function Ranking({ onNavigate }: RankingProps) {
                 <img className="ranking__question ranking__question--2" src={questionMark} alt="" />
                 <img className="ranking__question ranking__question--3" src={questionMark} alt="" />
                 <img className="ranking__question ranking__question--4" src={questionMark} alt="" />
-            </div>
-
-            <nav className="ranking__top-nav">
-                <button className="ranking__rules-btn" onClick={() => onNavigate('rules')} title="Ver reglas del juego" aria-label="Reglas del juego">
-                    <img src={rulesButton} alt="" />
-                </button>
-            </nav>
-
-            <div className="ranking__account">
-                <button
-                    className="ranking__profile-sticker"
-                    onClick={() => onNavigate('profile')}
-                    title="Ver mi perfil"
-                    aria-label="Ver mi perfil"
-                >
-                    <span className="ranking__tape ranking__tape--left"></span>
-                    <span className="ranking__tape ranking__tape--right"></span>
-                    <div className="ranking__profile-frame">
-                        <img
-                            className="ranking__profile-avatar"
-                            src={resolveUserAvatar(myUser?.avatar_url, myUser?.username || 'Jugador')}
-                            alt="Avatar"
-                        />
-                    </div>
-                    <span className="ranking__profile-elo">{myUser?.elo ?? 1000} RR</span>
-                </button>
-
-                <button className="ranking__logout-btn" onClick={handleLogout} title="Cerrar sesion" aria-label="Cerrar sesion">
-                    <img src={logoutSticker} alt="" />
-                </button>
             </div>
 
             <main className="ranking__stage">

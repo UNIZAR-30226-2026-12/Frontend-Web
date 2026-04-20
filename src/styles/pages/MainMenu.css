@@ -1,12 +1,12 @@
 .menu {
   position: relative;
-  min-height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: clamp(0.6rem, 1.8vw, 1.2rem) clamp(0.8rem, 2vw, 1.6rem) clamp(1.1rem, 2.3vw, 1.6rem);
+  padding: clamp(0.4rem, 1.2vh, 1rem) clamp(0.7rem, 1.9vw, 1.5rem);
   color: #11100f;
   isolation: isolate;
 }
@@ -88,8 +88,8 @@
 
 .menu__top-nav {
   position: absolute;
-  top: clamp(0.5rem, 1.7vw, 1.3rem);
-  left: clamp(0.65rem, 1.7vw, 1.4rem);
+  top: clamp(0.45rem, 1.7vw, 1.3rem);
+  left: clamp(0.5rem, 1.7vw, 1.3rem);
   z-index: 9;
 }
 
@@ -103,7 +103,7 @@
 }
 
 .menu__rules-btn img {
-  width: clamp(8.7rem, 15vw, 13.1rem);
+  width: clamp(8rem, 14vw, 13rem);
   height: auto;
   display: block;
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.3));
@@ -115,12 +115,12 @@
 
 .menu__account {
   position: absolute;
-  top: clamp(0.65rem, 1.8vw, 1.4rem);
-  right: clamp(0.7rem, 1.8vw, 1.6rem);
+  top: clamp(0.45rem, 1.8vw, 1.3rem);
+  right: clamp(0.55rem, 1.8vw, 1.4rem);
   z-index: 9;
   display: flex;
   align-items: flex-start;
-  gap: 0.72rem;
+  gap: 0.68rem;
 }
 
 .menu__profile-sticker {
@@ -196,7 +196,7 @@
 }
 
 .menu__logout-btn img {
-  width: clamp(8.4rem, 14vw, 11rem);
+  width: clamp(7.4rem, 13vw, 10.8rem);
   height: auto;
   display: block;
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.3));
@@ -209,25 +209,28 @@
 .menu__stage {
   position: relative;
   z-index: 5;
-  width: min(960px, 100%);
+  width: min(980px, 100%);
+  height: 100%;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(0.5rem, 1.4vw, 1.2rem);
-  padding-top: clamp(1rem, 3vw, 2.6rem);
+  justify-content: flex-start;
+  gap: clamp(0.45rem, 1.5vh, 1.2rem);
+  padding: clamp(2.2rem, 6vh, 4.4rem) 0 clamp(0.2rem, 1vh, 0.8rem);
 }
 
 .menu__header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   text-align: center;
 }
 
 .menu__logo {
-  width: min(34vw, 24rem);
-  min-width: 14rem;
+  width: clamp(15.2rem, 36vw, 31rem);
+  min-width: 0;
   height: auto;
   display: block;
   filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.28));
@@ -240,43 +243,55 @@
   box-shadow: 0 5px 0 #171411;
   color: #13110f;
   font-family: 'Trebuchet MS', 'Arial Rounded MT Bold', sans-serif;
-  font-size: clamp(1.08rem, 2.7vw, 2.05rem);
+  font-size: clamp(1rem, 2.3vw, 2.2rem);
   line-height: 1;
   font-weight: 900;
   letter-spacing: -0.01em;
-  padding: 0.42rem 1.1rem 0.52rem;
+  padding: 0.38rem 1rem 0.46rem;
   transform: rotate(-1.6deg);
+}
+
+.menu__center-layout {
+  position: relative;
+  width: min(980px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.2rem, 0.8vh, 0.55rem);
 }
 
 .menu__primary-row,
 .menu__secondary-row {
   width: min(860px, 100%);
   display: grid;
-  justify-content: center;
+  justify-items: center;
 }
 
 .menu__primary-row {
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
-  gap: 0.8rem;
-  align-items: center;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.4rem, 1.4vw, 1.2rem);
+  align-items: end;
 }
 
 .menu__secondary-row {
-  grid-template-columns: repeat(3, minmax(170px, 1fr));
-  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(2.2rem, 8.8vw, 6.8rem);
   align-items: end;
+  padding-top: clamp(0.7rem, 2.2vh, 1.6rem);
 }
 
 .menu__image-btn {
   --tilt: 0deg;
   --tilt-hover: 0deg;
+  --offset-x: 0px;
+  --offset-y: 0px;
   border: 0;
   background: transparent;
   padding: 0;
   line-height: 0;
   justify-self: center;
   position: relative;
-  transform: rotate(var(--tilt));
+  transform: translate(var(--offset-x), var(--offset-y)) rotate(var(--tilt));
   transition: transform 0.2s ease, filter 0.2s ease;
   animation: chip-bob 6.2s ease-in-out infinite;
 }
@@ -290,48 +305,46 @@
 }
 
 .menu__image-btn:hover {
-  transform: translateY(-6px) rotate(var(--tilt-hover));
+  transform: translate(var(--offset-x), calc(var(--offset-y) - 6px)) rotate(var(--tilt-hover));
 }
 
 .menu__image-btn--online {
   --tilt: -6deg;
   --tilt-hover: -2deg;
-  width: clamp(18rem, 30vw, 24.5rem);
+  width: clamp(15.8rem, 30vw, 29rem);
   animation-delay: -0.4s;
-}
-
-.menu__image-btn--online img {
-  position: static;
-  width: 100%;
-  max-width: 100%;
-  transform: none;
 }
 
 .menu__image-btn--ia {
   --tilt: 6deg;
   --tilt-hover: 2deg;
-  width: clamp(14rem, 24vw, 19.5rem);
+  width: clamp(15rem, 28vw, 26rem);
   animation-delay: -0.2s;
 }
 
 .menu__image-btn--custom {
   --tilt: -5deg;
   --tilt-hover: -2deg;
-  width: clamp(11.5rem, 17vw, 15rem);
+  width: clamp(11.6rem, 22vw, 19.5rem);
   animation-delay: -0.1s;
 }
 
 .menu__image-btn--friends {
   --tilt: -1deg;
   --tilt-hover: 1deg;
-  width: clamp(12.2rem, 18vw, 16rem);
+  --offset-x: -50%;
+  position: absolute;
+  left: 50%;
+  top: calc(50% - clamp(0.4rem, 1.2vh, 1rem));
+  width: clamp(10.2rem, 17vw, 16rem);
+  z-index: 2;
   animation-delay: -0.6s;
 }
 
 .menu__image-btn--ranking {
   --tilt: 6deg;
   --tilt-hover: 3deg;
-  width: clamp(11.8rem, 17.5vw, 15.8rem);
+  width: clamp(11.6rem, 22vw, 19.5rem);
   animation-delay: -0.3s;
 }
 
@@ -445,115 +458,206 @@
   }
 }
 
-@media (max-width: 1040px) {
-  .menu {
-    padding-top: 0.9rem;
+@media (max-height: 820px) {
+  .menu__stage {
+    padding-top: clamp(2rem, 6vh, 3.5rem);
+    gap: clamp(0.25rem, 0.9vh, 0.7rem);
   }
 
-  .menu__account {
-    position: static;
-    width: 100%;
-    justify-content: flex-end;
-    margin-bottom: 0.36rem;
+  .menu__logo {
+    width: clamp(12.4rem, 32vw, 24rem);
+  }
+
+  .menu__subtitle {
+    font-size: clamp(0.95rem, 2.4vw, 1.7rem);
+    padding: 0.3rem 0.9rem 0.36rem;
+  }
+
+  .menu__image-btn--online {
+    width: clamp(12.2rem, 26vw, 23.5rem);
+  }
+
+  .menu__image-btn--ia {
+    width: clamp(11.8rem, 24.5vw, 21.8rem);
+  }
+
+  .menu__image-btn--custom,
+  .menu__image-btn--ranking {
+    width: clamp(9.4rem, 18vw, 16.4rem);
+  }
+
+  .menu__image-btn--friends {
+    width: clamp(8.4rem, 14.5vw, 13.3rem);
+    top: calc(50% - clamp(0.3rem, 0.8vh, 0.65rem));
+  }
+
+  .menu__secondary-row {
+    padding-top: clamp(0.6rem, 1.8vh, 1.2rem);
+  }
+}
+
+@media (max-height: 700px) {
+  .menu__question--3,
+  .menu__question--4,
+  .menu__question--6 {
+    display: none;
   }
 
   .menu__stage {
-    padding-top: 0.24rem;
+    padding-top: clamp(1.4rem, 4.8vh, 2.5rem);
+  }
+
+  .menu__profile-sticker {
+    transform: rotate(-4deg) scale(0.72);
+    transform-origin: top right;
+  }
+
+  .menu__profile-frame {
+    width: 66px;
+    height: 76px;
+  }
+
+  .menu__profile-elo {
+    font-size: 1.1rem;
+  }
+
+  .menu__image-btn--online {
+    width: clamp(11.2rem, 22vw, 20rem);
+  }
+
+  .menu__image-btn--ia {
+    width: clamp(10.8rem, 21vw, 18.8rem);
+  }
+
+  .menu__image-btn--custom,
+  .menu__image-btn--ranking {
+    width: clamp(8.4rem, 15.5vw, 14.7rem);
+  }
+
+  .menu__image-btn--friends {
+    width: clamp(7.4rem, 12vw, 11.8rem);
+    top: calc(50% - 0.35rem);
+  }
+}
+
+@media (max-width: 1040px) {
+  .menu__rules-btn img {
+    width: clamp(7.2rem, 16vw, 10.2rem);
+  }
+
+  .menu__profile-sticker {
+    transform: rotate(-5deg) scale(0.9);
+    transform-origin: top right;
+  }
+
+  .menu__logout-btn img {
+    width: clamp(6.8rem, 13vw, 9rem);
   }
 }
 
 @media (max-width: 860px) {
-  .menu__top-nav {
-    position: static;
-    width: 100%;
-    margin-bottom: 0.2rem;
-  }
-
-  .menu__primary-row {
-    grid-template-columns: 1fr;
-    width: min(500px, 100%);
-    gap: 0.85rem;
+  .menu__stage {
+    padding-top: clamp(2.2rem, 8.4vh, 4rem);
   }
 
   .menu__secondary-row {
-    grid-template-columns: repeat(2, minmax(165px, 1fr));
-    width: min(520px, 100%);
-    gap: 0.8rem;
+    gap: clamp(2.2rem, 11vw, 4.8rem);
   }
 
   .menu__image-btn--friends {
-    grid-column: 1 / -1;
-  }
-
-  .menu__image-btn--online {
-    width: min(82vw, 24rem);
-  }
-
-  .menu__image-btn--ia {
-    width: min(65vw, 19rem);
-  }
-
-  .menu__image-btn--custom,
-  .menu__image-btn--ranking,
-  .menu__image-btn--friends {
-    width: min(45vw, 15rem);
+    top: calc(50% - clamp(0.25rem, 0.8vh, 0.55rem));
   }
 }
 
 @media (max-width: 620px) {
   .menu {
-    padding: 0.65rem;
+    padding: 0.4rem;
+  }
+
+  .menu__top-nav {
+    top: 0.35rem;
+    left: 0.35rem;
   }
 
   .menu__account {
-    justify-content: space-between;
-    align-items: center;
+    top: 0.3rem;
+    right: 0.35rem;
+    gap: 0.28rem;
+  }
+
+  .menu__rules-btn img {
+    width: clamp(5.7rem, 24vw, 8rem);
   }
 
   .menu__profile-sticker {
-    transform: rotate(-3deg) scale(0.86);
-    transform-origin: top left;
+    border-width: 2px;
+    box-shadow: 0 4px 0 #171411;
+    padding: 0.22rem 0.22rem 0.2rem;
+    transform: rotate(-3deg) scale(0.64);
+    transform-origin: top right;
   }
 
-  .menu__logout-btn {
-    transform: rotate(2deg);
+  .menu__tape {
+    width: 14px;
+    height: 7px;
+    border-width: 1px;
+    top: -5px;
+  }
+
+  .menu__profile-frame {
+    width: 60px;
+    height: 70px;
+    border-width: 2px;
+  }
+
+  .menu__profile-elo {
+    font-size: 1rem;
   }
 
   .menu__logout-btn img {
-    width: clamp(7.8rem, 31vw, 9.5rem);
+    width: clamp(5.7rem, 23vw, 7.5rem);
   }
 
-  .menu__logo {
-    width: min(70vw, 20rem);
-    min-width: 0;
+  .menu__stage {
+    padding-top: clamp(2.3rem, 10vh, 3.8rem);
   }
 
   .menu__subtitle {
-    font-size: clamp(1.02rem, 6vw, 1.35rem);
+    border-width: 2px;
+    box-shadow: 0 3px 0 #171411;
+    font-size: clamp(0.9rem, 4.9vw, 1.28rem);
+    padding: 0.25rem 0.6rem 0.3rem;
+  }
+
+  .menu__primary-row {
+    gap: clamp(0.2rem, 1.7vw, 0.5rem);
   }
 
   .menu__secondary-row {
-    grid-template-columns: 1fr;
-    width: min(340px, 100%);
-    gap: 0.9rem;
+    gap: clamp(1.1rem, 8.5vw, 2.5rem);
+    padding-top: clamp(0.9rem, 4.5vh, 1.6rem);
   }
 
   .menu__image-btn--online {
-    width: min(86vw, 20rem);
+    width: clamp(12.2rem, 54vw, 16rem);
   }
 
   .menu__image-btn--ia {
-    width: min(74vw, 16rem);
+    width: clamp(11.5rem, 51vw, 15.3rem);
   }
 
   .menu__image-btn--custom,
-  .menu__image-btn--ranking,
+  .menu__image-btn--ranking {
+    width: clamp(9rem, 40vw, 13rem);
+  }
+
   .menu__image-btn--friends {
-    width: min(70vw, 14.5rem);
+    width: clamp(8rem, 35vw, 12rem);
+    top: calc(50% - 0.35rem);
   }
 
   .menu__question {
-    width: clamp(1.7rem, 8vw, 2.6rem);
-    opacity: 0.28;
+    width: clamp(1.4rem, 6vw, 2.2rem);
+    opacity: 0.22;
   }
 }

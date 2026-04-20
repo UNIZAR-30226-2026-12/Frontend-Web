@@ -19,8 +19,8 @@ import blackFourthPlaceTokenImage from '../assets/salaEspera/FichaNegra4Puesto.p
 import whiteFourthPlaceTokenImage from '../assets/salaEspera/FichaBlanca4Puesto.png'
 import questionMarkImage from '../assets/elementosGenerales/interrogante.png'
 import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
-import leaveButtonImage from '../assets/elementosGenerales/fichaRoja.png'
-import readyButtonImage from '../assets/elementosGenerales/fichaVerde.png'
+import leaveButtonImage from '../assets/salaEspera/Abandonar.png'
+import readyButtonImage from '../assets/salaEspera/Listo.png'
 import '../styles/pages/WaitingRoom.css'
 
 interface Player {
@@ -166,6 +166,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
         (myUserId !== null && player.id === myUserId) || (myUsername && player.username === myUsername),
     )
     const allReady = isFull && players.every((player) => player.is_ready)
+    const isWaitingForPlayers = roomStatus === 'waiting' && !isFull && !allReady && !isResume
 
     useEffect(() => {
         playersRef.current = players
@@ -397,7 +398,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
         if (allReady || roomStatus === 'playing') return 'INICIANDO PARTIDA...'
         if (isResume) return 'REANUDANDO PARTIDA...'
         if (isFull) return 'SALA LLENA'
-        return 'ESPERANDO OPONENTES...'
+        return 'ESPERANDO OPONENTES'
     }, [allReady, isFull, isResume, roomStatus])
 
     const helperText = useMemo(() => {
@@ -417,7 +418,7 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
     const boardImage = normalizedGameMode === '1vs1' ? boardImage1v1 : boardImage4Players
 
     return (
-        <div className="waiting-room">
+        <div className={`waiting-room ${isWaitingForPlayers ? 'waiting-room--seeking' : ''}`}>
             <img className="waiting-room__background" src={menuBackground} alt="" aria-hidden="true" />
             <div className="waiting-room__overlay" aria-hidden="true"></div>
 
@@ -434,7 +435,16 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                     <img className="waiting-room__board-image" src={boardImage} alt="" aria-hidden="true" />
 
                     <div className="waiting-room__board-content">
-                        <p className="waiting-room__status-pill">{statusText}</p>
+                        <p className={`waiting-room__status-pill ${isWaitingForPlayers ? 'waiting-room__status-pill--animated' : ''}`}>
+                            <span>{statusText}</span>
+                            {isWaitingForPlayers && (
+                                <span className="waiting-room__dots" aria-hidden="true">
+                                    <span className="waiting-room__dot">.</span>
+                                    <span className="waiting-room__dot">.</span>
+                                    <span className="waiting-room__dot">.</span>
+                                </span>
+                            )}
+                        </p>
 
                         <div className={`waiting-room__players waiting-room__players--${maxPlayers}`}>
                             {Array.from({ length: maxPlayers }).map((_, index) => {
@@ -483,7 +493,14 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                                         </div>
 
                                         <span className="waiting-player-card__name" title={player?.username || 'Esperando jugador'}>
-                                            {player ? player.username : 'Esperando...'}
+                                            {player ? player.username : 'Esperando'}
+                                            {!player && isWaitingForPlayers && (
+                                                <span className="waiting-room__dots waiting-room__dots--small" aria-hidden="true">
+                                                    <span className="waiting-room__dot">.</span>
+                                                    <span className="waiting-room__dot">.</span>
+                                                    <span className="waiting-room__dot">.</span>
+                                                </span>
+                                            )}
                                         </span>
 
                                         <p className="waiting-player-card__rr">
@@ -531,18 +548,21 @@ function WaitingRoom({ gameMode, gameId, returnScreen, isResume, onNavigate }: W
                 </section>
 
                 <div className="waiting-room__actions">
-                    <button className="waiting-room__btn waiting-room__btn--leave" onClick={handleLeave}>
+                    <button
+                        className="waiting-room__btn waiting-room__btn--leave"
+                        aria-label="Abandonar sala"
+                        onClick={handleLeave}
+                    >
                         <img className="waiting-room__btn-image" src={leaveButtonImage} alt="" aria-hidden="true" />
-                        <span className="waiting-room__btn-label">Abandonar sala</span>
                     </button>
 
                     <button
                         className={`waiting-room__btn waiting-room__btn--ready ${localPlayer?.is_ready ? 'waiting-room__btn--is-ready' : ''}`}
+                        aria-label={localPlayer?.is_ready ? 'Quitar listo' : 'Estoy listo'}
                         disabled={roomStatus === 'playing' || !localPlayer}
                         onClick={handleReady}
                     >
                         <img className="waiting-room__btn-image" src={readyButtonImage} alt="" aria-hidden="true" />
-                        <span className="waiting-room__btn-label">{localPlayer?.is_ready ? 'Listo' : 'Estoy listo'}</span>
                     </button>
                 </div>
             </main>

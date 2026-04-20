@@ -8,7 +8,7 @@ import questionMark from '../assets/elementosGenerales/interrogante.png'
 import rulesButton from '../assets/homeScreenMenu/botonReglas.png'
 import onlineButton from '../assets/homeScreenMenu/botonJugarOnline.png'
 import aiButton from '../assets/homeScreenMenu/botonJugarIA.png'
-import customizationButton from '../assets/homeScreenMenu/botonPersonalizaci\u00f3n.png'
+import customizationButton from '../assets/homeScreenMenu/botonPersonalizacion.png'
 import friendsButton from '../assets/homeScreenMenu/botonAmigos.png'
 import rankingButton from '../assets/homeScreenMenu/botonRanking.png'
 import logoutSticker from '../assets/homeScreenMenu/cerrarSesion.png'
@@ -162,27 +162,29 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                     <p className="menu__subtitle">Elige tu jugada</p>
                 </div>
 
-                <div className="menu__primary-row">
-                    <button className="menu__image-btn menu__image-btn--online" onClick={() => onNavigate('online-game')} aria-label="Jugar online">
-                        <img src={onlineButton} alt="" />
-                    </button>
+                <div className="menu__center-layout">
+                    <div className="menu__primary-row">
+                        <button className="menu__image-btn menu__image-btn--online" onClick={() => onNavigate('online-game')} aria-label="Jugar online">
+                            <img src={onlineButton} alt="" />
+                        </button>
 
-                    <button className="menu__image-btn menu__image-btn--ia" onClick={() => setShowIAModal(true)} aria-label="Jugar contra la IA">
-                        <img src={aiButton} alt="" />
-                    </button>
-                </div>
+                        <button className="menu__image-btn menu__image-btn--ia" onClick={() => setShowIAModal(true)} aria-label="Jugar contra la IA">
+                            <img src={aiButton} alt="" />
+                        </button>
+                    </div>
 
-                <div className="menu__secondary-row">
-                    <button className="menu__image-btn menu__image-btn--custom" onClick={() => onNavigate('customization')} aria-label="Personalizacion">
-                        <img src={customizationButton} alt="" />
-                    </button>
+                    <div className="menu__secondary-row">
+                        <button className="menu__image-btn menu__image-btn--custom" onClick={() => onNavigate('customization')} aria-label="Personalizacion">
+                            <img src={customizationButton} alt="" />
+                        </button>
+
+                        <button className="menu__image-btn menu__image-btn--ranking" onClick={() => onNavigate('ranking')} aria-label="Ranking global">
+                            <img src={rankingButton} alt="" />
+                        </button>
+                    </div>
 
                     <button className="menu__image-btn menu__image-btn--friends" onClick={() => onNavigate('friends')} aria-label="Amigos">
                         <img src={friendsButton} alt="" />
-                    </button>
-
-                    <button className="menu__image-btn menu__image-btn--ranking" onClick={() => onNavigate('ranking')} aria-label="Ranking global">
-                        <img src={rankingButton} alt="" />
                     </button>
                 </div>
             </main>

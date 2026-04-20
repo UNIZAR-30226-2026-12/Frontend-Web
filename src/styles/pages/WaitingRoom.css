@@ -69,10 +69,15 @@
 
 .waiting-room__title-image {
     width: min(72vw, 23rem);
+    position: fixed;
+    top: clamp(0.45rem, 1.2vh, 1rem);
+    left: clamp(0.6rem, 1.6vw, 1.4rem);
+    z-index: 4;
     height: auto;
     display: block;
     user-select: none;
     pointer-events: none;
+    transform: none;
     filter: drop-shadow(0 9px 11px rgba(11, 6, 4, 0.35));
 }
 
@@ -126,6 +131,42 @@
     line-height: 0.92;
     color: #20130c;
     text-shadow: 0 1px 0 rgba(255, 249, 233, 0.8);
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.06em;
+}
+
+.waiting-room--seeking .waiting-room__status-pill--animated {
+    animation: waiting-room-status-breathe 2.15s ease-in-out infinite;
+}
+
+.waiting-room__dots {
+    display: inline-flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 1.35em;
+    letter-spacing: 0.07em;
+}
+
+.waiting-room__dots--small {
+    min-width: 1.1em;
+    letter-spacing: 0.05em;
+    margin-left: 0.02em;
+}
+
+.waiting-room__dot {
+    display: inline-block;
+    opacity: 0.22;
+    animation: waiting-room-dot-bounce 1.2s ease-in-out infinite;
+}
+
+.waiting-room__dot:nth-child(2) {
+    animation-delay: 0.16s;
+}
+
+.waiting-room__dot:nth-child(3) {
+    animation-delay: 0.32s;
 }
 
 .waiting-room__board--2 .waiting-room__status-pill {
@@ -316,6 +357,18 @@
     object-fit: contain;
     opacity: 0.75;
     filter: saturate(0.42) contrast(0.92);
+}
+
+.waiting-room--seeking .waiting-player-card--empty .waiting-player-card__avatar--placeholder {
+    animation: waiting-room-placeholder-float 2.8s ease-in-out infinite;
+}
+
+.waiting-room--seeking .waiting-player-card--empty:nth-child(2n) .waiting-player-card__avatar--placeholder {
+    animation-delay: 0.3s;
+}
+
+.waiting-room--seeking .waiting-player-card--empty:nth-child(3n) .waiting-player-card__avatar--placeholder {
+    animation-delay: 0.62s;
 }
 
 .waiting-player-card__ready-badge {
@@ -595,6 +648,10 @@
     z-index: 4;
 }
 
+.waiting-room--seeking .waiting-room__hint {
+    animation: waiting-room-hint-breathe 2.9s ease-in-out infinite;
+}
+
 .waiting-room__board--2 .waiting-room__hint {
     bottom: 21%;
     white-space: pre-line;
@@ -632,6 +689,7 @@
     display: flex;
     justify-content: center;
     gap: clamp(1.05rem, 2.8vw, 2.2rem);
+    transform: translateY(-2.3rem);
 }
 
 .waiting-room__btn {
@@ -720,6 +778,59 @@
 
     50% {
         transform: translateY(-8px) rotate(3deg);
+    }
+}
+
+@keyframes waiting-room-dot-bounce {
+
+    0%,
+    80%,
+    100% {
+        opacity: 0.25;
+        transform: translateY(0);
+    }
+
+    40% {
+        opacity: 1;
+        transform: translateY(-0.13em);
+    }
+}
+
+@keyframes waiting-room-status-breathe {
+
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.09);
+    }
+}
+
+@keyframes waiting-room-hint-breathe {
+
+    0%,
+    100% {
+        opacity: 0.82;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes waiting-room-placeholder-float {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 0.68;
+    }
+
+    50% {
+        transform: translateY(-4px) scale(1.03);
+        opacity: 0.92;
     }
 }
 
@@ -885,7 +996,11 @@
 
     .waiting-room__question,
     .waiting-room__btn,
-    .waiting-player-card {
+    .waiting-player-card,
+    .waiting-room__status-pill--animated,
+    .waiting-room__hint,
+    .waiting-room__dot,
+    .waiting-player-card__avatar--placeholder {
         animation: none;
         transition: none;
     }

@@ -2,10 +2,14 @@
   position: relative;
   height: 100vh;
   min-height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   overflow: hidden;
   display: flex;
-  justify-content: center;
-  padding: clamp(0.6rem, 1.8vw, 1.2rem) clamp(0.7rem, 2vw, 1.6rem) clamp(1rem, 2.4vw, 1.6rem);
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: clamp(0.6rem, 1.8vw, 1.2rem) clamp(0.7rem, 2vw, 1.6rem) clamp(0.7rem, 2vw, 1.3rem);
   font-family: 'Trebuchet MS', 'Arial Rounded MT Bold', sans-serif;
   color: #17110e;
   isolation: isolate;
@@ -115,15 +119,18 @@
   position: relative;
   z-index: 5;
   width: min(990px, 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.45rem;
-  padding-top: clamp(2.5rem, 7vw, 4.4rem);
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-items: center;
+  align-content: start;
+  gap: clamp(0.25rem, 0.7vh, 0.55rem);
+  padding-top: clamp(2.1rem, 5.8vw, 3.6rem);
 }
 
 .rules__title-image {
-  width: clamp(8rem, 22vw, 14rem);
+  width: clamp(7.8rem, 20.5vw, 13rem);
   height: auto;
   display: block;
   filter: drop-shadow(0 9px 12px rgba(0, 0, 0, 0.25));
@@ -134,6 +141,9 @@
   width: min(940px, 100%);
   max-width: 100%;
   aspect-ratio: 512 / 299;
+  max-height: 100%;
+  min-height: 0;
+  align-self: center;
 }
 
 .rules__sheet-bg {
@@ -154,6 +164,8 @@
   right: 3.8%;
   bottom: 8.2%;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: clamp(0.2rem, 0.8vw, 0.6rem) clamp(0.6rem, 1.3vw, 1rem);
   font-family: 'Comic Sans MS', 'Trebuchet MS', 'Arial Rounded MT Bold', cursive;
   color: #2a2016;
@@ -233,8 +245,8 @@
   background: transparent;
   padding: 0;
   line-height: 0;
-  width: clamp(12.8rem, 23vw, 18.8rem);
-  margin-top: 0.24rem;
+  width: clamp(11.6rem, 20vw, 16.9rem);
+  margin-top: 0;
   transition: transform 0.2s ease, filter 0.2s ease;
   animation: rules-bob 6.5s ease-in-out infinite;
 }
@@ -294,10 +306,12 @@
 
   .rules__topbar {
     position: static;
+    width: 100%;
     margin-bottom: 0.2rem;
   }
 
   .rules__stage {
+    width: 100%;
     padding-top: 0;
   }
 
@@ -356,4 +370,3 @@
     transition: none;
   }
 }
-

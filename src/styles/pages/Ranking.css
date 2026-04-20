@@ -2,12 +2,14 @@
     position: relative;
     height: 100vh;
     min-height: 100vh;
+    height: 100dvh;
+    min-height: 100dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: clamp(0.6rem, 1.7vw, 1.1rem) clamp(0.7rem, 1.9vw, 1.4rem) clamp(1rem, 2.4vw, 1.6rem);
+    padding: clamp(0.6rem, 1.7vw, 1.1rem) clamp(0.7rem, 1.9vw, 1.4rem) clamp(0.7rem, 2vw, 1.3rem);
     font-family: 'Trebuchet MS', 'Arial Rounded MT Bold', sans-serif;
     color: #17120f;
     isolation: isolate;
@@ -74,135 +76,18 @@
     animation-delay: -2s;
 }
 
-.ranking__top-nav {
-    position: absolute;
-    top: clamp(0.45rem, 1.3vw, 1.1rem);
-    left: clamp(0.55rem, 1.5vw, 1.3rem);
-    z-index: 12;
-}
-
-.ranking__rules-btn {
-    border: 0;
-    background: transparent;
-    padding: 0;
-    line-height: 0;
-    transform: rotate(-6deg);
-    transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-.ranking__rules-btn img {
-    width: clamp(7.4rem, 13vw, 11.2rem);
-    height: auto;
-    display: block;
-    filter: drop-shadow(0 9px 14px rgba(0, 0, 0, 0.28));
-}
-
-.ranking__rules-btn:hover {
-    transform: translateY(-3px) rotate(-4deg);
-}
-
-.ranking__account {
-    position: absolute;
-    top: clamp(0.6rem, 1.6vw, 1.2rem);
-    right: clamp(0.65rem, 1.8vw, 1.6rem);
-    z-index: 12;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.7rem;
-}
-
-.ranking__profile-sticker {
-    position: relative;
-    border: 3px solid #17120f;
-    border-radius: 14px;
-    background: #f4ecd8;
-    box-shadow: 0 5px 0 #17120f;
-    padding: 0.32rem 0.34rem 0.28rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    transform: rotate(-6deg);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.ranking__profile-sticker:hover {
-    transform: translateY(-2px) rotate(-4deg);
-    box-shadow: 0 7px 0 #17120f;
-}
-
-.ranking__tape {
-    position: absolute;
-    top: -6px;
-    width: 14px;
-    height: 8px;
-    border: 2px solid #17120f;
-}
-
-.ranking__tape--left {
-    left: 5px;
-    transform: rotate(-28deg);
-    background: #9fceb9;
-}
-
-.ranking__tape--right {
-    right: 5px;
-    transform: rotate(22deg);
-    background: #ef8a74;
-}
-
-.ranking__profile-frame {
-    width: 56px;
-    height: 64px;
-    border: 3px solid #17120f;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #d2ddd5;
-}
-
-.ranking__profile-avatar {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.ranking__profile-elo {
-    font-size: 1rem;
-    line-height: 1;
-    font-weight: 900;
-    color: #17120f;
-}
-
-.ranking__logout-btn {
-    border: 0;
-    background: transparent;
-    padding: 0;
-    line-height: 0;
-    transform: rotate(5deg);
-    transition: transform 0.2s ease, filter 0.2s ease;
-    align-self: center;
-}
-
-.ranking__logout-btn img {
-    width: clamp(6.8rem, 11.4vw, 9.4rem);
-    height: auto;
-    display: block;
-    filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.3));
-}
-
-.ranking__logout-btn:hover {
-    transform: translateY(-2px) rotate(3deg);
-}
-
 .ranking__stage {
     position: relative;
     z-index: 8;
     width: min(980px, 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.45rem;
-    padding-top: clamp(2.2rem, 6.8vw, 4.4rem);
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    justify-items: center;
+    align-content: start;
+    gap: clamp(0.25rem, 0.7vh, 0.55rem);
+    padding-top: clamp(1.4rem, 3.6vw, 2.4rem);
 }
 
 .ranking__header {
@@ -214,7 +99,7 @@
 }
 
 .ranking__title-image {
-    width: clamp(13.2rem, 34vw, 23rem);
+    width: clamp(11.8rem, 31vw, 20.8rem);
     height: auto;
     display: block;
     filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.24));
@@ -252,6 +137,9 @@
     width: min(920px, 100%);
     max-width: 100%;
     aspect-ratio: 512 / 299;
+    max-height: 100%;
+    min-height: 0;
+    align-self: center;
 }
 
 .ranking__sheet-bg {
@@ -279,6 +167,8 @@
     flex-direction: column;
     gap: clamp(0.22rem, 0.42vw, 0.36rem);
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     padding-right: 0.2rem;
 }
 
@@ -394,8 +284,8 @@
     background: transparent;
     padding: 0;
     line-height: 0;
-    width: clamp(12.8rem, 22vw, 18.2rem);
-    margin-top: 0.3rem;
+    width: clamp(11.8rem, 20vw, 16.9rem);
+    margin-top: 0;
     animation: ranking-sticker-bob 6.5s ease-in-out infinite;
     transition: transform 0.2s ease, filter 0.2s ease;
 }
@@ -412,9 +302,6 @@
     transform: translateY(-4px) rotate(-1.2deg);
 }
 
-.ranking__rules-btn:focus-visible,
-.ranking__profile-sticker:focus-visible,
-.ranking__logout-btn:focus-visible,
 .ranking__refresh-btn:focus-visible,
 .ranking__row:focus-visible,
 .ranking__back-btn:focus-visible {
@@ -490,23 +377,9 @@
 }
 
 @media (max-width: 1040px) {
-    .ranking__top-nav {
-        position: static;
-        width: 100%;
-        display: flex;
-        justify-content: flex-start;
-        margin-bottom: 0.15rem;
-    }
-
-    .ranking__account {
-        position: static;
-        width: 100%;
-        justify-content: flex-end;
-        margin-bottom: 0.25rem;
-    }
-
     .ranking__stage {
-        padding-top: 0;
+        width: 100%;
+        padding-top: 0.4rem;
     }
 }
 
@@ -515,19 +388,9 @@
         padding: 0.6rem;
     }
 
-    .ranking__account {
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .ranking__profile-sticker {
-        transform: rotate(-3deg) scale(0.9);
-        transform-origin: top left;
-    }
-
-    .ranking__logout-btn {
-        transform: rotate(2deg);
+    .ranking__stage {
+        width: 100%;
+        padding-top: 0.2rem;
     }
 
     .ranking__header {
@@ -575,9 +438,6 @@
         animation: none;
     }
 
-    .ranking__rules-btn,
-    .ranking__profile-sticker,
-    .ranking__logout-btn,
     .ranking__refresh-btn,
     .ranking__row,
     .ranking__back-btn {
