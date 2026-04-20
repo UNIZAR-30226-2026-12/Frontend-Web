@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import Modal from '../components/Modal'
@@ -55,6 +55,25 @@ const normalizeMode = (rawMode: unknown): '1vs1' | '1vs1vs1vs1' => {
     return '1vs1'
 }
 
+const normalizeFriendStatus = (rawStatus: unknown): Friend['status'] => {
+    const cleanedStatus = String(rawStatus || '').toLowerCase()
+    if (cleanedStatus === 'online') return 'online'
+    if (cleanedStatus === 'playing' || cleanedStatus === 'in_game' || cleanedStatus === 'in-game') return 'playing'
+    return 'offline'
+}
+
+const friendStatusPriority: Record<Friend['status'], number> = {
+    online: 0,
+    playing: 1,
+    offline: 2,
+}
+
+const friendStatusLabel: Record<Friend['status'], string> = {
+    online: 'En linea',
+    playing: 'Jugando',
+    offline: 'Desconectado',
+}
+
 const toInitial = (name: string) => {
     const trimmed = name.trim()
     return trimmed ? trimmed.charAt(0).toUpperCase() : '?'
@@ -104,6 +123,7 @@ function Friends({ onNavigate }: FriendsProps) {
             const data = await api.friends.list()
             const normalizedFriends: Friend[] = (data.friends || []).map((friend: any) => ({
                 ...friend,
+                status: normalizeFriendStatus(friend.status),
                 unread_count: Number(friend.unread_count || 0),
             }))
             setFriends(normalizedFriends)
@@ -385,7 +405,17 @@ function Friends({ onNavigate }: FriendsProps) {
         setNewFriendName('')
     }
 
-    const groupInviteCandidates = friends.filter(friend => friend.id !== selectedFriend?.id)
+    const sortedFriends = useMemo(
+        () =>
+            [...friends].sort((left, right) => {
+                const statusOrder = friendStatusPriority[left.status] - friendStatusPriority[right.status]
+                if (statusOrder !== 0) return statusOrder
+                return left.name.localeCompare(right.name, 'es', { sensitivity: 'base' })
+            }),
+        [friends]
+    )
+
+    const groupInviteCandidates = sortedFriends.filter(friend => friend.id !== selectedFriend?.id)
     const navigateToProfile = (id: number, name: string) => onNavigate('profile', { id, name, returnTo: 'friends' })
 
     return (
@@ -424,7 +454,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                         />
                                     </div>
                                 ) : (
-                                    friends.map(friend => (
+                                    sortedFriends.map(friend => (
                                         <div
                                             key={friend.id}
                                             className="friend-card friend-card--friend friend-card--clickable"
@@ -439,12 +469,17 @@ function Friends({ onNavigate }: FriendsProps) {
                                             }}
                                         >
                                             <div className="friend-card__info">
-                                                <img className="friend-card__avatar" src={resolveUserAvatar(friend.avatar_url, friend.name)} alt={`Avatar de ${friend.name}`} />
+                                                <div className={`friend-card__avatar-ring ${friend.status === 'online' ? 'friend-card__avatar-ring--online' : ''}`}>
+                                                    <img className="friend-card__avatar" src={resolveUserAvatar(friend.avatar_url, friend.name)} alt={`Avatar de ${friend.name}`} />
+                                                </div>
                                                 <div className="friend-card__details">
                                                     <div className="friend-card__name-row">
                                                         <span className="friend-card__name">{friend.name}</span>
                                                         <span className="friend-card__rr">{friend.rr} RR</span>
                                                     </div>
+                                                    <p className={`friend-card__status friend-card__status--${friend.status}`}>
+                                                        {friendStatusLabel[friend.status]}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <div className="friend-card__actions">
