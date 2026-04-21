@@ -97,7 +97,7 @@ function Modal({
       document.body.style.overflow = previousOverflow
       previousFocusedElementRef.current?.focus?.()
     }
-  }, [isOpen, onClose])
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMouseDown = (e: React.MouseEvent) => {
     // Save if the click starts on the overlay itself.

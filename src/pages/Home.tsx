@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+﻿import { useState, useCallback, useEffect } from 'react'
 import LoginModal from '../components/LoginModal'
 import RegisterModal from '../components/RegisterModal'
 import ForgotPasswordModal from '../components/ForgotPasswordModal'
@@ -14,12 +14,27 @@ import '../styles/pages/Home.css'
 
 interface HomeProps {
   onNavigate: (screen: string, data?: any) => void
+  initialLoginMessage?: string
+  initialLoginMessageType?: 'success' | 'warning'
+  onLoginMessageShown?: () => void
 }
 
-function Home({ onNavigate }: HomeProps) {
+function Home({ onNavigate, initialLoginMessage, initialLoginMessageType = 'success', onLoginMessageShown }: HomeProps) {
   const [showLogin, setShowLogin] = useState(false)
   const [showRegister, setShowRegister] = useState(false)
   const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [loginSuccessMessage, setLoginSuccessMessage] = useState('')
+  const [loginSuccessMessageType, setLoginSuccessMessageType] = useState<'success' | 'warning'>('success')
+
+  const handleCloseForgotPassword = useCallback(() => setShowForgotPassword(false), [])
+
+  useEffect(() => {
+    if (!initialLoginMessage) return
+    setLoginSuccessMessage(initialLoginMessage)
+    setLoginSuccessMessageType(initialLoginMessageType)
+    setShowLogin(true)
+    onLoginMessageShown?.()
+  }, [initialLoginMessage, initialLoginMessageType, onLoginMessageShown])
 
   return (
     <div className="home">
@@ -80,19 +95,22 @@ function Home({ onNavigate }: HomeProps) {
 
       <LoginModal
         isOpen={showLogin}
-        onClose={() => setShowLogin(false)}
+        onClose={() => { setShowLogin(false); setLoginSuccessMessage('') }}
         onNavigate={onNavigate}
         onForgotPassword={() => setShowForgotPassword(true)}
+        successMessage={loginSuccessMessage}
+        successMessageType={loginSuccessMessageType}
       />
       <RegisterModal
         isOpen={showRegister}
         onClose={() => setShowRegister(false)}
         onRegisterSuccess={() => {
           setShowRegister(false)
+          setLoginSuccessMessage('Cuenta creada correctamente. Ya puedes iniciar sesión.')
           setShowLogin(true)
         }}
       />
-      <ForgotPasswordModal isOpen={showForgotPassword} onClose={() => setShowForgotPassword(false)} />
+      <ForgotPasswordModal isOpen={showForgotPassword} onClose={handleCloseForgotPassword} />
     </div>
   )
 }

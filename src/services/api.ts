@@ -137,7 +137,10 @@ export const api = {
             const response = await interceptedFetch(`${BASE_URL}/users/me`, {
                 headers: getHeaders(),
             });
-            if (!response.ok) throw new Error('Error al obtener perfil');
+            if (!response.ok) {
+                if (response.status === 401) throw new Error('SESSION_EXPIRED')
+                throw new Error('SERVER_ERROR')
+            }
             return response.json();
         },
         getStats: async (userId: number | 'me') => {

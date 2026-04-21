@@ -11,6 +11,8 @@ interface LoginModalProps {
   onClose: () => void
   onNavigate: (screen: string) => void
   onForgotPassword: () => void
+  successMessage?: string
+  successMessageType?: 'success' | 'warning'
 }
 
 function PasswordEyeIcon({ hidden }: { hidden: boolean }) {
@@ -45,7 +47,7 @@ function PasswordEyeIcon({ hidden }: { hidden: boolean }) {
   )
 }
 
-function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword }: LoginModalProps) {
+function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword, successMessage, successMessageType = 'success' }: LoginModalProps) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -89,6 +91,7 @@ function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword }: LoginModa
           <h2 className="auth-form__sr-title" id={titleId}>Iniciar Sesión</h2>
 
           <form className="auth-form__fields" onSubmit={handleLogin}>
+            {successMessage && <div className={`auth-form__success auth-form__success--${successMessageType}`} role="status">{successMessage}</div>}
             {error && <div className="auth-form__error" id={errorId} role="alert">{error}</div>}
 
             <label className="auth-form__label">

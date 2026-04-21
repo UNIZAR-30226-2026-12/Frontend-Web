@@ -508,17 +508,22 @@
   }
 
   .menu__profile-sticker {
-    transform: rotate(-4deg) scale(0.72);
+    transform: rotate(-6deg) scale(0.85);
     transform-origin: top right;
   }
 
+  .menu__profile-sticker:hover {
+    transform: translateY(-2px) rotate(-4deg) scale(0.85);
+    box-shadow: 0 8px 0 #171411;
+  }
+
   .menu__profile-frame {
-    width: 66px;
-    height: 76px;
+    width: 78px;
+    height: 90px;
   }
 
   .menu__profile-elo {
-    font-size: 1.1rem;
+    font-size: 1.48rem;
   }
 
   .menu__image-btn--online {
@@ -546,8 +551,13 @@
   }
 
   .menu__profile-sticker {
-    transform: rotate(-5deg) scale(0.9);
+    transform: rotate(-5deg) scale(1);
     transform-origin: top right;
+  }
+
+  .menu__profile-sticker:hover {
+    transform: translateY(-2px) rotate(-3deg) scale(1);
+    box-shadow: 0 8px 0 #171411;
   }
 
   .menu__logout-btn img {
@@ -590,28 +600,33 @@
   }
 
   .menu__profile-sticker {
-    border-width: 2px;
-    box-shadow: 0 4px 0 #171411;
-    padding: 0.22rem 0.22rem 0.2rem;
-    transform: rotate(-3deg) scale(0.64);
+    border-width: 3px;
+    box-shadow: 0 6px 0 #171411;
+    padding: 0.38rem 0.38rem 0.32rem;
+    transform: rotate(-6deg);
     transform-origin: top right;
   }
 
+  .menu__profile-sticker:hover {
+    transform: translateY(-2px) rotate(-4deg);
+    box-shadow: 0 8px 0 #171411;
+  }
+
   .menu__tape {
-    width: 14px;
-    height: 7px;
-    border-width: 1px;
-    top: -5px;
+    width: 17px;
+    height: 9px;
+    border-width: 2px;
+    top: -6px;
   }
 
   .menu__profile-frame {
-    width: 60px;
-    height: 70px;
-    border-width: 2px;
+    width: 78px;
+    height: 90px;
+    border-width: 3px;
   }
 
   .menu__profile-elo {
-    font-size: 1rem;
+    font-size: 1.48rem;
   }
 
   .menu__logout-btn img {

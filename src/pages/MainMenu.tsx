@@ -42,7 +42,13 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                 setUser(data)
             } catch (err) {
                 localStorage.removeItem('token')
-                onNavigate('home')
+                const isExpired = err instanceof Error && err.message === 'SESSION_EXPIRED'
+                onNavigate('home', {
+                    loginMessage: isExpired
+                        ? 'Tu sesión ha expirado. Inicia sesión de nuevo.'
+                        : 'No se pudo conectar con el servidor. Inténtalo más tarde.',
+                    loginMessageType: 'warning',
+                })
             }
         }
 

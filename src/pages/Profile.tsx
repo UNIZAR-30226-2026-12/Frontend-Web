@@ -564,6 +564,8 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                             />
                                         </label>
 
+                                        <div className="profile__form-field" />
+
                                         <label className="profile__form-field">
                                             <span>Nueva contrasena</span>
                                             <input
@@ -576,7 +578,7 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                         </label>
 
                                         <label className="profile__form-field">
-                                            <span>Confirmar contrasena</span>
+                                            <span>Confirmar nueva contrasena</span>
                                             <input
                                                 className="profile__form-input"
                                                 type="password"

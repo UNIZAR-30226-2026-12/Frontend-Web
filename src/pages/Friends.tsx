@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
 import Modal from '../components/Modal'
+import ConfirmModal from '../components/ConfirmModal'
 import '../styles/pages/Friends.css'
 import { resolveUserAvatar } from '../config/avatarOptions'
 import friendsBackground from '../assets/backgrounds/menu-mosaic-bg.png'
@@ -115,6 +116,8 @@ function Friends({ onNavigate }: FriendsProps) {
     const [chatInput, setChatInput] = useState('')
     const [chatLoading, setChatLoading] = useState(false)
     const [chatSending, setChatSending] = useState(false)
+    const [friendToRemove, setFriendToRemove] = useState<Friend | null>(null)
+    const [isRemoving, setIsRemoving] = useState(false)
     const toastTimer = useRef<number | null>(null)
     const chatListRef = useRef<HTMLDivElement | null>(null)
     const addFriendModalTitleId = 'friends-add-modal-title'
@@ -359,14 +362,18 @@ function Friends({ onNavigate }: FriendsProps) {
         }
     }
 
-    const handleRemove = async (id: number) => {
+    const handleConfirmRemove = async () => {
+        if (!friendToRemove) return
+        setIsRemoving(true)
         try {
-            await api.friends.remove(id)
-            const friend = friends.find(f => f.id === id)
-            setFriends(friends.filter(f => f.id !== id))
-            if (friend) showToast(`${friend.name} eliminado de tus amigos`, 'error')
+            await api.friends.remove(friendToRemove.id)
+            setFriends(friends.filter(f => f.id !== friendToRemove.id))
+            showToast(`${friendToRemove.name} eliminado de tus amigos`, 'error')
         } catch (err) {
             showToast('Error al eliminar amigo', 'error')
+        } finally {
+            setIsRemoving(false)
+            setFriendToRemove(null)
         }
     }
 
@@ -507,7 +514,7 @@ function Friends({ onNavigate }: FriendsProps) {
                                                 </button>
                                                 <button
                                                     className="friend-btn friend-btn--remove"
-                                                    onClick={() => handleRemove(friend.id)}
+                                                    onClick={() => setFriendToRemove(friend)}
                                                     title="Eliminar amigo"
                                                 >
                                                     Eliminar
@@ -889,6 +896,17 @@ function Friends({ onNavigate }: FriendsProps) {
                     </form>
                 </div>
             </Modal>
+
+            <ConfirmModal
+                isOpen={!!friendToRemove}
+                onClose={() => setFriendToRemove(null)}
+                onConfirm={handleConfirmRemove}
+                title="Eliminar amigo"
+                message={`¿Seguro que quieres eliminar a ${friendToRemove?.name} de tu lista de amigos?`}
+                confirmLabel="Eliminar"
+                cancelLabel="Cancelar"
+                isLoading={isRemoving}
+            />
         </div>
     )
 }

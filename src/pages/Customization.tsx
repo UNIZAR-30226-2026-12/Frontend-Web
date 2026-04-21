@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+﻿import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { api } from '../services/api'
 import '../styles/pages/Customization.css'
 import { PIECE_STYLES_1V1, PIECE_STYLES_4P, decodePiecePreference, encodePiecePreference } from '../config/pieceStyles'
@@ -19,6 +19,20 @@ function Customization({ onNavigate }: CustomizationProps) {
     const [selectedAvatar, setSelectedAvatar] = useState<number | 'custom'>(0)
     const [customAvatar, setCustomAvatar] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; visible: boolean }>({
+        message: '',
+        type: 'success',
+        visible: false,
+    })
+    const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    const showToast = useCallback((message: string, type: 'success' | 'error') => {
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+        setToast({ message, type, visible: true })
+        toastTimerRef.current = setTimeout(() => {
+            setToast(prev => ({ ...prev, visible: false }))
+        }, 3000)
+    }, [])
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -52,6 +66,7 @@ function Customization({ onNavigate }: CustomizationProps) {
         piece4pIdx: number,
         avatarSelection: number | 'custom',
         customAvatarUrl?: string | null,
+        silent = false,
     ) => {
         try {
             const avatarUrl = typeof avatarSelection === 'number'
@@ -62,8 +77,10 @@ function Customization({ onNavigate }: CustomizationProps) {
                 preferred_piece_color: encodePiecePreference(piece1v1Idx, piece4pIdx),
                 avatar_url: avatarUrl,
             })
+            if (!silent) showToast('Personalización guardada', 'success')
         } catch (err) {
             console.error('Error saving customization', err)
+            if (!silent) showToast('No se pudo guardar la personalización', 'error')
         }
     }
 
@@ -78,9 +95,11 @@ function Customization({ onNavigate }: CustomizationProps) {
             const response = await api.users.uploadAvatar(formData)
             setCustomAvatar(response.avatar_url)
             setSelectedAvatar('custom')
-            await handleSaveCustomization(selectedPiece1v1, selectedPiece4p, 'custom', response.avatar_url)
+            await handleSaveCustomization(selectedPiece1v1, selectedPiece4p, 'custom', response.avatar_url, true)
+            showToast('Avatar guardado correctamente', 'success')
         } catch (err) {
             console.error('Error uploading avatar', err)
+            showToast('No se pudo subir la imagen', 'error')
         }
     }
 
@@ -273,6 +292,19 @@ function Customization({ onNavigate }: CustomizationProps) {
                     <img src={backToMenuButtonImage} alt="" />
                 </button>
             </main>
+
+            <div
+                className={`popup-toast popup-toast--${toast.type} ${toast.visible ? 'popup-toast--visible' : ''}`}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+            >
+                <span className="popup-toast__icon">
+                    {toast.type === 'success' && 'OK'}
+                    {toast.type === 'error' && 'X'}
+                </span>
+                <span className="popup-toast__message">{toast.message}</span>
+            </div>
         </div>
     )
 }

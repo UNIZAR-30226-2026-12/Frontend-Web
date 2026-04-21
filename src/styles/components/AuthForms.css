@@ -400,6 +400,26 @@
   padding: 0.4rem 0.5rem;
 }
 
+.auth-form--prototype .auth-form__success {
+  border: 2px solid #171411;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  padding: 0.4rem 0.5rem;
+  text-align: left;
+  margin-top: 0;
+}
+
+.auth-form--prototype .auth-form__success--success {
+  background: rgba(205, 245, 210, 0.94);
+  color: #1a5c26;
+}
+
+.auth-form--prototype .auth-form__success--warning {
+  background: rgba(255, 243, 194, 0.96);
+  color: #7a4a00;
+}
+
 .auth-form--prototype .auth-form__mascot {
   position: absolute;
   z-index: 2;

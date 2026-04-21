@@ -56,6 +56,8 @@ function App() {
   const [activeMatchData4Players, setActiveMatchData4Players] = useState<MatchData4Players | null>(() => JSON.parse(localStorage.getItem('activeMatchData4Players') || 'null'))
   const [profileData, setProfileData] = useState<{ userId?: number, username?: string, returnTo?: string }>(() => JSON.parse(localStorage.getItem('profileData') || '{}'))
   const [notification, setNotification] = useState<string | null>(null)
+  const [homeLoginMessage, setHomeLoginMessage] = useState('')
+  const [homeLoginMessageType, setHomeLoginMessageType] = useState<'success' | 'warning'>('success')
   const wsRef = useRef<WebSocket | null>(null)
   const notificationCloseButtonRef = useRef<HTMLButtonElement | null>(null)
   const notificationTitleId = 'popup-notification-title'
@@ -200,6 +202,10 @@ function App() {
     if (screen === 'profile') {
       setProfileData({ userId: data?.id, username: data?.name, returnTo: data?.returnTo })
     }
+    if (screen === 'home' && data?.loginMessage) {
+      setHomeLoginMessage(data.loginMessage)
+      setHomeLoginMessageType(data.loginMessageType ?? 'warning')
+    }
     setCurrentScreen(screen)
   }, [currentScreen])
 
@@ -208,7 +214,7 @@ function App() {
       <a className="skip-link" href="#app-main">Saltar al contenido principal</a>
 
       <div id="app-main" tabIndex={-1}>
-        {currentScreen === 'home' && <Home onNavigate={navigateTo} />}
+        {currentScreen === 'home' && <Home onNavigate={navigateTo} initialLoginMessage={homeLoginMessage} initialLoginMessageType={homeLoginMessageType} onLoginMessageShown={() => { setHomeLoginMessage(''); setHomeLoginMessageType('success') }} />}
         {currentScreen === 'menu' && <MainMenu onNavigate={navigateTo} />}
         {currentScreen === 'rules' && <Rules onNavigate={navigateTo} />}
         {currentScreen === 'customization' && <Customization onNavigate={navigateTo} />}
