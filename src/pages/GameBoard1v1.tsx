@@ -1,4 +1,3 @@
-import '../styles/background.css'
 import '../styles/pages/GameBoard1v1.css'
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import Modal from '../components/Modal'
@@ -7,14 +6,12 @@ import '../styles/components/InGameChat.css'
 import { api, WS_BASE_URL } from '../services/api'
 import { PIECE_STYLES_1V1, decodePiecePreference } from '../config/pieceStyles'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import fireBoard from '../assets/arenas/fireboard.png'
-import iceBoard from '../assets/arenas/iceboard.png'
-import woodBoard from '../assets/arenas/woodboard.png'
-import quartzBoard from '../assets/arenas/quartzboard.png'
-import fireBackground from '../assets/arenas/firebackground.png'
-import iceBackground from '../assets/arenas/icebackground.png'
-import woodBackground from '../assets/arenas/woodbackground.png'
-import quartzBackground from '../assets/arenas/quartzbackground.png'
+import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
+import blockGameFrame from '../assets/Ingame/bloqueJuego.png'
+import boardBackgroundDefault from '../assets/Ingame/Fondo1.png'
+import boardDefault from '../assets/Ingame/Tablero1v1.png'
+import questionCellDefault from '../assets/Ingame/casillaInterrogante.png'
+import leaveRoomButtonImage from '../assets/salaEspera/Abandonar.png'
 
 interface GameBoard1v1Props {
     onNavigate: (screen: string, data?: any) => void
@@ -182,16 +179,20 @@ const isInsideBoard = (row: number, col: number) =>
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
 
-interface ArenaTheme {
+interface InGameTheme {
+    frame: string
+    boardBackground: string
     board: string
-    background: string
+    questionCell: string
 }
 
-const getArenaFromElo = (elo: number): ArenaTheme => {
-    if (elo < 900) return { board: woodBoard, background: woodBackground }
-    if (elo < 1100) return { board: quartzBoard, background: quartzBackground }
-    if (elo < 1300) return { board: fireBoard, background: fireBackground }
-    return { board: iceBoard, background: iceBackground }
+const INGAME_THEME_PRESETS: Record<'classic', InGameTheme> = {
+    classic: {
+        frame: blockGameFrame,
+        boardBackground: boardBackgroundDefault,
+        board: boardDefault,
+        questionCell: questionCellDefault,
+    },
 }
 
 function createInitialBoard(): BoardCell[][] {
@@ -471,12 +472,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [isAbandoning, setIsAbandoning] = useState(false)
     const [showPauseConfirm, setShowPauseConfirm] = useState(false)
     const [pausedUsernames, setPausedUsernames] = useState<string[]>([])
-    const [myUsername, setMyUsername] = useState(matchData?.playerName ?? '')
 
-    // Chat states
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-    const [isChatOpen, setIsChatOpen] = useState(false)
-    const [unreadCount, setUnreadCount] = useState(0)
     const playerPieceColorName = selectedPieceStyle1v1.sideAName
     const opponentPieceColorName = selectedPieceStyle1v1.sideBName
     const isAiMatch = (matchData?.opponentName ?? '').trim().toUpperCase() === 'IA'
@@ -496,7 +493,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         color: localPiece === 'black' ? opponentPieceColorName : playerPieceColorName,
     }
     const playerNameByPiece = (piece: Piece) => (piece === playerProfile.piece ? playerProfile.name : opponentProfile.name)
-    const arenaTheme = getArenaFromElo(playerProfile.rr)
+    const activeTheme = INGAME_THEME_PRESETS.classic
 
     const clearSkillAnnouncement = () => {
         if (skillAnnouncementTimeoutRef.current !== null) {
@@ -628,7 +625,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 setSelectedPieceStyle1v1(PIECE_STYLES_1V1[duelIndex] ?? PIECE_STYLES_1V1[0])
                 setCurrentUserAvatar(me.avatar_url)
                 setCurrentUserElo(me.elo ?? PLAYER.rr)
-                setMyUsername(me.username)
             } catch {
                 if (!isMounted) return
                 setSelectedPieceStyle1v1(PIECE_STYLES_1V1[0])
@@ -780,9 +776,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     const sender = data.payload.sender || '?'
                     const message = data.payload.message || ''
                     setChatMessages(prev => [...prev, { sender, message }])
-                    if (!isChatOpen && sender !== myUsername) {
-                        setUnreadCount(prev => prev + 1)
-                    }
                 }
             } catch {
                 // ignore malformed websocket payloads
@@ -1199,28 +1192,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         useInstantAbility(ability, inventoryIndex)
     }
 
-    const handleOpponentUseAbility = (ability: AbilityId, inventoryIndex: number) => {
-        // In online matches the opponent is a real remote player; local user must never control their skills
-        if (isOnlineMatch) return
-
-        if (!ENABLE_SPECIAL_MECHANICS_1V1 || gameOver || currentTurn !== opponentProfile.piece) {
-            return
-        }
-
-        if (pendingAbility?.inventoryIndex === inventoryIndex) {
-            setPendingAbility(null)
-            return
-        }
-
-        if (ABILITY_META[ability].needsTarget) {
-            setPendingAbility({ id: ability, inventoryIndex })
-            setSystemMessage(`Selecciona casilla para ${getAbilityDisplayName(ability)}.`)
-            return
-        }
-
-        useInstantAbility(ability, inventoryIndex)
-    }
-
     const handleCellClick = (row: number, col: number) => {
         if (gameOver) {
             return
@@ -1386,13 +1357,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
     }
 
-    const toggleChat = () => {
-        setIsChatOpen(!isChatOpen)
-        if (!isChatOpen) {
-            setUnreadCount(0)
-        }
-    }
-
     const turnColorLabel = currentTurn === playerProfile.piece ? playerProfile.color : opponentProfile.color
     const turnLabel =
         gameOver
@@ -1454,6 +1418,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
     return (
         <div className="duel">
+            <img className="duel__background" src={menuBackground} alt="" aria-hidden="true" />
+            <div className="duel__overlay" aria-hidden="true" />
             <h1 className="sr-only">Partida 1 contra 1</h1>
             {!gameOver && pausedUsernames.length > 0 && (
                 <div className="duel__paused-status">
@@ -1479,209 +1445,156 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     {abilityError}
                 </div>
             )}
-            <div className="home__bg" aria-hidden="true">
-                <span className="home__chip home__chip--1">⚫</span>
-                <span className="home__chip home__chip--2">⚪</span>
-                <span className="home__chip home__chip--3">🔴</span>
-                <span className="home__chip home__chip--4">🔵</span>
-                <span className="home__chip home__chip--5">🟢</span>
-                <span className="home__chip home__chip--6">🟡</span>
-                <span className="home__chip home__chip--7">🟣</span>
-                <span className="home__chip home__chip--8">🟠</span>
-                <span className="home__chip home__chip--9">⚫</span>
-                <span className="home__chip home__chip--10">⚪</span>
-                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
-            </div>
-
-            <div className="duel__container">
-                <div style={{ display: 'flex', gap: '12px', position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
-                    {!isAiMatch && (
-                        <button type="button" className="ingame-chat-btn" onClick={toggleChat}>
-                            Chat
-                            {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-                        </button>
-                    )}
-                    {isOnlineMatch && matchData?.returnTo === 'friends' && (
-                        <button type="button" className="duel__pause-btn" onClick={handleAttemptPause}>
-                            Pausar
-                        </button>
-                    )}
-                    <button type="button" className="duel__leave-btn" style={{ position: 'static' }} onClick={handleAttemptLeave}>
-                        Abandonar partida
-                    </button>
-                </div>
-                <header className="duel__header">
-                    <div className="duel__center-info">
-                        <span className="duel__turn-label">Turno actual</span>
-                        <span className="duel__turn-value">{turnLabel}</span>
-                        {/* UI de Habilidad Pendiente o Direccion de Gravedad */}
-                        {(pendingAbility || selectingGravityDirection) && (
-                            <div className="duel__ability-pending-bar">
-                                <span className="duel__ability-pending-text">
-                                    {pendingAbility
-                                        ? `Usando: ${getAbilityDisplayName(pendingAbility.id)}`
-                                        : 'Selecciona Direccion de Gravedad'}
-                                </span>
-                                <button
-                                    className="duel__ability-cancel-btn"
-                                    type="button"
-                                    onClick={() => {
-                                        setPendingAbility(null)
-                                        setSelectingGravityDirection(null)
-                                        setSystemMessage('Accion cancelada.')
-                                    }}
-                                >
-                                    Cancelar
-                                </button>
-                            </div>
-                        )}
-
-                        {selectingGravityDirection && (
-                            <div className="duel__gravity-direction-picker">
-                                {(['up', 'down', 'left', 'right'] as const).map((dir) => (
-                                    <button
-                                        key={dir}
-                                        className={`duel__gravity-btn duel__gravity-btn--${dir}`}
-                                        type="button"
-                                        onClick={() => {
-                                            const { inventoryIndex } = selectingGravityDirection
-                                            if (isOnlineMatch) {
-                                                if (onlineWsRef.current?.readyState === WebSocket.OPEN) {
-                                                    pendingOnlineSkillRef.current = { actor: playerProfile.piece, ability: 'gravity', direction: dir }
-                                                    onlineWsRef.current.send(JSON.stringify({
-                                                        action: 'use_skill',
-                                                        type: 'gravity',
-                                                        direction: dir,
-                                                        inventory_index: inventoryIndex
-                                                    }))
-                                                }
-                                            } else {
-                                                const { board: nextBoard, questionCells: nextQuestions } = applyGravity(board, dir, questionCells)
-                                                const nextInventories = JSON.parse(JSON.stringify(inventories))
-                                                nextInventories[currentTurn].splice(inventoryIndex, 1)
-                                                showSkillAnnouncement(currentTurn, 'gravity', dir)
-                                                finishAction(nextBoard, nextQuestions, nextInventories, skipTurns, `Gravedad aplicada hacia ${dir}`)
-                                            }
-                                            setSelectingGravityDirection(null)
-                                        }}
-                                    >
-                                        {dir === 'up' ? '⬆️' : dir === 'down' ? '⬇️' : dir === 'left' ? '⬅️' : '➡️'}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className="duel__board-container">
-                            {isOnlineMatch ? (onlineStatusMessage || 'Partida online en curso') : systemMessage}
-                        </div>
-                    </div>
-                </header>
-
-                <main className="duel__main">
-                    <aside className={`duel__panel ${currentTurn === playerProfile.piece && !gameOver ? 'duel__panel--active' : ''} ${pausedUsernames.includes(playerProfile.name) ? 'duel__panel--paused' : ''}`}>
-                        <div className="duel__player-card">
-                            <img
-                                className="duel__avatar"
-                                src={resolveUserAvatar(currentUserAvatar ?? matchData?.playerAvatarUrl, playerProfile.name)}
-                                alt={`Avatar de ${playerProfile.name}`}
+            <div
+                className="duel__container"
+                style={{
+                    '--duel-frame-image': `url(${activeTheme.frame})`,
+                    '--duel-board-background-image': `url(${activeTheme.boardBackground})`,
+                    '--duel-question-image': `url(${activeTheme.questionCell})`,
+                } as CSSProperties}
+            >
+                <main className="duel__layout">
+                    <aside className="duel__chat-column">
+                        {isAiMatch ? (
+                            <div className="duel__chat-placeholder">Chat desactivado en partida contra IA.</div>
+                        ) : (
+                            <InGameChat
+                                messages={chatMessages}
+                                myUsername={playerProfile.name}
+                                onSend={handleSendChat}
+                                mode="panel"
                             />
-                            <div className="duel__player-data">
-                                <span className="duel__player-row">
-                                    <span className="duel__name">{playerProfile.name}</span>
-                                    <span className="duel__player-score">{playerScoreRaw} pts</span>
-                                </span>
-                                <span className="duel__meta">{playerProfile.color}</span>
-                            </div>
-                        </div>
-                        {ENABLE_SPECIAL_MECHANICS_1V1 && (
-                            <>
-                                <h2 className="duel__panel-title">Habilidades</h2>
-                                <div className="duel__skills">
-                                    {inventories[playerProfile.piece].length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
-                                    {inventories[playerProfile.piece].map((ability, index) => false ? (
-                                        <button
-                                            key={`${ability}-${index}-${playerProfile.piece}`}
-                                            className={`duel__skill-card ${pendingAbility?.inventoryIndex === index && currentTurn === playerProfile.piece ? 'duel__skill-card--active' : ''}`}
-                                            onClick={() => handleUseAbility(ability, index)}
-                                            type="button"
-                                            disabled={gameOver || currentTurn !== playerProfile.piece}
-                                        >
-                                            <span className="duel__skill-icon">{(ABILITY_META[ability] || { icon: '❓' }).icon}</span>
-                                            <div className="duel__skill-text">
-                                                <span className="duel__skill-name">{(ABILITY_META[ability] || { name: 'Desconocida' }).name}</span>
-                                                <span className="duel__skill-uses">1 uso</span>
-                                            </div>
-                                        </button>
-                                    ) : renderSkillCard(ability, index, playerProfile.piece, handleUseAbility))}
-                                </div>
-                            </>
                         )}
                     </aside>
 
-                    <section
-                        className="duel__board-area"
-                        style={{ '--duel-board-area-bg': `url(${arenaTheme.background})` } as CSSProperties}
-                    >
-                        {skillAnnouncement && (
-                            <div
-                                className={`duel__skill-announcement duel__skill-announcement--${skillAnnouncement.tone} duel__skill-announcement--${skillAnnouncement.theme}`}
-                                aria-live="polite"
-                            >
-                                <span className="duel__skill-announcement-icon">{skillAnnouncement.icon}</span>
-                                <div className="duel__skill-announcement-copy">
-                                    <span className="duel__skill-announcement-actor">{skillAnnouncement.actorLabel}</span>
-                                    <span className="duel__skill-announcement-name">{skillAnnouncement.abilityLabel}</span>
-                                </div>
-                            </div>
-                        )}
-                        <div
-                            className="duel__board"
-                            style={{ backgroundImage: `url(${arenaTheme.board})` }}
-                        >
-                            {Array.from({ length: 64 }).map((_, index) => {
-                                const row = Math.floor(index / BOARD_SIZE)
-                                const col = index % BOARD_SIZE
-                                const key = `${row}-${col}`
-                                const cell = board[row][col]
-                                const hasQuestion = ENABLE_SPECIAL_MECHANICS_1V1 && questionCells.has(key)
-                                const canShowPlayableMove = !isOnlineMatch || currentTurn === playerProfile.piece
-                                const isPlayable = !pendingAbility && validMoves.has(key) && !gameOver && canShowPlayableMove
+                    <section className="duel__board-column">
+                        <header className="duel__center-info">
+                            <span className="duel__turn-label">Turno actual</span>
+                            <span className="duel__turn-value">{turnLabel}</span>
+                            <span className="duel__turn-state">
+                                {isOnlineMatch ? (onlineStatusMessage || 'Partida online en curso') : systemMessage}
+                            </span>
 
-                                return (
+                            {(pendingAbility || selectingGravityDirection) && (
+                                <div className="duel__ability-pending-bar">
+                                    <span className="duel__ability-pending-text">
+                                        {pendingAbility
+                                            ? `Usando: ${getAbilityDisplayName(pendingAbility.id)}`
+                                            : 'Selecciona direccion de gravedad'}
+                                    </span>
                                     <button
-                                        key={key}
-                                        className={`duel__cell ${(row + col) % 2 === 0 ? 'duel__cell--dark' : 'duel__cell--light'} ${isPlayable ? 'duel__cell--playable' : ''} ${hasQuestion ? 'duel__cell--question' : ''}`}
-                                        onClick={() => handleCellClick(row, col)}
-                                        disabled={gameOver || pausedUsernames.length > 0}
+                                        className="duel__ability-cancel-btn"
                                         type="button"
-                                        aria-label={`Casilla ${row + 1}-${col + 1}`}
-                                        tabIndex={isPlayable ? 0 : -1}
+                                        onClick={() => {
+                                            setPendingAbility(null)
+                                            setSelectingGravityDirection(null)
+                                            setSystemMessage('Accion cancelada.')
+                                        }}
                                     >
-                                        {hasQuestion && <span className="duel__question">?</span>}
-                                        {cell.piece && (
-                                            <>
-                                                <span
-                                                    className={`duel-piece ${cell.piece === 'black' ? 'duel-piece--black' : 'duel-piece--white'} ${cell.fixed ? 'duel-piece--fixed' : ''}`}
-                                                    style={{
-                                                        background: cell.piece === 'black'
-                                                            ? selectedPieceStyle1v1.sideA
-                                                            : selectedPieceStyle1v1.sideB,
-                                                    }}
-                                                />
-                                                {cell.fixed && <span className="duel-piece-lock">🔒</span>}
-                                            </>
-                                        )}
+                                        Cancelar
                                     </button>
-                                )
-                            })}
+                                </div>
+                            )}
+
+                            {selectingGravityDirection && (
+                                <div className="duel__gravity-direction-picker">
+                                    {(['up', 'down', 'left', 'right'] as const).map((dir) => (
+                                        <button
+                                            key={dir}
+                                            className={`duel__gravity-btn duel__gravity-btn--${dir}`}
+                                            type="button"
+                                            onClick={() => {
+                                                const { inventoryIndex } = selectingGravityDirection
+                                                if (isOnlineMatch) {
+                                                    if (onlineWsRef.current?.readyState === WebSocket.OPEN) {
+                                                        pendingOnlineSkillRef.current = { actor: playerProfile.piece, ability: 'gravity', direction: dir }
+                                                        onlineWsRef.current.send(JSON.stringify({
+                                                            action: 'use_skill',
+                                                            type: 'gravity',
+                                                            direction: dir,
+                                                            inventory_index: inventoryIndex
+                                                        }))
+                                                    }
+                                                } else {
+                                                    const { board: nextBoard, questionCells: nextQuestions } = applyGravity(board, dir, questionCells)
+                                                    const nextInventories = JSON.parse(JSON.stringify(inventories))
+                                                    nextInventories[currentTurn].splice(inventoryIndex, 1)
+                                                    showSkillAnnouncement(currentTurn, 'gravity', dir)
+                                                    finishAction(nextBoard, nextQuestions, nextInventories, skipTurns, `Gravedad aplicada hacia ${dir}`)
+                                                }
+                                                setSelectingGravityDirection(null)
+                                            }}
+                                        >
+                                            {dir === 'up' ? 'Arriba' : dir === 'down' ? 'Abajo' : dir === 'left' ? 'Izq' : 'Der'}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </header>
+
+                        <div className="duel__board-area">
+                            <div
+                                className="duel__board"
+                                style={{ backgroundImage: `url(${activeTheme.board})` }}
+                            >
+                                {Array.from({ length: 64 }).map((_, index) => {
+                                    const row = Math.floor(index / BOARD_SIZE)
+                                    const col = index % BOARD_SIZE
+                                    const key = `${row}-${col}`
+                                    const cell = board[row][col]
+                                    const hasQuestion = ENABLE_SPECIAL_MECHANICS_1V1 && questionCells.has(key)
+                                    const canShowPlayableMove = !isOnlineMatch || currentTurn === playerProfile.piece
+                                    const isPlayable = !pendingAbility && validMoves.has(key) && !gameOver && canShowPlayableMove
+
+                                    return (
+                                        <button
+                                            key={key}
+                                            className={`duel__cell ${(row + col) % 2 === 0 ? 'duel__cell--dark' : 'duel__cell--light'} ${isPlayable ? 'duel__cell--playable' : ''} ${hasQuestion ? 'duel__cell--question' : ''}`}
+                                            onClick={() => handleCellClick(row, col)}
+                                            disabled={gameOver || pausedUsernames.length > 0}
+                                            type="button"
+                                            aria-label={`Casilla ${row + 1}-${col + 1}`}
+                                            tabIndex={isPlayable ? 0 : -1}
+                                        >
+                                            {hasQuestion && <span className="duel__question" aria-hidden="true" />}
+                                            {cell.piece && (
+                                                <>
+                                                    <span
+                                                        className={`duel-piece ${cell.piece === 'black' ? 'duel-piece--black' : 'duel-piece--white'} ${cell.fixed ? 'duel-piece--fixed' : ''}`}
+                                                        style={{
+                                                            background: cell.piece === 'black'
+                                                                ? selectedPieceStyle1v1.sideA
+                                                                : selectedPieceStyle1v1.sideB,
+                                                        }}
+                                                    />
+                                                    {cell.fixed && <span className="duel-piece-lock">{'\u{1F512}'}</span>}
+                                                </>
+                                            )}
+                                        </button>
+                                    )
+                                })}
+                            </div>
                         </div>
                     </section>
 
-                    <aside className={`duel__panel ${currentTurn === opponentProfile.piece && !gameOver ? 'duel__panel--active' : ''} ${pausedUsernames.includes(opponentProfile.name) ? 'duel__panel--paused' : ''}`}>
-                        <div className="duel__player-card">
+                    <aside className="duel__info-column">
+                        <div className="duel__actions">
+                            {isOnlineMatch && matchData?.returnTo === 'friends' && (
+                                <button type="button" className="duel__pause-btn" onClick={handleAttemptPause}>
+                                    Pausar
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                className="duel__leave-btn duel__leave-btn--image"
+                                onClick={handleAttemptLeave}
+                                aria-label="Abandonar partida"
+                            >
+                                <img src={leaveRoomButtonImage} alt="" aria-hidden="true" />
+                            </button>
+                        </div>
+
+                        <div className={`duel__player-card duel__player-card--opponent ${currentTurn === opponentProfile.piece && !gameOver ? 'duel__player-card--active' : ''} ${pausedUsernames.includes(opponentProfile.name) ? 'duel__panel--paused' : ''}`}>
                             <img
                                 className="duel__avatar"
                                 src={resolveUserAvatar(matchData?.opponentAvatarUrl, opponentProfile.name)}
@@ -1695,17 +1608,29 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                 <span className="duel__meta">{opponentProfile.color}</span>
                             </div>
                         </div>
+
+                        <div className={`duel__player-card duel__player-card--self ${currentTurn === playerProfile.piece && !gameOver ? 'duel__player-card--active' : ''} ${pausedUsernames.includes(playerProfile.name) ? 'duel__panel--paused' : ''}`}>
+                            <img
+                                className="duel__avatar"
+                                src={resolveUserAvatar(currentUserAvatar ?? matchData?.playerAvatarUrl, playerProfile.name)}
+                                alt={`Avatar de ${playerProfile.name}`}
+                            />
+                            <div className="duel__player-data">
+                                <span className="duel__player-row">
+                                    <span className="duel__name">{playerProfile.name}</span>
+                                    <span className="duel__player-score">{playerScoreRaw} pts</span>
+                                </span>
+                                <span className="duel__meta">{playerProfile.color}</span>
+                            </div>
+                        </div>
+
                         {ENABLE_SPECIAL_MECHANICS_1V1 && (
-                            <>
-                                <h2 className="duel__panel-title">Habilidades</h2>
-                                <div className="duel__skills">
-                                    {inventories[opponentProfile.piece].length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
-                                    {inventories[opponentProfile.piece].map((ability, index) =>
-                                        // forceDisabled=isOnlineMatch: use-button blocked for local player, Info button stays functional
-                                        renderSkillCard(ability, index, opponentProfile.piece, handleOpponentUseAbility, isOnlineMatch)
-                                    )}
-                                </div>
-                            </>
+                            <div className="duel__skills duel__skills--slot">
+                                {inventories[playerProfile.piece].length === 0 && <span className="duel__empty-skills">Sin habilidades</span>}
+                                {inventories[playerProfile.piece].map((ability, index) =>
+                                    renderSkillCard(ability, index, playerProfile.piece, handleUseAbility)
+                                )}
+                            </div>
                         )}
                     </aside>
                 </main>
@@ -1814,20 +1739,10 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     </div>
                 </div>
             </Modal>
-
-
-            {!isAiMatch && (
-                <InGameChat
-                    messages={chatMessages}
-                    myUsername={playerProfile.name}
-                    isOpen={isChatOpen}
-                    onClose={() => setIsChatOpen(false)}
-                    onSend={handleSendChat}
-                />
-            )}
         </div>
     )
 }
 
 export default GameBoard1v1
+
 
