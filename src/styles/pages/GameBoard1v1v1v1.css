@@ -1,374 +1,1123 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap');
+
 .duel-quad {
     position: relative;
-    height: 100vh;
-    padding: 1.5rem;
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 0.35rem;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    color: #22170c;
+    isolation: isolate;
+}
+
+.duel-quad__background {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -3;
+}
+
+.duel-quad__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+        radial-gradient(64rem 30rem at 16% 13%, rgba(255, 232, 174, 0.2) 0%, transparent 70%),
+        radial-gradient(56rem 26rem at 86% 82%, rgba(255, 225, 165, 0.14) 0%, transparent 70%),
+        linear-gradient(180deg, rgba(6, 18, 21, 0.08) 0%, rgba(8, 18, 20, 0.4) 100%);
+}
+
+.duel-quad,
+.duel-quad * {
+    font-family: 'Montserrat', 'Avenir Next', 'Segoe UI', sans-serif;
 }
 
 .duel-quad__container {
+    width: min(92vw, calc(92dvh * 724 / 380));
+    height: min(92dvh, calc(92vw * 380 / 724));
+    max-height: 100%;
+    aspect-ratio: 724 / 380;
     position: relative;
-    z-index: 2;
-    width: min(1460px, 100%);
-    height: calc(100vh - 3rem);
-    border-radius: 22px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(14, 17, 28, 0.88);
-    backdrop-filter: blur(12px);
-    padding: 1.25rem;
+    background-image: var(--duel-quad-frame-image);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    filter: drop-shadow(0 16px 20px rgba(20, 18, 14, 0.35));
+
+    /* ==== Controles De Posicion Por Bloque ==== */
+    --dq-left-col-x: 3.4%;
+    --dq-left-col-y: 0px;
+    --dq-right-col-x: 2.2%;
+    --dq-right-col-y: 0px;
+    --dq-left-players-x: 0px;
+    --dq-left-players-y: 0px;
+    --dq-right-players-x: 0px;
+    --dq-right-players-y: 0px;
+    --dq-chat-x: 0px;
+    --dq-chat-y: 0px;
+    --dq-chat-width: 70%;
+    --dq-chat-max-width: 100%;
+    --dq-chat-height: auto;
+    --dq-skills-x: 40px;
+    --dq-skills-y: 65px;
+    --dq-skills-width: 100%;
+    --dq-skills-max-width: 70%;
+    --dq-actions-top: -8.8%;
+    --dq-actions-right: -1.3%;
+    --dq-actions-x: 0px;
+    --dq-actions-y: 0px;
+    --dq-leave-width: clamp(6.8rem, 10.6vw, 11rem);
+    --dq-board-bg-area-width: 119%;
+    --dq-board-bg-area-height: 98%;
+    --dq-board-bg-area-x: -22px;
+    --dq-board-bg-area-y: -0px;
+
+    /* ==== Controles Del Chat ==== */
+    --dq-chat-input-gap: 0.16rem;
+    --dq-chat-input-padding-y: 0.26rem;
+    --dq-chat-input-padding-x: 0.36rem;
+    --dq-chat-input-font-size: 0.6rem;
+    --dq-chat-send-size: 1.62rem;
+    --dq-chat-send-icon-size: 0.64rem;
+
+    /* ==== Jugador Izquierda Arriba (L1) ==== */
+    --dq-l1-panel-x: 0px;
+    --dq-l1-panel-y: 0px;
+    --dq-l1-card-x: 0px;
+    --dq-l1-card-y: 0px;
+    --dq-l1-avatar-x: 0px;
+    --dq-l1-avatar-y: 0px;
+    --dq-l1-avatar-size: clamp(68px, 4vw, 58px);
+    --dq-l1-avatar-rotate: -4deg;
+    --dq-l1-data-x: 15px;
+    --dq-l1-data-y: 0px;
+    --dq-l1-name-x: 0px;
+    --dq-l1-name-y: 0px;
+    --dq-l1-score-x: -105px;
+    --dq-l1-score-y: 0px;
+    --dq-l1-score-gap: 0.06rem;
+    --dq-l1-meta-x: 0px;
+    --dq-l1-meta-y: 0px;
+
+    /* ==== Jugador Izquierda Abajo (L2) ==== */
+    --dq-l2-panel-x: 0px;
+    --dq-l2-panel-y: -22px;
+    --dq-l2-card-x: 0px;
+    --dq-l2-card-y: 0px;
+    --dq-l2-avatar-x: 0px;
+    --dq-l2-avatar-y: 0px;
+    --dq-l2-avatar-size: clamp(72px, 4vw, 58px);
+    --dq-l2-avatar-rotate: -5deg;
+    --dq-l2-data-x: 12px;
+    --dq-l2-data-y: 0px;
+    --dq-l2-name-x: 0px;
+    --dq-l2-name-y: 0px;
+    --dq-l2-score-x: -105px;
+    --dq-l2-score-y: 0px;
+    --dq-l2-score-gap: 0.06rem;
+    --dq-l2-meta-x: 0px;
+    --dq-l2-meta-y: 0px;
+
+    /* ==== Jugador Derecha Arriba (R1) ==== */
+    --dq-r1-panel-x: 45px;
+    --dq-r1-panel-y: 0px;
+    --dq-r1-card-x: 0px;
+    --dq-r1-card-y: 0px;
+    --dq-r1-avatar-x: 0px;
+    --dq-r1-avatar-y: 0px;
+    --dq-r1-avatar-size: clamp(68px, 4vw, 58px);
+    --dq-r1-avatar-rotate: -5deg;
+    --dq-r1-data-x: 19px;
+    --dq-r1-data-y: 0px;
+    --dq-r1-name-x: 0px;
+    --dq-r1-name-y: 0px;
+    --dq-r1-score-x: -95px;
+    --dq-r1-score-y: 0px;
+    --dq-r1-score-gap: 0.06rem;
+    --dq-r1-meta-x: 0px;
+    --dq-r1-meta-y: 0px;
+
+    /* ==== Jugador Derecha Abajo (R2) ==== */
+    --dq-r2-panel-x: 45px;
+    --dq-r2-panel-y: 0px;
+    --dq-r2-card-x: 0px;
+    --dq-r2-card-y: 0px;
+    --dq-r2-avatar-x: 0px;
+    --dq-r2-avatar-y: 0px;
+    --dq-r2-avatar-size: clamp(68px, 4vw, 58px);
+    --dq-r2-avatar-rotate: -5deg;
+    --dq-r2-data-x: 19px;
+    --dq-r2-data-y: 0px;
+    --dq-r2-name-x: 0px;
+    --dq-r2-name-y: 0px;
+    --dq-r2-score-x: -95px;
+    --dq-r2-score-y: 0px;
+    --dq-r2-score-gap: 0.06rem;
+    --dq-r2-meta-x: 0px;
+    --dq-r2-meta-y: 0px;
+}
+
+.duel-quad__layout {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 26.2% 46.2% 23.4%;
+    column-gap: 2.1%;
+    padding: 2.3% 2.7% 2.8% 2.9%;
+    min-height: 0;
+}
+
+.duel-quad__left-column {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 56% 39%;
+    row-gap: 0.32rem;
+    transform: translate(var(--dq-left-col-x), var(--dq-left-col-y));
+}
+
+.duel-quad__right-column {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 45% 1fr;
+    row-gap: 0.42rem;
+    transform: translate(var(--dq-right-col-x), var(--dq-right-col-y));
+}
+
+.duel-quad__players-stack {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 0.36rem;
+}
+
+.duel-quad__players-stack--right {
+    margin-top: 0.08rem;
+    transform: translate(var(--dq-right-players-x), var(--dq-right-players-y));
+}
+
+.duel-quad__players-stack--left {
+    transform: translate(var(--dq-left-players-x), var(--dq-left-players-y));
+}
+
+.duel-quad__panel {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0.1rem 0;
+    transition: transform 0.2s ease, filter 0.2s ease;
+    --dq-panel-x: 0px;
+    --dq-panel-y: 0px;
+    --dq-card-x: 0px;
+    --dq-card-y: 0px;
+    --dq-avatar-x: 0px;
+    --dq-avatar-y: 0px;
+    --dq-avatar-size: clamp(38px, 4vw, 58px);
+    --dq-avatar-rotate: 0deg;
+    --dq-data-x: 0px;
+    --dq-data-y: 0px;
+    --dq-name-x: 0px;
+    --dq-name-y: 0px;
+    --dq-score-x: 0px;
+    --dq-score-y: 0px;
+    --dq-score-gap: 0.06rem;
+    --dq-meta-x: 0px;
+    --dq-meta-y: 0px;
+    transform: translate(var(--dq-panel-x), var(--dq-panel-y));
+}
+
+.duel-quad__panel--active {
+    transform: translate(var(--dq-panel-x), calc(var(--dq-panel-y) - 1px));
+    filter: brightness(1.05);
+}
+
+.duel-quad__panel--active .duel-quad__player-name,
+.duel-quad__panel--active .duel-quad__player-score {
+    text-shadow: 0 0 10px rgba(244, 177, 88, 0.38);
+}
+
+.duel-quad__panel--abandoned {
+    filter: saturate(0.66);
+}
+
+.duel-quad__panel--paused {
+    filter: grayscale(1);
+    opacity: 0.72;
+}
+
+.duel-quad__panel--slot-l1 {
+    --dq-panel-x: var(--dq-l1-panel-x);
+    --dq-panel-y: var(--dq-l1-panel-y);
+    --dq-card-x: var(--dq-l1-card-x);
+    --dq-card-y: var(--dq-l1-card-y);
+    --dq-avatar-x: var(--dq-l1-avatar-x);
+    --dq-avatar-y: var(--dq-l1-avatar-y);
+    --dq-avatar-size: var(--dq-l1-avatar-size);
+    --dq-avatar-rotate: var(--dq-l1-avatar-rotate);
+    --dq-data-x: var(--dq-l1-data-x);
+    --dq-data-y: var(--dq-l1-data-y);
+    --dq-name-x: var(--dq-l1-name-x);
+    --dq-name-y: var(--dq-l1-name-y);
+    --dq-score-x: var(--dq-l1-score-x);
+    --dq-score-y: var(--dq-l1-score-y);
+    --dq-score-gap: var(--dq-l1-score-gap);
+    --dq-meta-x: var(--dq-l1-meta-x);
+    --dq-meta-y: var(--dq-l1-meta-y);
+}
+
+.duel-quad__panel--slot-l2 {
+    --dq-panel-x: var(--dq-l2-panel-x);
+    --dq-panel-y: var(--dq-l2-panel-y);
+    --dq-card-x: var(--dq-l2-card-x);
+    --dq-card-y: var(--dq-l2-card-y);
+    --dq-avatar-x: var(--dq-l2-avatar-x);
+    --dq-avatar-y: var(--dq-l2-avatar-y);
+    --dq-avatar-size: var(--dq-l2-avatar-size);
+    --dq-avatar-rotate: var(--dq-l2-avatar-rotate);
+    --dq-data-x: var(--dq-l2-data-x);
+    --dq-data-y: var(--dq-l2-data-y);
+    --dq-name-x: var(--dq-l2-name-x);
+    --dq-name-y: var(--dq-l2-name-y);
+    --dq-score-x: var(--dq-l2-score-x);
+    --dq-score-y: var(--dq-l2-score-y);
+    --dq-score-gap: var(--dq-l2-score-gap);
+    --dq-meta-x: var(--dq-l2-meta-x);
+    --dq-meta-y: var(--dq-l2-meta-y);
+}
+
+.duel-quad__panel--slot-r1 {
+    --dq-panel-x: var(--dq-r1-panel-x);
+    --dq-panel-y: var(--dq-r1-panel-y);
+    --dq-card-x: var(--dq-r1-card-x);
+    --dq-card-y: var(--dq-r1-card-y);
+    --dq-avatar-x: var(--dq-r1-avatar-x);
+    --dq-avatar-y: var(--dq-r1-avatar-y);
+    --dq-avatar-size: var(--dq-r1-avatar-size);
+    --dq-avatar-rotate: var(--dq-r1-avatar-rotate);
+    --dq-data-x: var(--dq-r1-data-x);
+    --dq-data-y: var(--dq-r1-data-y);
+    --dq-name-x: var(--dq-r1-name-x);
+    --dq-name-y: var(--dq-r1-name-y);
+    --dq-score-x: var(--dq-r1-score-x);
+    --dq-score-y: var(--dq-r1-score-y);
+    --dq-score-gap: var(--dq-r1-score-gap);
+    --dq-meta-x: var(--dq-r1-meta-x);
+    --dq-meta-y: var(--dq-r1-meta-y);
+}
+
+.duel-quad__panel--slot-r2 {
+    --dq-panel-x: var(--dq-r2-panel-x);
+    --dq-panel-y: var(--dq-r2-panel-y);
+    --dq-card-x: var(--dq-r2-card-x);
+    --dq-card-y: var(--dq-r2-card-y);
+    --dq-avatar-x: var(--dq-r2-avatar-x);
+    --dq-avatar-y: var(--dq-r2-avatar-y);
+    --dq-avatar-size: var(--dq-r2-avatar-size);
+    --dq-avatar-rotate: var(--dq-r2-avatar-rotate);
+    --dq-data-x: var(--dq-r2-data-x);
+    --dq-data-y: var(--dq-r2-data-y);
+    --dq-name-x: var(--dq-r2-name-x);
+    --dq-name-y: var(--dq-r2-name-y);
+    --dq-score-x: var(--dq-r2-score-x);
+    --dq-score-y: var(--dq-r2-score-y);
+    --dq-score-gap: var(--dq-r2-score-gap);
+    --dq-meta-x: var(--dq-r2-meta-x);
+    --dq-meta-y: var(--dq-r2-meta-y);
+}
+
+.duel-quad__player-card {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 100%;
+    transform: translate(var(--dq-card-x), var(--dq-card-y));
+}
+
+.duel-quad__avatar {
+    width: var(--dq-avatar-size);
+    height: var(--dq-avatar-size);
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid rgba(82, 57, 30, 0.34);
+    transform: translate(var(--dq-avatar-x), var(--dq-avatar-y)) rotate(var(--dq-avatar-rotate));
+}
+
+.duel-quad__player-data {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    box-shadow: 0 20px 55px rgba(0, 0, 0, 0.45);
+    gap: 0.05rem;
+    min-width: 0;
+    width: 100%;
+    transform: translate(var(--dq-data-x), var(--dq-data-y));
+}
+
+.duel-quad__player-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.08rem;
+    min-width: 0;
+}
+
+.duel-quad__player-name {
+    color: #23170d;
+    font-size: clamp(0.84rem, 1.12vw, 1.16rem);
+    font-weight: 800;
+    flex: 1 1 0;
+    max-width: none;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transform: translate(var(--dq-name-x), var(--dq-name-y));
+}
+
+.duel-quad__player-score {
+    color: #2a1a0d;
+    margin-left: var(--dq-score-gap);
+    font-size: clamp(0.82rem, 1vw, 1.06rem);
+    font-weight: 800;
+    white-space: nowrap;
+    transform: translate(var(--dq-score-x), var(--dq-score-y));
+}
+
+.duel-quad__player-meta {
+    color: rgba(74, 49, 25, 0.78);
+    font-size: clamp(0.68rem, 0.82vw, 0.9rem);
+    font-weight: 700;
+    transform: translate(var(--dq-meta-x), var(--dq-meta-y));
+}
+
+.duel-quad__player-abandoned {
+    color: #9f2e2e;
+    font-size: clamp(0.54rem, 0.65vw, 0.72rem);
+    font-weight: 800;
+}
+
+.duel-quad__chat-slot {
+    min-height: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0.06rem 0;
+    width: var(--dq-chat-width);
+    max-width: var(--dq-chat-max-width);
+    height: var(--dq-chat-height);
+    justify-self: start;
+    transform: translate(var(--dq-chat-x), var(--dq-chat-y));
+}
+
+.duel-quad__chat-placeholder {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    color: rgba(70, 46, 23, 0.82);
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.35rem;
+}
+
+.duel-quad .ingame-chat-panel {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    color: #2d1f11;
+}
+
+.duel-quad .ingame-chat-header {
+    display: none;
+}
+
+.duel-quad .ingame-chat-messages {
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    margin-bottom: 0.18rem;
+    background: transparent;
+    padding: 0.28rem 0.2rem;
+}
+
+.duel-quad .ingame-chat-bubble-container {
+    max-width: 95%;
+}
+
+.duel-quad .ingame-chat-sender {
+    font-size: 0.56rem;
+    color: rgba(71, 45, 20, 0.76);
+    margin-bottom: 1px;
+}
+
+.duel-quad .ingame-chat-bubble {
+    border-radius: 8px;
+    border: 1px solid rgba(113, 77, 39, 0.16);
+    box-shadow: 0 2px 4px rgba(58, 35, 16, 0.08);
+    font-size: 0.67rem;
+    padding: 0.32rem 0.45rem;
+}
+
+.duel-quad .ingame-chat-bubble--mine {
+    background: linear-gradient(180deg, #e7b466 0%, #d79649 100%);
+    color: #2b180a;
+}
+
+.duel-quad .ingame-chat-bubble--others {
+    background: rgba(253, 244, 225, 0.92);
+    color: #2c1b0b;
+}
+
+.duel-quad .ingame-chat-input-area {
+    width: 100%;
+    box-sizing: border-box;
+    gap: var(--dq-chat-input-gap);
     overflow: hidden;
 }
 
-.duel-quad__header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
+.duel-quad .ingame-chat-input {
+    width: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 1px solid rgba(123, 84, 41, 0.24);
+    background: rgba(255, 251, 243, 0.85);
+    padding: var(--dq-chat-input-padding-y) var(--dq-chat-input-padding-x);
+    font-size: var(--dq-chat-input-font-size);
+}
+
+.duel-quad .ingame-chat-send {
+    border-radius: 7px;
+    min-width: var(--dq-chat-send-size);
+    width: var(--dq-chat-send-size);
+    height: var(--dq-chat-send-size);
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.duel-quad .ingame-chat-send svg {
+    width: var(--dq-chat-send-icon-size);
+    height: var(--dq-chat-send-icon-size);
+}
+
+.duel-quad__board-column {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    row-gap: 0.36rem;
 }
 
 .duel-quad__center-info {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.15rem;
+    gap: 0.2rem;
+    text-align: center;
+    color: #20160d;
+    text-shadow: 0 1px 0 rgba(255, 244, 224, 0.45);
 }
 
 .duel-quad__turn-label {
-    font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.07em;
+    font-size: clamp(0.62rem, 0.78vw, 0.84rem);
+    font-weight: 800;
 }
 
 .duel-quad__turn-value {
-    font-weight: 700;
-    color: #d9d6ff;
+    font-size: clamp(0.95rem, 1.45vw, 1.35rem);
+    line-height: 1.1;
+    font-weight: 800;
 }
 
 .duel-quad__timer {
-    margin-top: 0.2rem;
-    min-width: 92px;
-    text-align: center;
-    font-weight: 800;
-    letter-spacing: 1px;
-    color: #111;
-    background: linear-gradient(135deg, #facc15 0%, #fb923c 100%);
-    border-radius: 10px;
-    padding: 0.25rem 0.7rem;
+    min-height: 1.25em;
+    max-width: 90%;
+    font-size: clamp(0.66rem, 0.84vw, 0.92rem);
+    font-weight: 700;
+    color: rgba(38, 24, 12, 0.9);
 }
 
 .duel-quad__abandon-notice {
-    margin-top: 0.2rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #fca5a5;
+    font-size: clamp(0.62rem, 0.76vw, 0.84rem);
+    font-weight: 800;
+    color: #a33232;
 }
 
-.duel-quad__main {
-    display: grid;
-    grid-template-columns: 280px minmax(0, 1fr) 280px;
-    gap: 1rem;
-    flex: 1;
-    min-height: 0;
-}
-
-.duel-quad__side {
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    gap: 0.9rem;
-    min-height: 0;
-}
-
-.duel-quad__panel {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 0.9rem;
+.duel-quad__ability-pending-bar {
+    margin-top: 0.08rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.7rem;
+    align-items: center;
+    gap: 0.48rem;
+    background: rgba(245, 208, 140, 0.65);
+    border: 1px solid rgba(146, 100, 48, 0.45);
+    border-radius: 10px;
+    padding: 0.26rem 0.45rem;
+}
+
+.duel-quad__ability-pending-text {
+    font-size: clamp(0.6rem, 0.72vw, 0.78rem);
+    font-weight: 700;
+    color: #37200d;
+}
+
+.duel-quad__ability-cancel-btn {
+    border: none;
+    border-radius: 8px;
+    background: #b24633;
+    color: #fff;
+    padding: 0.26rem 0.5rem;
+    font-size: clamp(0.56rem, 0.67vw, 0.72rem);
+    font-weight: 800;
+}
+
+.duel-quad__gravity-direction-picker {
+    display: flex;
+    justify-content: center;
+    gap: 0.28rem;
+}
+
+.duel-quad__gravity-btn {
+    border: 1px solid rgba(130, 88, 41, 0.42);
+    border-radius: 8px;
+    background: rgba(255, 245, 223, 0.86);
+    color: #2d1b0d;
+    width: clamp(36px, 3.2vw, 48px);
+    height: clamp(28px, 2.2vw, 36px);
+    font-size: clamp(0.58rem, 0.68vw, 0.74rem);
+    font-weight: 800;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.duel-quad__gravity-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(96, 60, 25, 0.18);
+}
+
+.duel-quad__board-area {
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5.5% 5.8% 8.6%;
     position: relative;
+}
+
+.duel-quad__board-area::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--dq-board-bg-area-width);
+    height: var(--dq-board-bg-area-height);
+    transform: translate(
+        calc(-50% + var(--dq-board-bg-area-x)),
+        calc(-50% + var(--dq-board-bg-area-y))
+    );
+    background-image: var(--duel-quad-board-background-image);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.duel-quad__board {
+    width: min(88%, 620px);
+    aspect-ratio: 1;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    grid-template-rows: repeat(16, 1fr);
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 8px;
     overflow: hidden;
-    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 
-.duel-quad__panel--active {
-    border-color: rgba(250, 204, 21, 0.6);
-    background: linear-gradient(160deg, rgba(250, 204, 21, 0.14), rgba(255, 255, 255, 0.04));
-    box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.2);
-    animation: duel-quad-panel-pulse 2s ease-in-out infinite;
+.duel-quad__cell {
+    position: relative;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(75, 48, 24, 0.26);
+    background: transparent;
+    padding: 0;
 }
 
-.duel-quad__panel--active .duel-quad__player-card {
-    border-color: rgba(250, 204, 21, 0.55);
-    box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.22) inset;
+.duel-quad__cell--dark,
+.duel-quad__cell--light {
+    background: transparent;
 }
 
-.duel-quad__panel--active .duel-quad__panel-title {
-    color: #fef3c7;
+.duel-quad__cell--question {
+    border-color: rgba(68, 44, 22, 0.24);
 }
 
-.duel-quad__panel--active .duel-quad__skills {
-    border-color: rgba(250, 204, 21, 0.35);
+.duel-quad__question {
+    position: absolute;
+    inset: -1px;
+    z-index: 2;
+    background-image: var(--duel-quad-question-image);
+    background-position: center;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
 }
 
-.duel-quad__panel--abandoned {
-    border-color: rgba(248, 113, 113, 0.55);
-    background: linear-gradient(160deg, rgba(127, 29, 29, 0.32), rgba(255, 255, 255, 0.04));
-    box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25), 0 0 20px rgba(248, 113, 113, 0.2);
+.duel-quad__cell--playable {
+    cursor: pointer;
 }
 
-.duel-quad__player-card {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 0.75rem;
+.duel-quad__cell--playable::after {
+    content: '';
+    position: absolute;
+    width: 26%;
+    aspect-ratio: 1;
+    border-radius: 999px;
+    background: rgba(255, 248, 235, 0.74);
+    box-shadow: 0 0 0 2px rgba(95, 65, 34, 0.2);
+    z-index: 4;
 }
 
-.duel-quad__avatar {
-    width: 46px;
-    height: 46px;
+.duel-quad__cell--playable:hover::after {
+    background: rgba(255, 214, 141, 0.92);
+}
+
+.duel-quad-piece {
+    width: 70%;
+    aspect-ratio: 1;
     border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.25);
+    display: block;
+    position: relative;
+    z-index: 3;
+    box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.2), inset 0 -4px 6px rgba(0, 0, 0, 0.33), 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
-.duel-quad__player-data {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.25;
-    width: 100%;
+.duel-quad-piece--black {
+    background: radial-gradient(circle at 35% 30%, #646464 0%, #161616 72%);
 }
 
-.duel-quad__player-row {
+.duel-quad-piece--white {
+    background: radial-gradient(circle at 35% 30%, #ffffff 0%, #dfdfdf 72%);
+}
+
+.duel-quad-piece--red {
+    background: radial-gradient(circle at 35% 30%, #ffb0b0 0%, #da2c2c 72%);
+}
+
+.duel-quad-piece--blue {
+    background: radial-gradient(circle at 35% 30%, #9ec6ff 0%, #2b62d8 72%);
+}
+
+.duel-quad-piece--fixed {
+    box-shadow: 0 0 0 2px #f2c268, inset 0 3px 6px rgba(255, 255, 255, 0.2), inset 0 -4px 6px rgba(0, 0, 0, 0.33), 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.duel-quad-piece-lock {
+    position: absolute;
+    right: 10%;
+    bottom: 10%;
+    z-index: 5;
+    width: 0.95rem;
+    height: 0.95rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 0.55rem;
+    font-weight: 800;
+    color: #f7deb5;
+    background: rgba(33, 23, 12, 0.95);
+    border: 1px solid rgba(242, 194, 104, 0.95);
+}
+
+.duel-quad__actions {
+    position: absolute;
+    top: var(--dq-actions-top);
+    right: var(--dq-actions-right);
+    z-index: 8;
     display: flex;
+    justify-content: flex-end;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    transform: translate(var(--dq-actions-x), var(--dq-actions-y));
 }
 
-.duel-quad__player-name {
-    font-weight: 700;
+.duel-quad__actions--corner {
+    align-items: flex-start;
+}
+
+.duel-quad__pause-btn,
+.duel-quad__leave-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 0.33rem 0.66rem;
+    line-height: 1;
+    font-size: clamp(0.58rem, 0.68vw, 0.74rem);
+    font-weight: 800;
     color: #fff;
 }
 
-.duel-quad__player-score {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #facc15;
+.duel-quad__pause-btn {
+    background: linear-gradient(180deg, #4f93a2 0%, #3b7483 100%);
 }
 
-.duel-quad__player-meta {
-    font-size: 0.82rem;
-    color: rgba(255, 255, 255, 0.65);
+.duel-quad__leave-btn {
+    background: linear-gradient(180deg, #d3624f 0%, #b84a3e 100%);
 }
 
-.duel-quad__player-abandoned {
-    font-size: 0.78rem;
-    font-weight: 800;
-    color: #fca5a5;
+.duel-quad__leave-btn--image {
+    background: transparent;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    line-height: 0;
+    width: var(--dq-leave-width);
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.duel-quad__leave-btn--image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 7px 10px rgba(11, 7, 3, 0.26));
+}
+
+.duel-quad__leave-btn--image:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.04);
+}
+
+.duel-quad__skills-panel {
+    min-height: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0.18rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.24rem;
+    width: var(--dq-skills-width);
+    max-width: var(--dq-skills-max-width);
+    justify-self: start;
+    transform: translate(var(--dq-skills-x), var(--dq-skills-y));
 }
 
 .duel-quad__panel-title {
     margin: 0;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.9);
+    color: #2b1c0f;
+    font-size: clamp(0.62rem, 0.77vw, 0.84rem);
+    font-weight: 800;
 }
 
 .duel-quad__skills {
-    border: 1px dashed rgba(255, 255, 255, 0.16);
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 0.75rem;
-    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.24rem;
     overflow-y: auto;
+    padding-right: 0.06rem;
 }
 
 .duel-quad__skill-card {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.55rem;
-    align-items: start;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    padding: 0.55rem 0.6rem;
-    width: 100%;
+    align-items: center;
+    gap: 0.16rem;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
 }
 
 .duel-quad__skill-card--active {
-    border-color: rgba(251, 191, 36, 0.8);
-    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.55) inset;
+    filter: brightness(1.08);
 }
 
 .duel-quad__skill-card--expanded {
-    border-color: rgba(125, 211, 252, 0.35);
-    background: rgba(15, 23, 42, 0.75);
-}
-
-.duel-quad__skill-card--opponent-view .duel-quad__skill-main {
-    opacity: 0.58;
-    cursor: not-allowed;
-}
-
-.duel-quad__skill-card--opponent-view .duel-quad__skill-main:hover .duel-quad__skill-name {
-    color: #fff;
+    filter: none;
 }
 
 .duel-quad__skill-main {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    padding: 0;
+    gap: 0.36rem;
     width: 100%;
     text-align: left;
-    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 0;
 }
 
 .duel-quad__skill-main:disabled {
-    opacity: 0.6;
+    opacity: 0.56;
     cursor: default;
 }
 
 .duel-quad__skill-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    font-size: 0.82rem;
     font-weight: 700;
-    color: #0a0a0a;
-    background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
-    flex-shrink: 0;
+    color: #2d1b0d;
+    background: rgba(242, 208, 144, 0.72);
 }
 
 .duel-quad__skill-text {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    gap: 0.5rem;
     min-width: 0;
 }
 
 .duel-quad__skill-name {
-    font-size: 0.88rem;
-    color: #fff;
-    font-weight: 600;
+    color: #2a1a0c;
+    font-size: clamp(0.55rem, 0.64vw, 0.72rem);
+    font-weight: 700;
+    line-height: 1.18;
+    white-space: normal;
+    word-break: break-word;
 }
 
 .duel-quad__skill-info-toggle {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.06);
-    color: #fcd34d;
+    border: 1px solid rgba(145, 101, 53, 0.28);
     border-radius: 999px;
-    padding: 0.28rem 0.7rem;
-    font-size: 0.75rem;
+    background: rgba(253, 245, 231, 0.7);
+    color: #593616;
+    padding: 0.13rem 0.35rem;
+    font-size: clamp(0.49rem, 0.54vw, 0.58rem);
     font-weight: 700;
-    cursor: pointer;
+    line-height: 1;
 }
 
-.duel-quad__skill-info-toggle:hover {
-    background: rgba(250, 204, 21, 0.16);
-    border-color: rgba(250, 204, 21, 0.36);
-    color: #fde68a;
-}
-
+.duel-quad__skill-info-toggle:hover,
 .duel-quad__skill-info-toggle--open {
-    background: rgba(125, 211, 252, 0.14);
-    border-color: rgba(125, 211, 252, 0.4);
-    color: #bae6fd;
+    background: #ffe3ba;
 }
 
 .duel-quad__skill-description {
     grid-column: 1 / -1;
-    margin-top: 0.1rem;
-    padding: 0.65rem 0.75rem;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    font-size: 0.8rem;
-    line-height: 1.35;
-    color: rgba(255, 255, 255, 0.82);
-}
-
-.duel-quad__skill-main:hover:not(:disabled) .duel-quad__skill-name {
-    color: #fde68a;
-}
-
-.duel-quad__skill-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.duel-quad__skill-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(1.05);
-}
-
-.duel-quad__skill-btn--active {
-    background: rgba(250, 204, 21, 0.2) !important;
-    border-color: #facc15 !important;
-    box-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
-}
-
-.duel-quad__skill-btn:disabled {
-    opacity: 0.5;
-    cursor: default;
-}
-
-.duel-quad-piece--fixed {
-    box-shadow: 0 0 0 2px #fbbf24, inset 0 4px 6px rgba(255, 255, 255, 0.22), inset 0 -6px 8px rgba(0, 0, 0, 0.33), 0 3px 8px rgba(0, 0, 0, 0.45) !important;
-}
-
-.duel-quad-piece-lock {
-    position: absolute;
-    right: 12%;
-    bottom: 10%;
-    z-index: 5;
-    width: 1.2rem;
-    height: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    background: rgba(17, 24, 39, 0.92);
-    border: 1px solid rgba(251, 191, 36, 0.85);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
-    font-size: 0.72rem;
-    line-height: 1;
+    border-radius: 7px;
+    border: 1px solid rgba(142, 102, 57, 0.2);
+    background: rgba(255, 249, 241, 0.75);
+    color: #342013;
+    font-size: clamp(0.52rem, 0.6vw, 0.66rem);
+    line-height: 1.28;
+    padding: 0.3rem 0.38rem;
 }
 
 .duel-quad__empty-skills {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.86rem;
+    margin: auto;
+    color: rgba(61, 41, 22, 0.84);
+    font-size: 0.74rem;
+    font-weight: 700;
     text-align: center;
+}
+
+.duel__paused-status {
+    position: fixed;
+    top: 12px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 60;
+    pointer-events: none;
+}
+
+.duel__paused-text {
+    margin: 0;
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.45rem 0.92rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    background: rgba(41, 24, 12, 0.84);
+    border: 1px solid rgba(255, 212, 154, 0.44);
+}
+
+.duel-quad__skill-announcement {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 70;
+    width: min(620px, calc(100% - 2rem));
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1rem 1.2rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(20, 14, 10, 0.95), rgba(48, 31, 18, 0.92));
+    color: #fff;
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+    animation: duel-quad-skill-announcement 2s ease-in-out both;
+}
+
+.duel-quad__skill-announcement-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    font-size: 2rem;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.duel-quad__skill-announcement-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+}
+
+.duel-quad__skill-announcement-actor {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.duel-quad__skill-announcement-name {
+    font-size: 1.24rem;
+    font-weight: 800;
+}
+
+.duel-quad__skill-announcement--self {
+    border-color: rgba(104, 183, 255, 0.55);
+}
+
+.duel-quad__skill-announcement--opponent {
+    border-color: rgba(255, 138, 138, 0.58);
+}
+
+.duel-quad__skill-announcement--bomb .duel-quad__skill-announcement-icon {
+    background: linear-gradient(145deg, rgba(255, 132, 111, 0.62), rgba(245, 174, 93, 0.45));
+}
+
+.duel-quad__skill-announcement--gravity .duel-quad__skill-announcement-icon {
+    background: linear-gradient(145deg, rgba(117, 217, 239, 0.54), rgba(122, 145, 255, 0.45));
+}
+
+.duel-quad__skill-announcement--trick .duel-quad__skill-announcement-icon {
+    background: linear-gradient(145deg, rgba(214, 161, 255, 0.56), rgba(255, 163, 203, 0.48));
+}
+
+.duel-quad__skill-announcement--control .duel-quad__skill-announcement-icon {
+    background: linear-gradient(145deg, rgba(140, 234, 165, 0.52), rgba(255, 221, 135, 0.46));
+}
+
+.duel-quad__ability-error {
+    position: fixed;
+    top: 5.7rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 72;
+    width: min(720px, calc(100% - 2rem));
+    border-radius: 16px;
+    border: 1px solid rgba(255, 136, 136, 0.58);
+    background: linear-gradient(145deg, rgba(157, 44, 30, 0.96), rgba(195, 51, 44, 0.95));
+    color: #fff7f4;
+    text-align: center;
+    padding: 0.82rem 1rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.duel-quad-result {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding-top: 0.2rem;
+    color: #fff;
+}
+
+.duel-quad-result__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.duel-quad-result__title {
+    margin: 0;
+    font-size: 1.45rem;
+}
+
+.duel-quad-result__status {
+    margin: 0;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #ffd67f;
+}
+
+.duel-quad-result__scores {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.24);
+    width: 100%;
+}
+
+.duel-quad-result__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-weight: 600;
+}
+
+.duel-quad-result__note {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.9rem;
+}
+
+.duel-quad-result__rr {
+    margin: 0;
+    font-weight: 700;
+}
+
+.duel-quad-result__rr--badge {
+    flex-shrink: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.duel-quad-result__rr--up {
+    color: #64e783;
+}
+
+.duel-quad-result__rr--down {
+    color: #ff8c8c;
+}
+
+.duel-quad-result__rr--neutral {
+    color: #ffd67f;
+}
+
+.duel-quad-result__back-btn {
+    margin-top: 0.2rem;
+    width: 100%;
+    border: 1px solid rgba(139, 92, 246, 0.55);
+    background: linear-gradient(120deg, #6d5dff, #8b5cf6 55%, #ec4899);
+    color: #fff;
+    border-radius: 10px;
+    font-weight: 700;
+    padding: 0.7rem 1rem;
 }
 
 .duel-quad-leave-confirm {
@@ -382,13 +1131,13 @@
     margin: 0;
     font-size: 1.5rem;
     font-weight: 800;
-    color: #f8fafc;
 }
 
+.duel-modal__text,
 .duel-quad-leave-confirm__text {
     margin: 0;
     line-height: 1.6;
-    color: rgba(255, 255, 255, 0.82);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .duel-quad-leave-confirm__actions {
@@ -419,605 +1168,14 @@
 
 .duel-quad-leave-confirm__btn--confirm {
     background: rgba(248, 113, 113, 0.1);
-    color: #f87171;
-    border: 1px solid rgba(248, 113, 113, 0.2);
-}
-
-.duel-quad__board-area {
-    position: relative;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.8rem;
-    background-image: var(--duel-quad-board-area-bg);
-    background-size: 100% 100%;
-    background-position: center;
-    background-repeat: no-repeat;
-    min-height: 0;
-}
-
-.duel-quad__skill-announcement {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 70;
-    width: min(620px, calc(100% - 2rem));
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.15rem 1.35rem;
-    border-radius: 22px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    background: linear-gradient(135deg, rgba(6, 10, 20, 0.96), rgba(25, 33, 54, 0.94));
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.48);
-    backdrop-filter: blur(18px);
-    pointer-events: none;
-    animation: duel-quad-skill-announcement 2s ease-in-out both;
-}
-
-.duel-quad__skill-announcement::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent 35%, transparent 65%, rgba(255, 255, 255, 0.08));
-    opacity: 0.55;
-    pointer-events: none;
-}
-
-.duel-quad__skill-announcement-icon {
-    position: relative;
-    z-index: 1;
-    width: 68px;
-    height: 68px;
-    border-radius: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.2rem;
-    background: rgba(255, 255, 255, 0.09);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
-    flex-shrink: 0;
-}
-
-.duel-quad__skill-announcement-copy {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.18rem;
-    min-width: 0;
-}
-
-.duel-quad__skill-announcement-actor {
-    color: rgba(255, 255, 255, 0.72);
-    font-size: 0.84rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.duel-quad__skill-announcement-name {
-    color: #fff;
-    font-size: 1.4rem;
-    font-weight: 800;
-    line-height: 1.15;
-}
-
-.duel-quad__skill-announcement--self {
-    border-color: rgba(96, 165, 250, 0.4);
-    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(96, 165, 250, 0.12);
-}
-
-.duel-quad__skill-announcement--opponent {
-    border-color: rgba(248, 113, 113, 0.4);
-    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(248, 113, 113, 0.12);
-}
-
-.duel-quad__skill-announcement--bomb .duel-quad__skill-announcement-icon {
-    background: linear-gradient(135deg, rgba(248, 113, 113, 0.38), rgba(251, 146, 60, 0.26));
-}
-
-.duel-quad__skill-announcement--gravity .duel-quad__skill-announcement-icon {
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(99, 102, 241, 0.26));
-}
-
-.duel-quad__skill-announcement--trick .duel-quad__skill-announcement-icon {
-    background: linear-gradient(135deg, rgba(192, 132, 252, 0.32), rgba(244, 114, 182, 0.24));
-}
-
-.duel-quad__skill-announcement--control .duel-quad__skill-announcement-icon {
-    background: linear-gradient(135deg, rgba(74, 222, 128, 0.28), rgba(250, 204, 21, 0.24));
-}
-
-.duel-quad__ability-error {
-    position: fixed;
-    top: 6.25rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 72;
-    width: min(720px, calc(100% - 2rem));
-    padding: 1rem 1.2rem;
-    border-radius: 18px;
-    border: 1px solid rgba(248, 113, 113, 0.45);
-    background: linear-gradient(135deg, rgba(127, 29, 29, 0.96), rgba(185, 28, 28, 0.92));
-    color: #fff5f5;
-    text-align: center;
-    font-size: 1rem;
-    font-weight: 800;
-    letter-spacing: 0.01em;
-    box-shadow: 0 22px 50px rgba(127, 29, 29, 0.45);
-    pointer-events: none;
-}
-
-.duel-quad__board {
-    width: min(70vh, 100%);
-    max-width: 860px;
-    aspect-ratio: 1 / 1;
-    display: grid;
-    grid-template-columns: repeat(16, 1fr);
-    grid-template-rows: repeat(16, 1fr);
-    border-radius: 12px;
-    overflow: hidden;
-    border: 3px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.2);
-    background-color: transparent;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
-
-.duel-quad__cell {
-    position: relative;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 0;
-    appearance: none;
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.duel-quad__cell--dark {
-    background: transparent;
-}
-
-.duel-quad__cell--light {
-    background: transparent;
-}
-
-.duel-quad__cell--question {
-    border-color: transparent;
-}
-
-.duel-quad__question {
-    position: absolute;
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: #fbbf24;
-    background: linear-gradient(135deg, #6d5dff 0%, #8b5cf6 45%, #ec4899 100%);
-    background-size: 220% 220%;
-    inset: -2px -3px -2px -2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
-    animation: duel-quad-question-bg 2.8s ease-in-out infinite;
-}
-
-.duel-quad__question::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    border-radius: 2px;
-    background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.35), transparent 55%);
-    animation: duel-quad-question-glow 1.8s ease-in-out infinite;
-    pointer-events: none;
-}
-
-.duel-quad__cell--playable {
-    cursor: pointer;
-}
-
-.duel-quad__cell--playable::after {
-    content: '';
-    position: absolute;
-    width: 30%;
-    aspect-ratio: 1 / 1;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.38);
-    z-index: 4;
-}
-
-.duel-quad__cell--playable:hover::after {
-    background: rgba(251, 191, 36, 0.78);
-}
-
-.duel-quad-piece {
-    width: 70%;
-    aspect-ratio: 1 / 1;
-    border-radius: 50%;
-    display: block;
-    position: relative;
-    z-index: 1;
-    box-shadow: inset 0 4px 6px rgba(255, 255, 255, 0.22), inset 0 -6px 8px rgba(0, 0, 0, 0.33), 0 3px 8px rgba(0, 0, 0, 0.45);
-}
-
-.duel-quad-piece--black {
-    background: radial-gradient(circle at 35% 30%, #525252 0%, #101010 68%);
-}
-
-.duel-quad-piece--white {
-    background: radial-gradient(circle at 35% 30%, #ffffff 0%, #d6d6d6 72%);
-}
-
-.duel-quad-piece--red {
-    background: radial-gradient(circle at 35% 30%, #fca5a5 0%, #dc2626 72%);
-}
-
-.duel-quad-piece--blue {
-    background: radial-gradient(circle at 35% 30%, #93c5fd 0%, #2563eb 72%);
-}
-
-.duel-quad__leave-btn {
-    border: 1px solid rgba(248, 113, 113, 0.35);
-    background: rgba(248, 113, 113, 0.15);
     color: #fca5a5;
-    border-radius: 10px;
-    font-weight: 700;
-    padding: 0.7rem 1.4rem;
-    transition: all 0.2s ease;
-}
-
-.duel-quad__leave-btn--top {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 50;
-}
-
-.duel-quad__leave-btn:hover {
-    background: rgba(248, 113, 113, 0.3);
-    color: #fff;
-    transform: translateY(-1px);
-}
-
-.duel-quad-result {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-    padding-top: 0.2rem;
-}
-
-.duel-quad-result__top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-}
-
-.duel-quad-result__title {
-    margin: 0;
-    color: #fff;
-    font-size: 1.5rem;
-}
-
-.duel-quad-result__status {
-    margin: 0;
-    color: #facc15;
-    font-weight: 800;
-    font-size: 1.1rem;
-}
-
-.duel-quad-result__winner {
-    margin: 0;
-    color: rgba(255, 255, 255, 0.88);
-    font-weight: 600;
-}
-
-.duel-quad-result__scores {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    padding: 0.75rem;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(0, 0, 0, 0.24);
-    width: 100%;
-}
-
-.duel-quad-result__row {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    color: #fff;
-    font-weight: 600;
-}
-
-.duel-quad-result__note {
-    margin: 0;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-}
-
-.duel-quad-result__rr {
-    margin: 0;
-    font-weight: 700;
-}
-
-.duel-quad-result__rr--badge {
-    flex-shrink: 0;
-    font-size: 2rem;
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: 0.3px;
-}
-
-.duel-quad-result__rr--up {
-    color: #4ade80;
-}
-
-.duel-quad-result__rr--down {
-    color: #f87171;
-}
-
-.duel-quad-result__rr--neutral {
-    color: #facc15;
-}
-
-.duel-quad-result__back-btn {
-    margin-top: 0.2rem;
-    width: 100%;
-    border: 1px solid rgba(139, 92, 246, 0.55);
-    background: linear-gradient(120deg, #6d5dff, #8b5cf6 55%, #ec4899);
-    color: #fff;
-    border-radius: 10px;
-    font-weight: 700;
-    padding: 0.7rem 1rem;
-}
-
-@keyframes duel-quad-question-bg {
-    0% {
-        background-position: 0% 50%;
-        filter: saturate(0.95);
-    }
-
-    50% {
-        background-position: 100% 50%;
-        filter: saturate(1.2);
-    }
-
-    100% {
-        background-position: 0% 50%;
-        filter: saturate(0.95);
-    }
-}
-
-@keyframes duel-quad-question-glow {
-    0% {
-        opacity: 0.3;
-        transform: scale(0.96);
-    }
-
-    50% {
-        opacity: 0.65;
-        transform: scale(1.03);
-    }
-
-    100% {
-        opacity: 0.3;
-        transform: scale(0.96);
-    }
-}
-
-@keyframes duel-quad-panel-pulse {
-    0% {
-        box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.2), 0 0 10px rgba(250, 204, 21, 0.12);
-    }
-
-    50% {
-        box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.38), 0 0 28px rgba(250, 204, 21, 0.34);
-    }
-
-    100% {
-        box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.2), 0 0 10px rgba(250, 204, 21, 0.12);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .duel-quad__panel--active {
-        animation: none;
-    }
-
-    .duel-quad__question,
-    .duel-quad__question::after {
-        animation: none;
-    }
-
-    .duel-quad__skill-announcement {
-        animation: none;
-    }
-}
-
-@media (max-width: 1320px) {
-    .duel-quad__main {
-        grid-template-columns: 250px minmax(0, 1fr) 250px;
-    }
-}
-
-@media (max-width: 1100px) {
-    .duel-quad__main {
-        grid-template-columns: 1fr;
-    }
-
-    .duel-quad__side {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows: 1fr;
-    }
-
-    .duel-quad__board {
-        width: min(78vw, 760px);
-    }
-}
-
-@media (max-width: 760px) {
-    .duel-quad__leave-btn--top {
-        top: 0.75rem;
-        right: 0.75rem;
-    }
-
-    .duel-quad__container {
-        padding: 0.95rem;
-    }
-
-    .duel-quad__side {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
-    }
-}
-.duel-quad__pause-btn {
-    border: 1px solid rgba(139, 92, 246, 0.35);
-    background: rgba(139, 92, 246, 0.15);
-    color: #c4b5fd;
-    border-radius: 10px;
-    font-weight: 700;
-    padding: 0.7rem 1.4rem;
-    transition: all 0.2s ease;
-}
-
-.duel-quad__pause-btn:hover {
-    background: rgba(139, 92, 246, 0.3);
-    color: #fff;
-    transform: translateY(-1px);
-}
-
-.duel-quad__panel--paused {
-    filter: grayscale(1);
-    opacity: 0.7;
-    border-color: rgba(148, 163, 184, 0.45) !important;
-    background: rgba(15, 23, 42, 0.6) !important;
-    box-shadow: none !important;
-}
-
-.duel__paused-status {
-    position: fixed;
-    top: 15px;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    pointer-events: none;
-    animation: slideDownStatus 0.4s ease-out;
-}
-
-@keyframes slideDownStatus {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.duel__paused-text {
-    margin: 0;
-    color: #fff;
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    text-shadow: 0 0 8px rgba(139, 92, 246, 0.8), 0 0 15px rgba(0, 0, 0, 0.9);
-}
-
-.duel-quad__ability-pending-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgba(251, 191, 36, 0.15);
-    padding: 8px 16px;
-    border-radius: 12px;
-    margin: 8px 0;
-    border: 1px solid rgba(251, 191, 36, 0.3);
-    backdrop-filter: blur(8px);
-    animation: fadeIn 0.3s ease-out;
-}
-
-.duel-quad__ability-pending-text {
-    color: #fcd34d;
-    font-size: 0.9rem;
-    font-weight: 700;
-}
-
-.duel-quad__ability-cancel-btn {
-    background: #e74c3c;
-    color: white;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 800;
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-}
-
-.duel-quad__ability-cancel-btn:hover {
-    background: #c0392b;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
-}
-
-.duel-quad__gravity-direction-picker {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    margin: 12px 0;
-    animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.duel-quad__gravity-btn {
-    width: 50px;
-    height: 50px;
-    border-radius: 14px;
-    border: 2px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.05);
-    font-size: 1.6rem;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-.duel-quad__gravity-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(1.15) translateY(-4px);
-    border-color: #facc15;
-    box-shadow: 0 8px 20px rgba(250, 204, 21, 0.3);
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes bounceIn {
-    0% { transform: scale(0.3); opacity: 0; }
-    50% { transform: scale(1.05); opacity: 1; }
-    70% { transform: scale(0.9); }
-    100% { transform: scale(1); }
+    border: 1px solid rgba(248, 113, 113, 0.2);
 }
 
 @keyframes duel-quad-skill-announcement {
     0% {
         opacity: 0;
-        transform: translate(-50%, calc(-50% - 18px)) scale(0.96);
+        transform: translate(-50%, calc(-50% - 16px)) scale(0.96);
     }
 
     12% {
@@ -1036,8 +1194,8 @@
     }
 }
 
-.duel-quad__leave-btn:focus-visible,
 .duel-quad__pause-btn:focus-visible,
+.duel-quad__leave-btn:focus-visible,
 .duel-quad__ability-cancel-btn:focus-visible,
 .duel-quad__gravity-btn:focus-visible,
 .duel-quad__skill-main:focus-visible,
@@ -1045,8 +1203,112 @@
 .duel-quad__cell:focus-visible,
 .duel-quad-result__back-btn:focus-visible,
 .duel-quad-leave-confirm__btn:focus-visible,
-.ingame-chat-btn:focus-visible {
-    outline: 3px solid #facc15;
+.duel-quad .ingame-chat-send:focus-visible,
+.duel-quad .ingame-chat-input:focus-visible {
+    outline: 3px solid #ffd583;
     outline-offset: 2px;
 }
 
+@media (max-width: 1240px) {
+    .duel-quad__layout {
+        grid-template-columns: 27% 45.4% 23.2%;
+        padding: 2.4% 2.6% 2.9% 2.8%;
+    }
+}
+
+@media (max-width: 1024px) {
+    .duel-quad {
+        padding: 0;
+    }
+
+    .duel-quad__container {
+        width: 100vw;
+        height: 100dvh;
+        aspect-ratio: auto;
+        background-image: none;
+        border-radius: 0;
+        border: 2px solid rgba(255, 237, 208, 0.28);
+        background:
+            radial-gradient(circle at 14% 24%, rgba(255, 186, 106, 0.26), transparent 48%),
+            radial-gradient(circle at 88% 18%, rgba(98, 180, 183, 0.24), transparent 42%),
+            rgba(25, 45, 53, 0.94);
+        filter: none;
+        overflow: hidden;
+    }
+
+    .duel-quad__layout {
+        position: static;
+        height: 100%;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        row-gap: 0.7rem;
+        padding: 0.82rem;
+    }
+
+    .duel-quad__board-column {
+        order: 1;
+    }
+
+    .duel-quad__left-column {
+        order: 2;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr;
+        column-gap: 0.55rem;
+    }
+
+    .duel-quad__players-stack {
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+
+    .duel-quad__right-column {
+        order: 3;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+        column-gap: 0.55rem;
+        row-gap: 0.55rem;
+        align-content: start;
+    }
+
+    .duel-quad__actions {
+        position: absolute;
+        top: var(--dq-actions-top-mobile, 0.2rem);
+        right: var(--dq-actions-right-mobile, 0.2rem);
+        justify-content: flex-end;
+    }
+
+    .duel-quad__players-stack--right {
+        margin-top: 0;
+    }
+
+    .duel-quad__board-area {
+        border-radius: 14px;
+        border: 1px solid rgba(255, 244, 223, 0.22);
+        padding: 0.62rem;
+    }
+
+    .duel-quad__board {
+        width: min(90vw, 620px);
+    }
+}
+
+@media (max-width: 760px) {
+    .duel-quad__left-column,
+    .duel-quad__right-column {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+
+    .duel-quad__actions {
+        justify-content: space-between;
+    }
+
+    .duel-quad__chat-slot {
+        min-height: 220px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .duel-quad__skill-announcement {
+        animation: none;
+    }
+}

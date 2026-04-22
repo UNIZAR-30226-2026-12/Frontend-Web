@@ -1,4 +1,3 @@
-import '../styles/background.css'
 import '../styles/pages/GameBoard1v1v1v1.css'
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import Modal from '../components/Modal'
@@ -7,14 +6,12 @@ import '../styles/components/InGameChat.css'
 import { api, WS_BASE_URL } from '../services/api'
 import { PIECE_STYLES_4P, decodePiecePreference } from '../config/pieceStyles'
 import { resolveUserAvatar } from '../config/avatarOptions'
-import fireBoard from '../assets/arenas/fireboard4players.png'
-import iceBoard from '../assets/arenas/iceboard4players.png'
-import woodBoard from '../assets/arenas/woodboard4players.png'
-import quartzBoard from '../assets/arenas/quartzboard4players.png'
-import fireBackground from '../assets/arenas/firebackground.png'
-import iceBackground from '../assets/arenas/icebackground.png'
-import woodBackground from '../assets/arenas/woodbackground.png'
-import quartzBackground from '../assets/arenas/quartzbackground.png'
+import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
+import blockGameFrame from '../assets/Ingame/bloqueJuego4Jugadores.png'
+import boardBackgroundDefault from '../assets/Ingame/Fondo1.png'
+import boardDefault from '../assets/Ingame/Tablero1v1v1v1.png'
+import questionCellDefault from '../assets/Ingame/casillaInterrogante.png'
+import leaveRoomButtonImage from '../assets/salaEspera/Abandonar.png'
 
 type Piece = 'black' | 'white' | 'red' | 'blue'
 interface BoardCell {
@@ -73,9 +70,11 @@ interface MatchData4Players {
     returnTo?: string
 }
 
-interface ArenaTheme {
+interface InGameTheme {
+    frame: string
+    boardBackground: string
     board: string
-    background: string
+    questionCell: string
 }
 
 interface QuadPlayer {
@@ -91,6 +90,15 @@ const BOARD_SIZE = 16
 const QUESTION_COUNT = 16
 const PIECE_ORDER: Piece[] = ['black', 'white', 'red', 'blue']
 const ANNOUNCEMENT_DURATION_MS = 2000
+
+const INGAME_THEME_PRESETS: Record<'classic', InGameTheme> = {
+    classic: {
+        frame: blockGameFrame,
+        boardBackground: boardBackgroundDefault,
+        board: boardDefault,
+        questionCell: questionCellDefault,
+    },
+}
 
 const ABILITY_META: Record<string, { name: string; icon: string; needsTarget: boolean }> = {
     bomb: { name: 'Bomba', icon: '💣', needsTarget: true },
@@ -167,13 +175,6 @@ const ANNOUNCEMENT_PRIORITY: AbilityId[] = [
     'place_free',
 ]
 const getAbilityDisplayName = (ability: AbilityId) => ABILITY_RULE_NAMES[ability] ?? ABILITY_META[ability]?.name ?? 'Habilidad'
-
-const getArenaFromElo = (elo: number): ArenaTheme => {
-    if (elo < 900) return { board: woodBoard, background: woodBackground }
-    if (elo < 1100) return { board: quartzBoard, background: quartzBackground }
-    if (elo < 1300) return { board: fireBoard, background: fireBackground }
-    return { board: iceBoard, background: iceBackground }
-}
 
 const isInsideBoard = (row: number, col: number) =>
     row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE
@@ -390,7 +391,6 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const [selectedPieceStyle4p, setSelectedPieceStyle4p] = useState(PIECE_STYLES_4P[0])
     const [myUsername, setMyUsername] = useState(matchData?.myUsername ?? '')
     const [myAvatar, setMyAvatar] = useState<string | undefined>(undefined)
-    const [myElo, setMyElo] = useState(1000)
     const [playersFromRoom, setPlayersFromRoom] = useState(matchData?.players ?? [])
 
     const [board, setBoard] = useState<BoardCell[][]>(() => createInitialBoard())
@@ -421,10 +421,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const [showPauseConfirm, setShowPauseConfirm] = useState(false)
     const [pausedUsernames, setPausedUsernames] = useState<string[]>([])
 
-    // Chat states
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-    const [isChatOpen, setIsChatOpen] = useState(false)
-    const [unreadCount, setUnreadCount] = useState(0)
 
     const wsRef = useRef<WebSocket | null>(null)
     const skillAnnouncementTimeoutRef = useRef<number | null>(null)
@@ -440,6 +437,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         selectedPieceStyle4p.p3Name,
         selectedPieceStyle4p.p4Name,
     ]
+    const activeTheme = INGAME_THEME_PRESETS.classic
 
     const normalizedPlayers: QuadPlayer[] = useMemo(() => {
         const fallbackPlayers = Array.from({ length: 4 }, (_, index) => ({
@@ -530,7 +528,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
     const myPlayer = normalizedPlayers.find(player => player.piece === localPiece)
     const currentTurnPlayer = playerByPiece[currentTurn]
-    const arenaTheme = getArenaFromElo(myPlayer?.rr ?? myElo)
+    const localPlayerName = playerByPiece[localPiece]?.name ?? ''
     const validMoves = isOnlineMatch ? onlineValidMoves : getValidMoves(board, currentTurn)
     const isAiMatch = useMemo(() => {
         if (!normalizedPlayers.length || !myPlayer) return false
@@ -540,6 +538,13 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const playerNameByPiece = (piece: Piece) => playerByPiece[piece]?.name ?? piece
     const getPrimaryOpponentPiece = (player: Piece) =>
         PIECE_ORDER.find(piece => piece !== player && !abandonedPieces.includes(piece)) ?? getNextPiece(player)
+    const getAliveOpponents = (player: Piece) =>
+        PIECE_ORDER.filter(piece => piece !== player && !abandonedPieces.includes(piece))
+    const getRandomOpponentPiece = (player: Piece) => {
+        const candidates = getAliveOpponents(player)
+        if (candidates.length === 0) return getNextPiece(player)
+        return candidates[Math.floor(Math.random() * candidates.length)]
+    }
 
     const clearSkillAnnouncement = () => {
         if (skillAnnouncementTimeoutRef.current !== null) {
@@ -608,7 +613,6 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 const { quadIndex } = decodePiecePreference(me.preferred_piece_color)
                 setSelectedPieceStyle4p(PIECE_STYLES_4P[quadIndex] ?? PIECE_STYLES_4P[0])
                 setMyAvatar(me.avatar_url)
-                setMyElo(me.elo ?? 1000)
                 if (!myUsername) setMyUsername(me.username)
             } catch {
                 if (!isMounted) return
@@ -763,9 +767,6 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     const sender = data.payload.sender || '?'
                     const message = data.payload.message || ''
                     setChatMessages(prev => [...prev, { sender, message }])
-                    if (!isChatOpen && sender !== myUsername) {
-                        setUnreadCount(prev => prev + 1)
-                    }
                 }
             } catch {
                 // Ignore malformed payloads
@@ -879,13 +880,16 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         if (isOnlineMatch) {
             if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return
             if (currentTurn !== localPiece) return
+            const targetPlayer = ability === 'steal_skill'
+                ? getRandomOpponentPiece(localPiece)
+                : getPrimaryOpponentPiece(localPiece)
 
             pendingOnlineSkillRef.current = { actor: localPiece, ability, direction }
             wsRef.current.send(JSON.stringify({
                 action: 'use_skill',
                 type: ability,
                 direction,
-                target_player: getPrimaryOpponentPiece(localPiece),
+                target_player: targetPlayer,
                 inventory_index: inventoryIndex,
             }))
             return
@@ -912,13 +916,15 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         }
 
         if (ability === 'steal_skill') {
-            if (nextInventories[opponent].length > 0) {
-                const stolenIndex = Math.floor(Math.random() * nextInventories[opponent].length)
-                const [stolen] = nextInventories[opponent].splice(stolenIndex, 1)
+            const stealTargets = getAliveOpponents(player).filter(piece => nextInventories[piece].length > 0)
+            if (stealTargets.length > 0) {
+                const stealTarget = stealTargets[Math.floor(Math.random() * stealTargets.length)]
+                const stolenIndex = Math.floor(Math.random() * nextInventories[stealTarget].length)
+                const [stolen] = nextInventories[stealTarget].splice(stolenIndex, 1)
                 nextInventories[player].push(stolen)
-                message = `${playerNameByPiece(player)} robó una habilidad a ${playerNameByPiece(opponent)}.`
+                message = `${playerNameByPiece(player)} robo una habilidad a ${playerNameByPiece(stealTarget)}.`
             } else {
-                message = `${playerNameByPiece(opponent)} no tiene habilidades para robar.`
+                message = 'Ningun rival tiene habilidades para robar.'
             }
         }
 
@@ -1208,27 +1214,19 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         }
     }
 
-    const toggleChat = () => {
-        setIsChatOpen(!isChatOpen)
-        if (!isChatOpen) {
-            setUnreadCount(0)
-        }
-    }
-
-    const renderSkillCard = (ability: AbilityId, index: number, owner: Piece) => {
-        const skillKey = `${owner}-${ability}-${index}`
+    const renderSkillCard = (ability: AbilityId, index: number) => {
+        const skillKey = `${localPiece}-${ability}-${index}`
         const isExpanded = expandedSkillKey === skillKey
-        const isActive = pendingAbility?.inventoryIndex === index && currentTurn === owner
+        const isActive = pendingAbility?.inventoryIndex === index && currentTurn === localPiece
         const meta = ABILITY_META[ability] || { icon: '❓', name: 'Desconocida', needsTarget: false }
         const displayName = getAbilityDisplayName(ability)
         const description = ABILITY_DESCRIPTIONS[ability] || 'Sin descripcion disponible.'
-        const canUse = owner === localPiece && currentTurn === localPiece && !gameOver
-        const isOpponentView = owner !== localPiece
+        const canUse = currentTurn === localPiece && !gameOver
 
         return (
             <div
                 key={skillKey}
-                className={`duel-quad__skill-card ${isActive ? 'duel-quad__skill-card--active' : ''} ${isExpanded ? 'duel-quad__skill-card--expanded' : ''} ${isOpponentView ? 'duel-quad__skill-card--opponent-view' : ''}`}
+                className={`duel-quad__skill-card ${isActive ? 'duel-quad__skill-card--active' : ''} ${isExpanded ? 'duel-quad__skill-card--expanded' : ''}`}
             >
                 <button
                     className="duel-quad__skill-main"
@@ -1257,9 +1255,15 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
     const leftPlayers = normalizedPlayers.slice(0, 2)
     const rightPlayers = normalizedPlayers.slice(2, 4)
+    const visibleStatusMessage =
+        statusMessage === 'Tu turno' || statusMessage === 'Turno de otro jugador'
+            ? ''
+            : statusMessage
 
     return (
         <div className="duel-quad">
+            <img className="duel-quad__background" src={menuBackground} alt="" aria-hidden="true" />
+            <div className="duel-quad__overlay" aria-hidden="true" />
             <h1 className="sr-only">Partida de cuatro jugadores</h1>
             {!gameOver && !isAiMatch && pausedUsernames.length > 0 && (
                 <div className="duel__paused-status">
@@ -1285,243 +1289,222 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     {abilityError}
                 </div>
             )}
-            <div className="home__bg" aria-hidden="true">
-                <span className="home__chip home__chip--1">⚫</span>
-                <span className="home__chip home__chip--2">⚪</span>
-                <span className="home__chip home__chip--3">🔴</span>
-                <span className="home__chip home__chip--4">🔵</span>
-                <span className="home__chip home__chip--5">🟢</span>
-                <span className="home__chip home__chip--6">🟡</span>
-                <span className="home__chip home__chip--7">🟣</span>
-                <span className="home__chip home__chip--8">🟠</span>
-                <span className="home__chip home__chip--9">⚫</span>
-                <span className="home__chip home__chip--10">⚪</span>
-                <span className="home__chip home__chip--q1 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q2 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q3 home__chip--question">❓</span>
-                <span className="home__chip home__chip--q4 home__chip--question">❓</span>
-            </div>
 
-            <div className="duel-quad__container">
-                <div style={{ display: 'flex', gap: '12px', position: 'absolute', top: '24px', right: '24px', zIndex: 10 }}>
-                    {!isAiMatch && (
-                        <button type="button" className="ingame-chat-btn" onClick={toggleChat}>
-                            Chat
-                            {unreadCount > 0 && <span className="ingame-chat-btn__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-                        </button>
-                    )}
+            <div
+                className="duel-quad__container"
+                style={{
+                    '--duel-quad-frame-image': `url(${activeTheme.frame})`,
+                    '--duel-quad-board-background-image': `url(${activeTheme.boardBackground})`,
+                    '--duel-quad-question-image': `url(${activeTheme.questionCell})`,
+                } as CSSProperties}
+            >
+                <div className="duel-quad__actions duel-quad__actions--corner">
                     {!isAiMatch && isOnlineMatch && matchData?.returnTo === 'friends' && (
                         <button type="button" className="duel-quad__pause-btn" onClick={handleAttemptPause}>
                             Pausar
                         </button>
                     )}
-                    <button type="button" className="duel-quad__leave-btn" style={{ position: 'static' }} onClick={handleAttemptLeave}>
-                        Abandonar partida
+                    <button
+                        type="button"
+                        className="duel-quad__leave-btn duel-quad__leave-btn--image"
+                        onClick={handleAttemptLeave}
+                        aria-label="Abandonar partida"
+                    >
+                        <img src={leaveRoomButtonImage} alt="" aria-hidden="true" />
                     </button>
                 </div>
 
-                <header className="duel-quad__header">
-                    <div className="duel-quad__center-info">
-                        <span className="duel-quad__turn-label">Turno actual</span>
-                        <span className="duel-quad__turn-value">
-                            {gameOver ? 'Partida finalizada' : `${currentTurnPlayer?.name ?? '-'} (${currentTurnPlayer?.color ?? '-'})`}
-                        </span>
-                        {/* UI de Habilidad Pendiente o Direccion de Gravedad */}
-                        {(pendingAbility || selectingGravityDirection) && (
-                            <div className="duel-quad__ability-pending-bar">
-                                <span className="duel-quad__ability-pending-text">
-                                    {pendingAbility
-                                        ? `Usando: ${getAbilityDisplayName(pendingAbility.id)}`
-                                        : 'Selecciona Direccion de Gravedad'}
-                                </span>
-                                <button
-                                    className="duel-quad__ability-cancel-btn"
-                                    type="button"
-                                    onClick={() => {
-                                        setPendingAbility(null)
-                                        setSelectingGravityDirection(null)
-                                        setStatusMessage('Accion cancelada.')
-                                    }}
+                <main className="duel-quad__layout">
+                    <aside className="duel-quad__left-column">
+                        <div className="duel-quad__players-stack duel-quad__players-stack--left">
+                            {leftPlayers.map((player, index) => (
+                                <article
+                                    key={`${player.name}-${player.id}-left`}
+                                    className={`duel-quad__panel duel-quad__panel--slot-l${index + 1} ${player.piece === currentTurn && !gameOver ? 'duel-quad__panel--active' : ''} ${abandonedPieces.includes(player.piece) ? 'duel-quad__panel--abandoned' : ''} ${pausedUsernames.includes(player.name) ? 'duel-quad__panel--paused' : ''}`}
                                 >
-                                    Cancelar
-                                </button>
-                            </div>
-                        )}
-
-                        {selectingGravityDirection && (
-                            <div className="duel-quad__gravity-direction-picker">
-                                {(['up', 'down', 'left', 'right'] as const).map((dir) => (
-                                    <button
-                                        key={dir}
-                                        className={`duel-quad__gravity-btn duel-quad__gravity-btn--${dir}`}
-                                        type="button"
-                                        onClick={() => {
-                                            const { inventoryIndex } = selectingGravityDirection
-                                            if (isOnlineMatch) {
-                                                if (wsRef.current?.readyState === WebSocket.OPEN) {
-                                                    pendingOnlineSkillRef.current = { actor: localPiece, ability: 'gravity', direction: dir }
-                                                    wsRef.current.send(JSON.stringify({
-                                                        action: 'use_skill',
-                                                        type: 'gravity',
-                                                        direction: dir,
-                                                        inventory_index: inventoryIndex
-                                                    }))
-                                                }
-                                            } else {
-                                                useInstantAbility('gravity', inventoryIndex, dir)
-                                            }
-                                            setSelectingGravityDirection(null)
-                                        }}
-                                    >
-                                        {dir === 'up' ? '⬆️' : dir === 'down' ? '⬇️' : dir === 'left' ? '⬅️' : '➡️'}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className="duel-quad__timer">{statusMessage}</div>
-                        {abandonNotice && (
-                            <span className="duel-quad__abandon-notice">{abandonNotice}</span>
-                        )}
-                    </div>
-                </header>
-
-                <main className="duel-quad__main">
-                    <aside className="duel-quad__side">
-                        {leftPlayers.map((player) => (
-                            <article
-                                padding-title={player.name}
-                                key={`${player.name}-${player.id}-left`}
-                                className={`duel-quad__panel ${player.piece === currentTurn && !gameOver ? 'duel-quad__panel--active' : ''} ${abandonedPieces.includes(player.piece) ? 'duel-quad__panel--abandoned' : ''} ${pausedUsernames.includes(player.name) ? 'duel-quad__panel--paused' : ''}`}
-                            >
-                                <div className="duel-quad__player-card">
-                                    <img
-                                        className="duel-quad__avatar"
-                                        src={resolveUserAvatar(player.piece === localPiece ? myAvatar : player.avatar_url, player.name)}
-                                        alt={`Avatar de ${player.name}`}
-                                    />
-                                    <div className="duel-quad__player-data">
-                                        <span className="duel-quad__player-row">
-                                            <span className="duel-quad__player-name">{player.name}</span>
-                                            <span className="duel-quad__player-score">{rawScoreByPiece[player.piece]} pts</span>
-                                        </span>
-                                        <span className="duel-quad__player-meta">{player.color}</span>
-                                        {abandonedPieces.includes(player.piece) && (
-                                            <span className="duel-quad__player-abandoned">Ha abandonado</span>
-                                        )}
+                                    <div className="duel-quad__player-card">
+                                        <img
+                                            className="duel-quad__avatar"
+                                            src={resolveUserAvatar(player.piece === localPiece ? myAvatar : player.avatar_url, player.name)}
+                                            alt={`Avatar de ${player.name}`}
+                                        />
+                                        <div className="duel-quad__player-data">
+                                            <span className="duel-quad__player-row">
+                                                <span className="duel-quad__player-name">{player.name}</span>
+                                                <span className="duel-quad__player-score">{rawScoreByPiece[player.piece]} pts</span>
+                                            </span>
+                                            <span className="duel-quad__player-meta">{player.color}</span>
+                                            {abandonedPieces.includes(player.piece) && (
+                                                <span className="duel-quad__player-abandoned">Ha abandonado</span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                                {ENABLE_SPECIAL_MECHANICS_4V4 && (
-                                    <div className="duel-quad__skills">
-                                        {inventories[player.piece].length === 0 && <span className="duel-quad__empty-skills">Sin habilidades</span>}
-                                        {inventories[player.piece].map((ability, idx) => false ? (
-                                            <button
-                                                key={`${ability}-${idx}`}
-                                                className={`duel-quad__skill-btn ${pendingAbility?.inventoryIndex === idx && currentTurn === localPiece && player.piece === localPiece ? 'duel-quad__skill-btn--active' : ''}`}
-                                                onClick={() => player.piece === localPiece && handleUseAbility(ability, idx)}
-                                                disabled={player.piece !== localPiece || gameOver || currentTurn !== localPiece}
-                                                title={(ABILITY_META[ability] || { name: 'Desconocida' }).name}
-                                            >
-                                                {(ABILITY_META[ability] || { icon: '❓' }).icon}
-                                            </button>
-                                        ) : renderSkillCard(ability, idx, player.piece))}
-                                    </div>
-                                )}
-                            </article>
-                        ))}
+                                </article>
+                            ))}
+                        </div>
+
+                        <div className="duel-quad__chat-slot">
+                            {isAiMatch ? (
+                                <div className="duel-quad__chat-placeholder">Chat desactivado en partida contra IA.</div>
+                            ) : (
+                                <InGameChat
+                                    messages={chatMessages}
+                                    myUsername={myUsername}
+                                    onSend={handleSendChat}
+                                    mode="panel"
+                                />
+                            )}
+                        </div>
                     </aside>
 
-                    <section
-                        className="duel-quad__board-area"
-                        style={{ '--duel-quad-board-area-bg': `url(${arenaTheme.background})` } as CSSProperties}
-                    >
-                        <div
-                            className="duel-quad__board"
-                            style={{ backgroundImage: `url(${arenaTheme.board})` }}
-                        >
-                            {Array.from({ length: BOARD_SIZE * BOARD_SIZE }).map((_, index) => {
-                                const row = Math.floor(index / BOARD_SIZE)
-                                const col = index % BOARD_SIZE
-                                const key = `${row}-${col}`
-                                const cell = board[row][col]
-                                const hasQuestion = ENABLE_SPECIAL_MECHANICS_4V4 && questionCells.has(key)
-                                const canShowPlayableMove = !isOnlineMatch || currentTurn === localPiece
-                                const isPlayable = !pendingAbility && validMoves.has(key) && !gameOver && canShowPlayableMove
+                    <section className="duel-quad__board-column">
+                        <header className="duel-quad__center-info">
+                            <span className="duel-quad__turn-label">Turno actual</span>
+                            <span className="duel-quad__turn-value">
+                                {gameOver ? 'Partida finalizada' : `${currentTurnPlayer?.name ?? '-'} (${currentTurnPlayer?.color ?? '-'})`}
+                            </span>
 
-                                return (
+                            {(pendingAbility || selectingGravityDirection) && (
+                                <div className="duel-quad__ability-pending-bar">
+                                    <span className="duel-quad__ability-pending-text">
+                                        {pendingAbility
+                                            ? `Usando: ${getAbilityDisplayName(pendingAbility.id)}`
+                                            : 'Selecciona direccion de gravedad'}
+                                    </span>
                                     <button
-                                        key={key}
-                                        className={`duel-quad__cell ${(row + col) % 2 === 0 ? 'duel-quad__cell--dark' : 'duel-quad__cell--light'} ${isPlayable ? 'duel-quad__cell--playable' : ''} ${hasQuestion ? 'duel-quad__cell--question' : ''}`}
+                                        className="duel-quad__ability-cancel-btn"
                                         type="button"
-                                        aria-label={`Casilla ${row + 1}-${col + 1}`}
-                                        onClick={() => handleCellClick(row, col)}
-                                        disabled={gameOver || pausedUsernames.length > 0}
-                                        tabIndex={isPlayable ? 0 : -1}
+                                        onClick={() => {
+                                            setPendingAbility(null)
+                                            setSelectingGravityDirection(null)
+                                            setStatusMessage('Accion cancelada.')
+                                        }}
                                     >
-                                        {hasQuestion && <span className="duel-quad__question">?</span>}
-                                        {cell.piece && (
-                                            <>
-                                                <span
-                                                    className={`duel-quad-piece duel-quad-piece--${cell.piece} ${cell.fixed ? 'duel-quad-piece--fixed' : ''}`}
-                                                    style={{
-                                                        background:
-                                                            cell.piece === 'black' ? selectedPieceStyle4p.p1
-                                                                : cell.piece === 'white' ? selectedPieceStyle4p.p2
-                                                                    : cell.piece === 'red' ? selectedPieceStyle4p.p3
-                                                                        : selectedPieceStyle4p.p4,
-                                                    }}
-                                                />
-                                                {cell.fixed && <span className="duel-quad-piece-lock">🔒</span>}
-                                            </>
-                                        )}
+                                        Cancelar
                                     </button>
-                                )
-                            })}
+                                </div>
+                            )}
+
+                            {selectingGravityDirection && (
+                                <div className="duel-quad__gravity-direction-picker">
+                                    {(['up', 'down', 'left', 'right'] as const).map((dir) => (
+                                        <button
+                                            key={dir}
+                                            className={`duel-quad__gravity-btn duel-quad__gravity-btn--${dir}`}
+                                            type="button"
+                                            onClick={() => {
+                                                const { inventoryIndex } = selectingGravityDirection
+                                                if (isOnlineMatch) {
+                                                    if (wsRef.current?.readyState === WebSocket.OPEN) {
+                                                        pendingOnlineSkillRef.current = { actor: localPiece, ability: 'gravity', direction: dir }
+                                                        wsRef.current.send(JSON.stringify({
+                                                            action: 'use_skill',
+                                                            type: 'gravity',
+                                                            direction: dir,
+                                                            inventory_index: inventoryIndex,
+                                                        }))
+                                                    }
+                                                } else {
+                                                    useInstantAbility('gravity', inventoryIndex, dir)
+                                                }
+                                                setSelectingGravityDirection(null)
+                                            }}
+                                        >
+                                            {dir === 'up' ? 'Arriba' : dir === 'down' ? 'Abajo' : dir === 'left' ? 'Izq' : 'Der'}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {visibleStatusMessage && <div className="duel-quad__timer">{visibleStatusMessage}</div>}
+                            {abandonNotice && (
+                                <span className="duel-quad__abandon-notice">{abandonNotice}</span>
+                            )}
+                        </header>
+
+                        <div className="duel-quad__board-area">
+                            <div
+                                className="duel-quad__board"
+                                style={{ backgroundImage: `url(${activeTheme.board})` }}
+                            >
+                                {Array.from({ length: BOARD_SIZE * BOARD_SIZE }).map((_, index) => {
+                                    const row = Math.floor(index / BOARD_SIZE)
+                                    const col = index % BOARD_SIZE
+                                    const key = `${row}-${col}`
+                                    const cell = board[row][col]
+                                    const hasQuestion = ENABLE_SPECIAL_MECHANICS_4V4 && questionCells.has(key)
+                                    const canShowPlayableMove = !isOnlineMatch || currentTurn === localPiece
+                                    const isPlayable = !pendingAbility && validMoves.has(key) && !gameOver && canShowPlayableMove
+
+                                    return (
+                                        <button
+                                            key={key}
+                                            className={`duel-quad__cell ${(row + col) % 2 === 0 ? 'duel-quad__cell--dark' : 'duel-quad__cell--light'} ${isPlayable ? 'duel-quad__cell--playable' : ''} ${hasQuestion ? 'duel-quad__cell--question' : ''}`}
+                                            type="button"
+                                            aria-label={`Casilla ${row + 1}-${col + 1}`}
+                                            onClick={() => handleCellClick(row, col)}
+                                            disabled={gameOver || pausedUsernames.length > 0}
+                                            tabIndex={isPlayable ? 0 : -1}
+                                        >
+                                            {hasQuestion && <span className="duel-quad__question" aria-hidden="true" />}
+                                            {cell.piece && (
+                                                <>
+                                                    <span
+                                                        className={`duel-quad-piece duel-quad-piece--${cell.piece} ${cell.fixed ? 'duel-quad-piece--fixed' : ''}`}
+                                                        style={{
+                                                            background:
+                                                                cell.piece === 'black' ? selectedPieceStyle4p.p1
+                                                                    : cell.piece === 'white' ? selectedPieceStyle4p.p2
+                                                                        : cell.piece === 'red' ? selectedPieceStyle4p.p3
+                                                                            : selectedPieceStyle4p.p4,
+                                                        }}
+                                                    />
+                                                    {cell.fixed && <span className="duel-quad-piece-lock">{"\u{1F512}"}</span>}
+                                                </>
+                                            )}
+                                        </button>
+                                    )
+                                })}
+                            </div>
                         </div>
                     </section>
 
-                    <aside className="duel-quad__side">
-                        {rightPlayers.map((player) => (
-                            <article
-                                padding-title={player.name}
-                                key={`${player.name}-${player.id}-right`}
-                                className={`duel-quad__panel ${player.piece === currentTurn && !gameOver ? 'duel-quad__panel--active' : ''} ${abandonedPieces.includes(player.piece) ? 'duel-quad__panel--abandoned' : ''} ${pausedUsernames.includes(player.name) ? 'duel-quad__panel--paused' : ''}`}
-                            >
-                                <div className="duel-quad__player-card">
-                                    <img
-                                        className="duel-quad__avatar"
-                                        src={resolveUserAvatar(player.piece === localPiece ? myAvatar : player.avatar_url, player.name)}
-                                        alt={`Avatar de ${player.name}`}
-                                    />
-                                    <div className="duel-quad__player-data">
-                                        <span className="duel-quad__player-row">
-                                            <span className="duel-quad__player-name">{player.name}</span>
-                                            <span className="duel-quad__player-score">{rawScoreByPiece[player.piece]} pts</span>
-                                        </span>
-                                        <span className="duel-quad__player-meta">{player.color}</span>
-                                        {abandonedPieces.includes(player.piece) && (
-                                            <span className="duel-quad__player-abandoned">Ha abandonado</span>
-                                        )}
+                    <aside className="duel-quad__right-column">
+                        <div className="duel-quad__players-stack duel-quad__players-stack--right">
+                            {rightPlayers.map((player, index) => (
+                                <article
+                                    key={`${player.name}-${player.id}-right`}
+                                    className={`duel-quad__panel duel-quad__panel--slot-r${index + 1} ${player.piece === currentTurn && !gameOver ? 'duel-quad__panel--active' : ''} ${abandonedPieces.includes(player.piece) ? 'duel-quad__panel--abandoned' : ''} ${pausedUsernames.includes(player.name) ? 'duel-quad__panel--paused' : ''}`}
+                                >
+                                    <div className="duel-quad__player-card">
+                                        <img
+                                            className="duel-quad__avatar"
+                                            src={resolveUserAvatar(player.piece === localPiece ? myAvatar : player.avatar_url, player.name)}
+                                            alt={`Avatar de ${player.name}`}
+                                        />
+                                        <div className="duel-quad__player-data">
+                                            <span className="duel-quad__player-row">
+                                                <span className="duel-quad__player-name">{player.name}</span>
+                                                <span className="duel-quad__player-score">{rawScoreByPiece[player.piece]} pts</span>
+                                            </span>
+                                            <span className="duel-quad__player-meta">{player.color}</span>
+                                            {abandonedPieces.includes(player.piece) && (
+                                                <span className="duel-quad__player-abandoned">Ha abandonado</span>
+                                            )}
+                                        </div>
                                     </div>
+                                </article>
+                            ))}
+                        </div>
+
+                        {ENABLE_SPECIAL_MECHANICS_4V4 && (
+                            <section className={`duel-quad__skills-panel ${pausedUsernames.includes(localPlayerName) ? 'duel-quad__panel--paused' : ''}`}>
+                                <div className="duel-quad__skills">
+                                    {inventories[localPiece].length === 0 && <span className="duel-quad__empty-skills">Sin habilidades</span>}
+                                    {inventories[localPiece].map((ability, idx) => renderSkillCard(ability, idx))}
                                 </div>
-                                {ENABLE_SPECIAL_MECHANICS_4V4 && (
-                                    <div className="duel-quad__skills">
-                                        {inventories[player.piece].length === 0 && <span className="duel-quad__empty-skills">Sin habilidades</span>}
-                                        {inventories[player.piece].map((ability, idx) => false ? (
-                                            <button
-                                                key={`${ability}-${idx}`}
-                                                className={`duel-quad__skill-btn ${pendingAbility?.inventoryIndex === idx && currentTurn === localPiece && player.piece === localPiece ? 'duel-quad__skill-btn--active' : ''}`}
-                                                onClick={() => player.piece === localPiece && handleUseAbility(ability, idx)}
-                                                disabled={player.piece !== localPiece || gameOver || currentTurn !== localPiece}
-                                                title={(ABILITY_META[ability] || { name: 'Desconocida' }).name}
-                                            >
-                                                {(ABILITY_META[ability] || { icon: '❓' }).icon}
-                                            </button>
-                                        ) : renderSkillCard(ability, idx, player.piece))}
-                                    </div>
-                                )}
-                            </article>
-                        ))}
+                            </section>
+                        )}
                     </aside>
                 </main>
             </div>
@@ -1580,7 +1563,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 ariaLabelledBy="duel-quad-leave-confirm-title"
             >
                 <div className="duel-quad-leave-confirm">
-                    <h2 className="duel-leave-confirm__title" id="duel-quad-leave-confirm-title">Abandonar partida</h2>
+                    <h2 className="duel-quad-leave-confirm__title" id="duel-quad-leave-confirm-title">Abandonar partida</h2>
                     <p className="duel-modal__text">
                         {isAiMatch
                             ? "Si abandonas esta partida contra la IA, no se contara como una derrota y no perderas puntos RR."
@@ -1636,15 +1619,6 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 </div>
             </Modal>
 
-            {!isAiMatch && (
-                <InGameChat
-                    messages={chatMessages}
-                    myUsername={myUsername}
-                    isOpen={isChatOpen}
-                    onClose={() => setIsChatOpen(false)}
-                    onSend={handleSendChat}
-                />
-            )}
         </div>
     )
 }
@@ -1733,3 +1707,5 @@ function getNextPiece(piece: Piece) {
 }
 
 export default GameBoard1v1v1v1
+
+
