@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../services/api'
 import { resolveUserAvatar } from '../config/avatarOptions'
 import rankingTitle from '../assets/ranking/rankingGlobal.png'
@@ -30,6 +30,14 @@ function Ranking({ onNavigate }: RankingProps) {
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [error, setError] = useState('')
     const [myUser, setMyUser] = useState<CurrentUser | null>(null)
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error'; visible: boolean }>({ message: '', type: 'info', visible: false })
+    const toastTimer = useRef<number | null>(null)
+
+    const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
+        if (toastTimer.current) window.clearTimeout(toastTimer.current)
+        setToast({ message, type, visible: true })
+        toastTimer.current = window.setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000)
+    }
 
     const fetchRanking = async (refresh = false) => {
         if (refresh) {
@@ -42,8 +50,10 @@ function Ranking({ onNavigate }: RankingProps) {
         try {
             const data = await api.ranking.getGlobal(100, 0)
             setRanking(data.ranking || [])
+            if (refresh) showToast('Ranking actualizado', 'success')
         } catch (err: any) {
             setError(err.message || 'No se pudo cargar el ranking global')
+            if (refresh) showToast('No se pudo actualizar el ranking', 'error')
         } finally {
             if (refresh) {
                 setIsRefreshing(false)
@@ -84,7 +94,7 @@ function Ranking({ onNavigate }: RankingProps) {
                         disabled={isRefreshing}
                         type="button"
                     >
-                        {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+                        Actualizar
                     </button>
                 </header>
 
@@ -134,6 +144,19 @@ function Ranking({ onNavigate }: RankingProps) {
                     <img src={backToMenuButtonImage} alt="" />
                 </button>
             </main>
+            <div
+                className={`popup-toast popup-toast--${toast.type} ${toast.visible ? 'popup-toast--visible' : ''}`}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+            >
+                <span className="popup-toast__icon">
+                    {toast.type === 'success' && 'OK'}
+                    {toast.type === 'info' && 'i'}
+                    {toast.type === 'error' && 'X'}
+                </span>
+                <span className="popup-toast__message">{toast.message}</span>
+            </div>
         </div>
     )
 }

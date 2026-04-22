@@ -129,7 +129,8 @@ function Friends({ onNavigate }: FriendsProps) {
     const fetchFriends = async () => {
         try {
             const data = await api.friends.list()
-            const normalizedFriends: Friend[] = (data.friends || []).map((friend: any) => ({
+            const rawFriends = [...(data.online || []), ...(data.offline || [])]
+            const normalizedFriends: Friend[] = rawFriends.map((friend: any) => ({
                 ...friend,
                 status: normalizeFriendStatus(friend.status),
                 unread_count: Number(friend.unread_count || 0),
