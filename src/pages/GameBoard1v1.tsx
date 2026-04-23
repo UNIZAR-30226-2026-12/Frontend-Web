@@ -11,6 +11,19 @@ import blockGameFrame from '../assets/Ingame/bloqueJuego.png'
 import boardBackgroundDefault from '../assets/Ingame/Fondo1.png'
 import boardDefault from '../assets/Ingame/Tablero1v1.png'
 import questionCellDefault from '../assets/Ingame/casillaInterrogante.png'
+import skillSlotImage from '../assets/Ingame/HuecoHabilidades.png'
+import abilityBombIcon from '../assets/Ingame/Bomba.png'
+import abilityFixPieceIcon from '../assets/Ingame/FichaFija.png'
+import abilityUnfixPieceIcon from '../assets/Ingame/QuitarFichaFija.png'
+import abilityFlipRivalIcon from '../assets/Ingame/VoltearFicha.png'
+import abilityPlaceFreeIcon from '../assets/Ingame/FichaLibre.png'
+import abilitySkipRivalIcon from '../assets/Ingame/SaltarTurno.png'
+import abilityStealSkillIcon from '../assets/Ingame/RobarHabilidad.png'
+import abilityExchangeSkillIcon from '../assets/Ingame/IntercambiarHabilidad.png'
+import abilityGiveSkillIcon from '../assets/Ingame/DarHabilidad.png'
+import abilitySwapColorsIcon from '../assets/Ingame/IntercambioColor.png'
+import abilityLoseTurnIcon from '../assets/Ingame/PerderTurno.png'
+import abilityGravityIcon from '../assets/Ingame/gravedad.png'
 import leaveRoomButtonImage from '../assets/salaEspera/Abandonar.png'
 
 interface GameBoard1v1Props {
@@ -64,7 +77,7 @@ type GravityDirection = 'up' | 'down' | 'left' | 'right'
 interface SkillAnnouncement {
     actorLabel: string
     abilityLabel: string
-    icon: string
+    iconSrc: string
     tone: 'self' | 'opponent'
     theme: 'bomb' | 'gravity' | 'trick' | 'control'
 }
@@ -88,19 +101,19 @@ const OPPONENT = {
     piece: 'white' as Piece,
 }
 
-const ABILITY_META: Record<string, { name: string; icon: string; needsTarget: boolean }> = {
-    bomb: { name: 'Bomba', icon: '💣', needsTarget: true },
-    fix_piece: { name: 'Fijar ficha', icon: '🔒', needsTarget: true },
-    unfix_piece: { name: 'Quitar fijación', icon: '🔓', needsTarget: true },
-    flip_rival: { name: 'Girar ficha rival', icon: '🔄', needsTarget: true },
-    place_free: { name: 'Poner ficha libre', icon: '➕', needsTarget: true },
-    skip_rival: { name: 'Saltar turno rival', icon: '⏭️', needsTarget: false },
-    steal_skill: { name: 'Robar habilidad', icon: '🕵️', needsTarget: false },
-    exchange_skill: { name: 'Intercambiar habilidad', icon: '🔀', needsTarget: false },
-    give_skill: { name: 'Regalar habilidad', icon: '🎁', needsTarget: false },
-    swap_colors: { name: 'Cambiar colores', icon: '🎨', needsTarget: false },
-    lose_turn: { name: 'Perder turno', icon: '🚫', needsTarget: false },
-    gravity: { name: 'Gravedad', icon: '🌌', needsTarget: false },
+const ABILITY_META: Record<string, { name: string; iconSrc: string; needsTarget: boolean }> = {
+    bomb: { name: 'Bomba', iconSrc: abilityBombIcon, needsTarget: true },
+    fix_piece: { name: 'Fijar ficha', iconSrc: abilityFixPieceIcon, needsTarget: true },
+    unfix_piece: { name: 'Quitar fijacion', iconSrc: abilityUnfixPieceIcon, needsTarget: true },
+    flip_rival: { name: 'Girar ficha rival', iconSrc: abilityFlipRivalIcon, needsTarget: true },
+    place_free: { name: 'Poner ficha libre', iconSrc: abilityPlaceFreeIcon, needsTarget: true },
+    skip_rival: { name: 'Saltar turno rival', iconSrc: abilitySkipRivalIcon, needsTarget: false },
+    steal_skill: { name: 'Robar habilidad', iconSrc: abilityStealSkillIcon, needsTarget: false },
+    exchange_skill: { name: 'Intercambiar habilidad', iconSrc: abilityExchangeSkillIcon, needsTarget: false },
+    give_skill: { name: 'Regalar habilidad', iconSrc: abilityGiveSkillIcon, needsTarget: false },
+    swap_colors: { name: 'Cambiar colores', iconSrc: abilitySwapColorsIcon, needsTarget: false },
+    lose_turn: { name: 'Perder turno', iconSrc: abilityLoseTurnIcon, needsTarget: false },
+    gravity: { name: 'Gravedad', iconSrc: abilityGravityIcon, needsTarget: false },
 }
 
 const ABILITY_DESCRIPTIONS: Record<AbilityId, string> = {
@@ -461,7 +474,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
     const [currentUserElo, setCurrentUserElo] = useState(PLAYER.rr)
     const [localPiece, setLocalPiece] = useState<Piece>('black')
-    const [onlineStatusMessage, setOnlineStatusMessage] = useState('')
+    const [onlineStatusMessage, setOnlineStatusMessage] = useState('Partida online en curso')
     const [onlineValidMoves, setOnlineValidMoves] = useState<Set<string>>(new Set())
     const [onlineWinner, setOnlineWinner] = useState<Piece | null>(null)
     const onlineWsRef = useRef<WebSocket | null>(null)
@@ -518,7 +531,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
     const showSkillAnnouncement = (actor: Piece, ability: AbilityId, direction?: GravityDirection) => {
         const normalizedAbility = normalizeAbilityForAnnouncement(ability)
-        const abilityMeta = ABILITY_META[normalizedAbility] ?? { name: 'Habilidad', icon: '❓', needsTarget: false }
+        const abilityMeta = ABILITY_META[normalizedAbility] ?? { name: 'Habilidad', iconSrc: questionCellDefault, needsTarget: false }
         const isSelf = actor === localPieceRef.current
         const tone: SkillAnnouncement['tone'] = isSelf ? 'self' : 'opponent'
         const actorLabel = isSelf ? 'Has usado' : `${matchData?.opponentName ?? opponentProfile.name} ha usado`
@@ -531,7 +544,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         setSkillAnnouncement({
             actorLabel,
             abilityLabel,
-            icon: abilityMeta.icon,
+            iconSrc: abilityMeta.iconSrc,
             tone,
             theme: getAnnouncementTheme(normalizedAbility),
         })
@@ -725,9 +738,9 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     if (payload.game_over) {
                         setOnlineStatusMessage('Partida finalizada')
                     } else if (payload.current_player === localPieceRef.current) {
-                        setOnlineStatusMessage('Tu turno')
+                        setOnlineStatusMessage('')
                     } else {
-                        setOnlineStatusMessage('Turno del rival')
+                        setOnlineStatusMessage('')
                     }
 
                     if (Array.isArray(payload.paused_usernames)) {
@@ -1378,7 +1391,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         const skillKey = `${owner}-${ability}-${index}`
         const isExpanded = expandedSkillKey === skillKey
         const isActive = !forceDisabled && pendingAbility?.inventoryIndex === index && currentTurn === owner
-        const meta = ABILITY_META[ability] || { icon: '❓', name: 'Desconocida', needsTarget: false }
+        const meta = ABILITY_META[ability] || { iconSrc: questionCellDefault, name: 'Desconocida', needsTarget: false }
         const displayName = getAbilityDisplayName(ability)
         const description = ABILITY_DESCRIPTIONS[ability] || 'Sin descripcion disponible.'
 
@@ -1393,7 +1406,9 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     type="button"
                     disabled={forceDisabled || gameOver || currentTurn !== owner}
                 >
-                    <span className="duel__skill-icon">{meta.icon}</span>
+                    <span className="duel__skill-icon">
+                        <img src={meta.iconSrc} alt="" aria-hidden="true" />
+                    </span>
                     <div className="duel__skill-text">
                         <span className="duel__skill-name">{displayName}</span>
                     </div>
@@ -1405,7 +1420,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     aria-expanded={isExpanded}
                     aria-label={`Ver descripcion de ${displayName}`}
                 >
-                    Info
+                    <span className="duel__skill-info-icon" aria-hidden="true">i</span>
                 </button>
                 {isExpanded && (
                     <div className="duel__skill-description">
@@ -1433,7 +1448,9 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     className={`duel__skill-announcement duel__skill-announcement--${skillAnnouncement.tone} duel__skill-announcement--${skillAnnouncement.theme}`}
                     aria-live="polite"
                 >
-                    <span className="duel__skill-announcement-icon">{skillAnnouncement.icon}</span>
+                    <span className="duel__skill-announcement-icon">
+                        <img src={skillAnnouncement.iconSrc} alt="" aria-hidden="true" />
+                    </span>
                     <div className="duel__skill-announcement-copy">
                         <span className="duel__skill-announcement-actor">{skillAnnouncement.actorLabel}</span>
                         <span className="duel__skill-announcement-name">{skillAnnouncement.abilityLabel}</span>
@@ -1451,6 +1468,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     '--duel-frame-image': `url(${activeTheme.frame})`,
                     '--duel-board-background-image': `url(${activeTheme.boardBackground})`,
                     '--duel-question-image': `url(${activeTheme.questionCell})`,
+                    '--duel-skill-slot-image': `url(${skillSlotImage})`,
                 } as CSSProperties}
             >
                 <main className="duel__layout">
@@ -1472,7 +1490,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                             <span className="duel__turn-label">Turno actual</span>
                             <span className="duel__turn-value">{turnLabel}</span>
                             <span className="duel__turn-state">
-                                {isOnlineMatch ? (onlineStatusMessage || 'Partida online en curso') : systemMessage}
+                                {isOnlineMatch ? onlineStatusMessage : systemMessage}
                             </span>
 
                             {(pendingAbility || selectingGravityDirection) && (
@@ -1641,9 +1659,12 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 onClose={() => onNavigate(postGameScreen)}
                 maxWidth="560px"
                 showCloseButton={false}
+                overlayClassName="popup-overlay"
+                boxClassName="popup-box popup-box--game"
+                closeButtonClassName="popup-close"
                 ariaLabelledBy="duel-result-title"
             >
-                <div className="duel-result">
+                <div className="duel-result popup-surface">
                     <div className="duel-result__top">
                         <h2 className="duel-result__title" id="duel-result-title">Partida finalizada</h2>
                         <p className={`duel-result__rr duel-result__rr--badge ${rrDelta > 0 ? 'duel-result__rr--up' : rrDelta < 0 ? 'duel-result__rr--down' : 'duel-result__rr--neutral'}`}>
@@ -1681,9 +1702,12 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 isOpen={showLeaveConfirm}
                 onClose={() => setShowLeaveConfirm(false)}
                 maxWidth="520px"
+                overlayClassName="popup-overlay"
+                boxClassName="popup-box popup-box--compact"
+                closeButtonClassName="popup-close"
                 ariaLabelledBy="duel-leave-confirm-title"
             >
-                <div className="duel-leave-confirm">
+                <div className="duel-leave-confirm popup-surface">
                     <h2 className="duel-leave-confirm__title" id="duel-leave-confirm-title">Abandonar partida</h2>
                     <p className="duel-modal__text">
                         {isAiMatch
@@ -1716,9 +1740,12 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 isOpen={showPauseConfirm}
                 onClose={() => setShowPauseConfirm(false)}
                 maxWidth="520px"
+                overlayClassName="popup-overlay"
+                boxClassName="popup-box popup-box--compact"
+                closeButtonClassName="popup-close"
                 ariaLabelledBy="duel-pause-confirm-title"
             >
-                <div className="duel-leave-confirm">
+                <div className="duel-leave-confirm popup-surface">
                     <h2 className="duel-leave-confirm__title" id="duel-pause-confirm-title">Pausar partida</h2>
                     <p className="duel-leave-confirm__text">
                         ¿Estás seguro de que quieres pausar la partida? Podrás reanudarla en cualquier momento desde la sección de Amigos.

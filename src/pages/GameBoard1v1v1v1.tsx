@@ -11,6 +11,19 @@ import blockGameFrame from '../assets/Ingame/bloqueJuego4Jugadores.png'
 import boardBackgroundDefault from '../assets/Ingame/Fondo1.png'
 import boardDefault from '../assets/Ingame/Tablero1v1v1v1.png'
 import questionCellDefault from '../assets/Ingame/casillaInterrogante.png'
+import skillSlotImage from '../assets/Ingame/HuecoHabilidades.png'
+import abilityBombIcon from '../assets/Ingame/Bomba.png'
+import abilityFixPieceIcon from '../assets/Ingame/FichaFija.png'
+import abilityUnfixPieceIcon from '../assets/Ingame/QuitarFichaFija.png'
+import abilityFlipRivalIcon from '../assets/Ingame/VoltearFicha.png'
+import abilityPlaceFreeIcon from '../assets/Ingame/FichaLibre.png'
+import abilitySkipRivalIcon from '../assets/Ingame/SaltarTurno.png'
+import abilityStealSkillIcon from '../assets/Ingame/RobarHabilidad.png'
+import abilityExchangeSkillIcon from '../assets/Ingame/IntercambiarHabilidad.png'
+import abilityGiveSkillIcon from '../assets/Ingame/DarHabilidad.png'
+import abilitySwapColorsIcon from '../assets/Ingame/IntercambioColor.png'
+import abilityLoseTurnIcon from '../assets/Ingame/PerderTurno.png'
+import abilityGravityIcon from '../assets/Ingame/gravedad.png'
 import leaveRoomButtonImage from '../assets/salaEspera/Abandonar.png'
 
 type Piece = 'black' | 'white' | 'red' | 'blue'
@@ -47,7 +60,7 @@ type GravityDirection = 'up' | 'down' | 'left' | 'right'
 interface SkillAnnouncement {
     actorLabel: string
     abilityLabel: string
-    icon: string
+    iconSrc: string
     tone: 'self' | 'opponent'
     theme: 'bomb' | 'gravity' | 'trick' | 'control'
 }
@@ -100,19 +113,19 @@ const INGAME_THEME_PRESETS: Record<'classic', InGameTheme> = {
     },
 }
 
-const ABILITY_META: Record<string, { name: string; icon: string; needsTarget: boolean }> = {
-    bomb: { name: 'Bomba', icon: '💣', needsTarget: true },
-    fix_piece: { name: 'Fijar ficha', icon: '🔒', needsTarget: true },
-    unfix_piece: { name: 'Quitar fijación', icon: '🔓', needsTarget: true },
-    flip_rival: { name: 'Girar ficha rival', icon: '🔄', needsTarget: true },
-    place_free: { name: 'Poner ficha libre', icon: '➕', needsTarget: true },
-    skip_rival: { name: 'Saltar turno rival', icon: '⏭️', needsTarget: false },
-    steal_skill: { name: 'Robar habilidad', icon: '🕵️', needsTarget: false },
-    exchange_skill: { name: 'Intercambiar habilidad', icon: '🔀', needsTarget: false },
-    give_skill: { name: 'Regalar habilidad', icon: '🎁', needsTarget: false },
-    swap_colors: { name: 'Cambiar colores', icon: '🎨', needsTarget: false },
-    lose_turn: { name: 'Perder turno', icon: '🚫', needsTarget: false },
-    gravity: { name: 'Gravedad', icon: '🌌', needsTarget: false },
+const ABILITY_META: Record<string, { name: string; iconSrc: string; needsTarget: boolean }> = {
+    bomb: { name: 'Bomba', iconSrc: abilityBombIcon, needsTarget: true },
+    fix_piece: { name: 'Fijar ficha', iconSrc: abilityFixPieceIcon, needsTarget: true },
+    unfix_piece: { name: 'Quitar fijacion', iconSrc: abilityUnfixPieceIcon, needsTarget: true },
+    flip_rival: { name: 'Girar ficha rival', iconSrc: abilityFlipRivalIcon, needsTarget: true },
+    place_free: { name: 'Poner ficha libre', iconSrc: abilityPlaceFreeIcon, needsTarget: true },
+    skip_rival: { name: 'Saltar turno rival', iconSrc: abilitySkipRivalIcon, needsTarget: false },
+    steal_skill: { name: 'Robar habilidad', iconSrc: abilityStealSkillIcon, needsTarget: false },
+    exchange_skill: { name: 'Intercambiar habilidad', iconSrc: abilityExchangeSkillIcon, needsTarget: false },
+    give_skill: { name: 'Regalar habilidad', iconSrc: abilityGiveSkillIcon, needsTarget: false },
+    swap_colors: { name: 'Cambiar colores', iconSrc: abilitySwapColorsIcon, needsTarget: false },
+    lose_turn: { name: 'Perder turno', iconSrc: abilityLoseTurnIcon, needsTarget: false },
+    gravity: { name: 'Gravedad', iconSrc: abilityGravityIcon, needsTarget: false },
 }
 
 const ENABLE_SPECIAL_MECHANICS_4V4 = true
@@ -569,7 +582,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
     const showSkillAnnouncement = (actor: Piece, ability: AbilityId, direction?: GravityDirection) => {
         const normalizedAbility = normalizeAbilityForAnnouncement(ability)
-        const abilityMeta = ABILITY_META[normalizedAbility] ?? { name: 'Habilidad', icon: '❓', needsTarget: false }
+        const abilityMeta = ABILITY_META[normalizedAbility] ?? { name: 'Habilidad', iconSrc: questionCellDefault, needsTarget: false }
         const tone = actor === localPiece ? 'self' : 'opponent'
         const actorLabel = tone === 'self' ? 'Has usado' : `${playerNameByPiece(actor)} ha usado`
         const abilityLabel =
@@ -581,7 +594,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         setSkillAnnouncement({
             actorLabel,
             abilityLabel,
-            icon: abilityMeta.icon,
+            iconSrc: abilityMeta.iconSrc,
             tone,
             theme: getAnnouncementTheme(normalizedAbility),
         })
@@ -751,9 +764,9 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     if (payload.game_over) {
                         setStatusMessage('Partida finalizada')
                     } else if (payload.current_player === localPiece) {
-                        setStatusMessage('Tu turno')
+                        setStatusMessage('')
                     } else {
-                        setStatusMessage('Turno de otro jugador')
+                        setStatusMessage('')
                     }
                 }
 
@@ -1218,7 +1231,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         const skillKey = `${localPiece}-${ability}-${index}`
         const isExpanded = expandedSkillKey === skillKey
         const isActive = pendingAbility?.inventoryIndex === index && currentTurn === localPiece
-        const meta = ABILITY_META[ability] || { icon: '❓', name: 'Desconocida', needsTarget: false }
+        const meta = ABILITY_META[ability] || { iconSrc: questionCellDefault, name: 'Desconocida', needsTarget: false }
         const displayName = getAbilityDisplayName(ability)
         const description = ABILITY_DESCRIPTIONS[ability] || 'Sin descripcion disponible.'
         const canUse = currentTurn === localPiece && !gameOver
@@ -1234,7 +1247,9 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     type="button"
                     disabled={!canUse}
                 >
-                    <span className="duel-quad__skill-icon">{meta.icon}</span>
+                    <span className="duel-quad__skill-icon">
+                        <img src={meta.iconSrc} alt="" aria-hidden="true" />
+                    </span>
                     <div className="duel-quad__skill-text">
                         <span className="duel-quad__skill-name">{displayName}</span>
                     </div>
@@ -1246,7 +1261,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     aria-expanded={isExpanded}
                     aria-label={`Ver descripcion de ${displayName}`}
                 >
-                    Info
+                    <span className="duel-quad__skill-info-icon" aria-hidden="true">i</span>
                 </button>
                 {isExpanded && <div className="duel-quad__skill-description">{description}</div>}
             </div>
@@ -1255,10 +1270,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
     const leftPlayers = normalizedPlayers.slice(0, 2)
     const rightPlayers = normalizedPlayers.slice(2, 4)
-    const visibleStatusMessage =
-        statusMessage === 'Tu turno' || statusMessage === 'Turno de otro jugador'
-            ? ''
-            : statusMessage
+    const visibleStatusMessage = statusMessage
 
     return (
         <div className="duel-quad">
@@ -1277,7 +1289,9 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     className={`duel-quad__skill-announcement duel-quad__skill-announcement--${skillAnnouncement.tone} duel-quad__skill-announcement--${skillAnnouncement.theme}`}
                     aria-live="polite"
                 >
-                    <span className="duel-quad__skill-announcement-icon">{skillAnnouncement.icon}</span>
+                    <span className="duel-quad__skill-announcement-icon">
+                        <img src={skillAnnouncement.iconSrc} alt="" aria-hidden="true" />
+                    </span>
                     <div className="duel-quad__skill-announcement-copy">
                         <span className="duel-quad__skill-announcement-actor">{skillAnnouncement.actorLabel}</span>
                         <span className="duel-quad__skill-announcement-name">{skillAnnouncement.abilityLabel}</span>
@@ -1296,6 +1310,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     '--duel-quad-frame-image': `url(${activeTheme.frame})`,
                     '--duel-quad-board-background-image': `url(${activeTheme.boardBackground})`,
                     '--duel-quad-question-image': `url(${activeTheme.questionCell})`,
+                    '--duel-quad-skill-slot-image': `url(${skillSlotImage})`,
                 } as CSSProperties}
             >
                 <div className="duel-quad__actions duel-quad__actions--corner">
@@ -1416,8 +1431,10 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                 </div>
                             )}
 
-                            {visibleStatusMessage && <div className="duel-quad__timer">{visibleStatusMessage}</div>}
-                            {abandonNotice && (
+                            {!pendingAbility && !selectingGravityDirection && visibleStatusMessage && (
+                                <div className="duel-quad__timer">{visibleStatusMessage}</div>
+                            )}
+                            {!pendingAbility && !selectingGravityDirection && abandonNotice && (
                                 <span className="duel-quad__abandon-notice">{abandonNotice}</span>
                             )}
                         </header>
@@ -1514,9 +1531,12 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 onClose={() => onNavigate(postGameScreen)}
                 maxWidth="600px"
                 showCloseButton={false}
+                overlayClassName="popup-overlay"
+                boxClassName="popup-box popup-box--game"
+                closeButtonClassName="popup-close"
                 ariaLabelledBy="duel-quad-result-title"
             >
-                <div className="duel-quad-result">
+                <div className="duel-quad-result popup-surface">
                     <div className="duel-quad-result__top">
                         <h2 className="duel-quad-result__title" id="duel-quad-result-title">Partida finalizada</h2>
                         <p className={`duel-quad-result__rr duel-quad-result__rr--badge ${rrDelta > 0 ? 'duel-quad-result__rr--up' : rrDelta < 0 ? 'duel-quad-result__rr--down' : 'duel-quad-result__rr--neutral'}`}>
@@ -1541,7 +1561,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     </div>
 
                     {ENABLE_SPECIAL_MECHANICS_4V4 && (
-                        <p className="duel-quad-result__note" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginTop: '0.5rem', textAlign: 'center' }}>
+                        <p className="duel-quad-result__note" style={{ fontSize: '0.85rem', marginTop: '0.5rem', textAlign: 'center' }}>
                             Penalización aplicada: -{ABILITY_PENALTY} pts por cada habilidad sin usar.
                         </p>
                     )}
@@ -1560,9 +1580,12 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 isOpen={showLeaveConfirm}
                 onClose={() => setShowLeaveConfirm(false)}
                 maxWidth="520px"
+                overlayClassName="popup-overlay"
+                boxClassName="popup-box popup-box--compact"
+                closeButtonClassName="popup-close"
                 ariaLabelledBy="duel-quad-leave-confirm-title"
             >
-                <div className="duel-quad-leave-confirm">
+                <div className="duel-quad-leave-confirm popup-surface">
                     <h2 className="duel-quad-leave-confirm__title" id="duel-quad-leave-confirm-title">Abandonar partida</h2>
                     <p className="duel-modal__text">
                         {isAiMatch
@@ -1595,9 +1618,12 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 isOpen={!isAiMatch && showPauseConfirm}
                 onClose={() => setShowPauseConfirm(false)}
                 maxWidth="520px"
+                overlayClassName="popup-overlay"
+                boxClassName="popup-box popup-box--compact"
+                closeButtonClassName="popup-close"
                 ariaLabelledBy="duel-quad-pause-confirm-title"
             >
-                <div className="duel-quad-leave-confirm">
+                <div className="duel-quad-leave-confirm popup-surface">
                     <h2 className="duel-quad-leave-confirm__title" id="duel-quad-pause-confirm-title">Pausar partida</h2>
                     <p className="duel-quad-leave-confirm__text">
                         ¿Estás seguro de que quieres pausar la partida? Podrás reanudarla después desde la sección de Amigos.
@@ -1707,5 +1733,3 @@ function getNextPiece(piece: Piece) {
 }
 
 export default GameBoard1v1v1v1
-
-
