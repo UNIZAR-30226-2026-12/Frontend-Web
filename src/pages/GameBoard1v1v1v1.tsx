@@ -6,10 +6,9 @@ import '../styles/components/InGameChat.css'
 import { api, WS_BASE_URL } from '../services/api'
 import { PIECE_STYLES_4P, decodePiecePreference } from '../config/pieceStyles'
 import { resolveUserAvatar } from '../config/avatarOptions'
+import { getArenaAssetsByRr } from '../config/arenaThemes'
 import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
 import blockGameFrame from '../assets/Ingame/bloqueJuego4Jugadores.png'
-import boardBackgroundDefault from '../assets/Ingame/Fondo1.png'
-import boardDefault from '../assets/Ingame/Tablero1v1v1v1.png'
 import questionCellDefault from '../assets/Ingame/casillaInterrogante.png'
 import skillSlotImage from '../assets/Ingame/HuecoHabilidades.png'
 import abilityBombIcon from '../assets/Ingame/Bomba.png'
@@ -103,15 +102,6 @@ const BOARD_SIZE = 16
 const QUESTION_COUNT = 16
 const PIECE_ORDER: Piece[] = ['black', 'white', 'red', 'blue']
 const ANNOUNCEMENT_DURATION_MS = 2000
-
-const INGAME_THEME_PRESETS: Record<'classic', InGameTheme> = {
-    classic: {
-        frame: blockGameFrame,
-        boardBackground: boardBackgroundDefault,
-        board: boardDefault,
-        questionCell: questionCellDefault,
-    },
-}
 
 const ABILITY_META: Record<string, { name: string; iconSrc: string; needsTarget: boolean }> = {
     bomb: { name: 'Bomba', iconSrc: abilityBombIcon, needsTarget: true },
@@ -404,6 +394,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const [selectedPieceStyle4p, setSelectedPieceStyle4p] = useState(PIECE_STYLES_4P[0])
     const [myUsername, setMyUsername] = useState(matchData?.myUsername ?? '')
     const [myAvatar, setMyAvatar] = useState<string | undefined>(undefined)
+    const [arenaRr, setArenaRr] = useState(matchData?.players?.[0]?.rr ?? 1000)
     const [playersFromRoom, setPlayersFromRoom] = useState(matchData?.players ?? [])
 
     const [board, setBoard] = useState<BoardCell[][]>(() => createInitialBoard())
@@ -450,7 +441,15 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         selectedPieceStyle4p.p3Name,
         selectedPieceStyle4p.p4Name,
     ]
-    const activeTheme = INGAME_THEME_PRESETS.classic
+    const activeTheme: InGameTheme = useMemo(() => {
+        const arenaAssets = getArenaAssetsByRr(arenaRr)
+        return {
+            frame: blockGameFrame,
+            boardBackground: arenaAssets.background,
+            board: arenaAssets.board4p,
+            questionCell: questionCellDefault,
+        }
+    }, [arenaRr])
 
     const normalizedPlayers: QuadPlayer[] = useMemo(() => {
         const fallbackPlayers = Array.from({ length: 4 }, (_, index) => ({
@@ -626,10 +625,12 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 const { quadIndex } = decodePiecePreference(me.preferred_piece_color)
                 setSelectedPieceStyle4p(PIECE_STYLES_4P[quadIndex] ?? PIECE_STYLES_4P[0])
                 setMyAvatar(me.avatar_url)
+                setArenaRr(me.elo ?? matchData?.players?.[0]?.rr ?? 1000)
                 if (!myUsername) setMyUsername(me.username)
             } catch {
                 if (!isMounted) return
                 setSelectedPieceStyle4p(PIECE_STYLES_4P[0])
+                setArenaRr(matchData?.players?.[0]?.rr ?? 1000)
             }
         }
 
@@ -637,7 +638,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         return () => {
             isMounted = false
         }
-    }, [myUsername])
+    }, [matchData?.players, myUsername])
 
     useEffect(() => () => {
         if (skillAnnouncementTimeoutRef.current !== null) {

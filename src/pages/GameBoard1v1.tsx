@@ -6,10 +6,9 @@ import '../styles/components/InGameChat.css'
 import { api, WS_BASE_URL } from '../services/api'
 import { PIECE_STYLES_1V1, decodePiecePreference } from '../config/pieceStyles'
 import { resolveUserAvatar } from '../config/avatarOptions'
+import { getArenaAssetsByRr } from '../config/arenaThemes'
 import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
 import blockGameFrame from '../assets/Ingame/bloqueJuego.png'
-import boardBackgroundDefault from '../assets/Ingame/Fondo1.png'
-import boardDefault from '../assets/Ingame/Tablero1v1.png'
 import questionCellDefault from '../assets/Ingame/casillaInterrogante.png'
 import skillSlotImage from '../assets/Ingame/HuecoHabilidades.png'
 import abilityBombIcon from '../assets/Ingame/Bomba.png'
@@ -197,15 +196,6 @@ interface InGameTheme {
     boardBackground: string
     board: string
     questionCell: string
-}
-
-const INGAME_THEME_PRESETS: Record<'classic', InGameTheme> = {
-    classic: {
-        frame: blockGameFrame,
-        boardBackground: boardBackgroundDefault,
-        board: boardDefault,
-        questionCell: questionCellDefault,
-    },
 }
 
 function createInitialBoard(): BoardCell[][] {
@@ -473,6 +463,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [selectedPieceStyle1v1, setSelectedPieceStyle1v1] = useState(PIECE_STYLES_1V1[0])
     const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
     const [currentUserElo, setCurrentUserElo] = useState(PLAYER.rr)
+    const [arenaRr, setArenaRr] = useState(matchData?.playerRR ?? PLAYER.rr)
     const [localPiece, setLocalPiece] = useState<Piece>('black')
     const [onlineValidMoves, setOnlineValidMoves] = useState<Set<string>>(new Set())
     const [onlineWinner, setOnlineWinner] = useState<Piece | null>(null)
@@ -505,7 +496,15 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         color: localPiece === 'black' ? opponentPieceColorName : playerPieceColorName,
     }
     const playerNameByPiece = (piece: Piece) => (piece === playerProfile.piece ? playerProfile.name : opponentProfile.name)
-    const activeTheme = INGAME_THEME_PRESETS.classic
+    const activeTheme: InGameTheme = useMemo(() => {
+        const arenaAssets = getArenaAssetsByRr(arenaRr)
+        return {
+            frame: blockGameFrame,
+            boardBackground: arenaAssets.background,
+            board: arenaAssets.board1v1,
+            questionCell: questionCellDefault,
+        }
+    }, [arenaRr])
 
     const clearSkillAnnouncement = () => {
         if (skillAnnouncementTimeoutRef.current !== null) {
@@ -635,11 +634,13 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 setSelectedPieceStyle1v1(PIECE_STYLES_1V1[duelIndex] ?? PIECE_STYLES_1V1[0])
                 setCurrentUserAvatar(me.avatar_url)
                 setCurrentUserElo(me.elo ?? PLAYER.rr)
+                setArenaRr(me.elo ?? matchData?.playerRR ?? PLAYER.rr)
             } catch {
                 if (!isMounted) return
                 setSelectedPieceStyle1v1(PIECE_STYLES_1V1[0])
                 setCurrentUserAvatar(undefined)
                 setCurrentUserElo(PLAYER.rr)
+                setArenaRr(matchData?.playerRR ?? PLAYER.rr)
             }
         }
 
@@ -647,7 +648,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         return () => {
             isMounted = false
         }
-    }, [])
+    }, [matchData?.playerRR])
 
     // Mantener la ref sincronizada sin generar dependencia reactiva en el WS effect
     useEffect(() => {
