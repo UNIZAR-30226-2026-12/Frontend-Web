@@ -809,6 +809,28 @@
     background: linear-gradient(180deg, #4f93a2 0%, #3b7483 100%);
 }
 
+.duel-quad__pause-btn--image {
+    background: transparent;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    line-height: 0;
+    width: var(--dq-leave-width);
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.duel-quad__pause-btn--image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 7px 10px rgba(11, 7, 3, 0.26));
+}
+
+.duel-quad__pause-btn--image:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.04);
+}
+
 .duel-quad__leave-btn {
     background: linear-gradient(180deg, #d3624f 0%, #b84a3e 100%);
 }

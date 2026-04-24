@@ -23,6 +23,7 @@ import abilityGiveSkillIcon from '../assets/Ingame/DarHabilidad.png'
 import abilitySwapColorsIcon from '../assets/Ingame/IntercambioColor.png'
 import abilityLoseTurnIcon from '../assets/Ingame/PerderTurno.png'
 import abilityGravityIcon from '../assets/Ingame/gravedad.png'
+import pauseButtonImage from '../assets/Ingame/BotonPausa.png'
 import leaveRoomButtonImage from '../assets/salaEspera/Abandonar.png'
 
 interface GameBoard1v1Props {
@@ -1600,8 +1601,8 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                     <aside className="duel__info-column">
                         <div className="duel__actions">
                             {isOnlineMatch && matchData?.returnTo === 'friends' && (
-                                <button type="button" className="duel__pause-btn" onClick={handleAttemptPause}>
-                                    Pausar
+                                <button type="button" className="duel__pause-btn duel__pause-btn--image" onClick={handleAttemptPause} aria-label="Pausar partida">
+                                    <img src={pauseButtonImage} alt="" aria-hidden="true" />
                                 </button>
                             )}
                             <button

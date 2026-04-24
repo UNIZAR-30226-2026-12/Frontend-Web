@@ -23,6 +23,7 @@ import abilityGiveSkillIcon from '../assets/Ingame/DarHabilidad.png'
 import abilitySwapColorsIcon from '../assets/Ingame/IntercambioColor.png'
 import abilityLoseTurnIcon from '../assets/Ingame/PerderTurno.png'
 import abilityGravityIcon from '../assets/Ingame/gravedad.png'
+import pauseButtonImage from '../assets/Ingame/BotonPausa.png'
 import leaveRoomButtonImage from '../assets/salaEspera/Abandonar.png'
 
 type Piece = 'black' | 'white' | 'red' | 'blue'
@@ -1280,7 +1281,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             {!gameOver && !isAiMatch && pausedUsernames.length > 0 && (
                 <div className="duel__paused-status">
                     <p className="duel__paused-text">
-                        Partida pausada: espera a que vuelvan {pausedUsernames.join(', ')}.
+                        Partida pausada: espera a que vuelva(n) {pausedUsernames.join(', ')}.
                     </p>
                 </div>
             )}
@@ -1325,8 +1326,8 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             >
                 <div className="duel-quad__actions duel-quad__actions--corner">
                     {!isAiMatch && isOnlineMatch && matchData?.returnTo === 'friends' && (
-                        <button type="button" className="duel-quad__pause-btn" onClick={handleAttemptPause}>
-                            Pausar
+                        <button type="button" className="duel-quad__pause-btn duel-quad__pause-btn--image" onClick={handleAttemptPause} aria-label="Pausar partida">
+                            <img src={pauseButtonImage} alt="" aria-hidden="true" />
                         </button>
                     )}
                     <button

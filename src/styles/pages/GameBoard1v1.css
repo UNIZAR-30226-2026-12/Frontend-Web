@@ -610,6 +610,28 @@
     background: linear-gradient(180deg, #4a8f9e 0%, #3a7685 100%);
 }
 
+.duel__pause-btn--image {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    line-height: 0;
+    border-radius: 0;
+    width: var(--duel-leave-width);
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.duel__pause-btn--image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 8px 10px rgba(9, 5, 2, 0.3));
+}
+
+.duel__pause-btn--image:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.04);
+}
+
 .duel__player-card {
     display: flex;
     align-items: center;

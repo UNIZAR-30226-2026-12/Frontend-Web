@@ -311,7 +311,7 @@ function Friends({ onNavigate }: FriendsProps) {
     }
 
     const sendInvite = async (mode: string, friendIds: number[]) => {
-        const backendMode = mode
+        const backendMode = mode === '1vs1' ? '1vs1_skills' : '1vs1vs1vs1_skills'
         const response = await api.games.invite(friendIds, backendMode)
         showToast(`Invitacion enviada`, 'info')
         onNavigate('waiting-room', {

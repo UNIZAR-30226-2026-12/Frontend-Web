@@ -47,6 +47,17 @@ interface MatchData4Players {
   }>
 }
 
+const formatNotificationMode = (rawMode: string) => {
+  const cleanedMode = String(rawMode || '').toLowerCase()
+  if (cleanedMode.startsWith('1vs1vs1vs1') || cleanedMode.startsWith('1v1v1v1')) return '1vs1vs1vs1'
+  return '1vs1'
+}
+
+const sanitizeNotificationMessage = (message: string) =>
+  String(message || '').replace(/\b(1vs1vs1vs1|1v1v1v1|1vs1|1v1)(?:_skills)?\b/gi, (match) =>
+    formatNotificationMode(match),
+  )
+
 function App() {
   const [currentScreen, setCurrentScreen] = useState(() => localStorage.getItem('currentScreen') || 'home')
   const [activeGameMode, setActiveGameMode] = useState<'1vs1' | '1vs1vs1vs1'>(() => (localStorage.getItem('activeGameMode') as any) || '1vs1')
@@ -78,7 +89,7 @@ function App() {
       try {
         const data = JSON.parse(event.data)
         if (data?.type === 'duel_invite' && data?.payload?.message) {
-          setNotification(data.payload.message)
+          setNotification(sanitizeNotificationMessage(data.payload.message))
         }
         if (data?.type === 'invite_response' && data?.payload?.message) {
           const action = data?.payload?.action
@@ -88,7 +99,7 @@ function App() {
           console.log(`NOTIF DEBUG: Action='${action}', GameId='${gameId}', CurrentRoom='${currentRoomId}', Screen='${currentScreen}'`)
           
           if (action !== 'accepted') {
-            setNotification(data.payload.message)
+            setNotification(sanitizeNotificationMessage(data.payload.message))
           }
 
           if ((action === 'room_closed' || action === 'kicked') && 
