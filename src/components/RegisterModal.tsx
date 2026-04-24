@@ -130,7 +130,7 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
                 <input
                   type={showPassword ? 'text' : 'password'}
                   className="auth-form__input auth-form__input--password"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   aria-invalid={!!error}
@@ -156,7 +156,7 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   className="auth-form__input auth-form__input--password"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="********"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   aria-invalid={!!error}

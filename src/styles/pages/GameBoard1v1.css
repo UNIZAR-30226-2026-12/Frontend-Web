@@ -89,25 +89,25 @@
     --duel-ability-bar-margin-top: 0.2rem;
     --duel-ability-bar-x: 0px;
     --duel-ability-bar-y: 0px;
-    --duel-ability-bar-top: calc(100% - var(--duel-center-info-reserved-bottom) + 1.35rem);
+    --duel-ability-bar-top: calc(100% - var(--duel-center-info-reserved-bottom) + 2.5rem);
     --duel-gravity-picker-margin-top: 0.18rem;
     --duel-gravity-picker-gap: 0.45rem;
     --duel-gravity-picker-x: 0px;
     --duel-gravity-picker-y: 0px;
-    --duel-gravity-picker-top: calc(100% - var(--duel-center-info-reserved-bottom) + 3.2rem);
+    --duel-gravity-picker-top: calc(100% - var(--duel-center-info-reserved-bottom) + 5.25rem);
     --duel-board-area-padding-top: 8%;
     --duel-board-area-padding-right: 4.5%;
     --duel-board-area-padding-bottom: 9.8%;
     --duel-board-area-padding-left: 4.5%;
-    --duel-board-area-x: 0px;
-    --duel-board-area-y: 0px;
+    --duel-board-area-x: 6px;
+    --duel-board-area-y: 11px;
     --duel-board-bg-width: 100%;
     --duel-board-bg-height: 100%;
     --duel-board-bg-pos-x: 50%;
     --duel-board-bg-pos-y: 50%;
     --duel-board-bg-size: var(--duel-board-bg-width) var(--duel-board-bg-height);
-    --duel-board-bg-area-width: 107.5%;
-    --duel-board-bg-area-height: 105%;
+    --duel-board-bg-area-width: 104%;
+    --duel-board-bg-area-height: 102%;
     --duel-board-bg-area-x: 18px;
     --duel-board-bg-area-y: -10px;
     --duel-board-width: min(72.5%, 520px);
@@ -133,15 +133,15 @@
     --duel-opponent-card-y: 0px;
     --duel-opponent-avatar-x: 0px;
     --duel-opponent-avatar-y: -5px;
-    --duel-opponent-avatar-size: clamp(68px, 4.2vw, 58px);
+    --duel-opponent-avatar-size: clamp(76px, 5vw, 86px);
     --duel-opponent-avatar-rotate: -5deg;
     --duel-opponent-text-x: 0px;
     --duel-opponent-text-y: 0px;
-    --duel-opponent-name-x: 0px;
+    --duel-opponent-name-x: 8px;
     --duel-opponent-name-y: 0px;
     --duel-opponent-score-x: 0px;
     --duel-opponent-score-y: 0px;
-    --duel-opponent-meta-x: 0px;
+    --duel-opponent-meta-x: 8px;
     --duel-opponent-meta-y: 0px;
     --duel-opponent-score-gap: 0px;
     /* ==== Jugador local ==== */
@@ -153,15 +153,15 @@
     --duel-self-card-y: 0px;
     --duel-self-avatar-x: 0px;
     --duel-self-avatar-y: -8px;
-    --duel-self-avatar-size: clamp(68px, 4.2vw, 58px);
+    --duel-self-avatar-size: clamp(76px, 5vw, 86px);
     --duel-self-avatar-rotate: -5deg;
     --duel-self-text-x: 0px;
     --duel-self-text-y: 0px;
-    --duel-self-name-x: 0px;
+    --duel-self-name-x: 8px;
     --duel-self-name-y: 0px;
     --duel-self-score-x: 0px;
     --duel-self-score-y: 0px;
-    --duel-self-meta-x: 0px;
+    --duel-self-meta-x: 8px;
     --duel-self-meta-y: 0px;
     --duel-self-score-gap: 0px;
     /* ==== Habilidades ==== */
@@ -179,6 +179,10 @@
     --duel-skill-slot-padding-x: 0.5rem;
     --duel-skill-slot-icon-size: clamp(3rem, 1.45vw, 1.38rem);
     --duel-skill-slot-info-size: clamp(1.34rem, 1.1vw, 1.02rem);
+    --duel-skill-slot-bg-pos-y: 54%;
+    --duel-skill-info-toggle-x: -0.85rem;
+    --duel-skill-main-x: 0.50rem;
+    --duel-skill-main-y: -0.18rem;
     position: relative;
     background-image: var(--duel-frame-image);
     background-size: 100% 100%;
@@ -194,10 +198,7 @@
     grid-template-columns: var(--duel-layout-columns);
     column-gap: var(--duel-layout-column-gap);
     padding:
-        var(--duel-layout-padding-top)
-        var(--duel-layout-padding-right)
-        var(--duel-layout-padding-bottom)
-        var(--duel-layout-padding-left);
+        var(--duel-layout-padding-top) var(--duel-layout-padding-right) var(--duel-layout-padding-bottom) var(--duel-layout-padding-left);
     min-height: 0;
     transform: translate(var(--duel-layout-x), var(--duel-layout-y));
 }
@@ -273,6 +274,7 @@
 .duel .ingame-chat-input-area {
     gap: var(--duel-chat-input-gap);
     overflow: hidden;
+    transform: translateY(-7px);
 }
 
 .duel .ingame-chat-input {
@@ -365,10 +367,11 @@
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    background: rgba(241, 198, 120, 0.6);
-    border: 1px solid rgba(136, 92, 41, 0.44);
+    background: rgba(241, 198, 120, 0.92);
+    border: 1px solid rgba(136, 92, 41, 0.62);
     padding: 0.4rem 0.7rem;
     border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(54, 35, 15, 0.18);
     transform: translate(-50%, 0) translate(var(--duel-ability-bar-x), var(--duel-ability-bar-y));
     z-index: 4;
 }
@@ -376,7 +379,8 @@
 .duel__ability-pending-text {
     font-size: clamp(0.68rem, 0.88vw, 0.88rem);
     font-weight: 700;
-    color: #33200f;
+    color: #2f1d0e;
+    text-shadow: 0 1px 0 rgba(255, 241, 214, 0.42);
 }
 
 .duel__ability-cancel-btn {
@@ -408,8 +412,9 @@
     border-radius: 10px;
     background: rgba(255, 243, 221, 0.82);
     color: #2c1a0c;
-    font-size: clamp(0.9rem, 1.2vw, 1.2rem);
+    font-size: clamp(1.1rem, 1.5vw, 1.45rem);
     font-weight: 800;
+    line-height: 1;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -426,10 +431,7 @@
     position: relative;
     z-index: 1;
     padding:
-        var(--duel-board-area-padding-top)
-        var(--duel-board-area-padding-right)
-        var(--duel-board-area-padding-bottom)
-        var(--duel-board-area-padding-left);
+        var(--duel-board-area-padding-top) var(--duel-board-area-padding-right) var(--duel-board-area-padding-bottom) var(--duel-board-area-padding-left);
     transform: translate(var(--duel-board-area-x), var(--duel-board-area-y));
 }
 
@@ -440,10 +442,8 @@
     top: 50%;
     width: var(--duel-board-bg-area-width);
     height: var(--duel-board-bg-area-height);
-    transform: translate(
-        calc(-50% + var(--duel-board-bg-area-x)),
-        calc(-50% + var(--duel-board-bg-area-y))
-    );
+    transform: translate(calc(-50% + var(--duel-board-bg-area-x)),
+            calc(-50% + var(--duel-board-bg-area-y)));
     background-image: var(--duel-board-background-image);
     background-size: var(--duel-board-bg-size);
     background-position: var(--duel-board-bg-pos-x) var(--duel-board-bg-pos-y);
@@ -700,7 +700,7 @@
 
 .duel__name {
     color: #1f150d;
-    font-size: clamp(0.84rem, 1.18vw, 1.2rem);
+    font-size: clamp(0.76rem, 1.04vw, 1.06rem);
     font-weight: 800;
     flex: 1 1 0;
     min-width: 0;
@@ -713,7 +713,7 @@
 .duel__player-score {
     color: #26180f;
     margin-left: calc(0.34rem + var(--duel-score-gap-extra, 0px));
-    font-size: clamp(0.84rem, 1.08vw, 1.12rem);
+    font-size: clamp(0.74rem, 0.96vw, 0.98rem);
     font-weight: 800;
     white-space: nowrap;
     transform: translate(var(--duel-score-offset-x, 0px), var(--duel-score-offset-y, 0px));
@@ -722,7 +722,7 @@
 .duel__meta {
     margin-top: 0.02rem;
     color: rgba(54, 36, 19, 0.78);
-    font-size: clamp(0.7rem, 0.9vw, 0.92rem);
+    font-size: clamp(0.64rem, 0.8vw, 0.82rem);
     font-weight: 700;
     transform: translate(var(--duel-meta-offset-x, 0px), var(--duel-meta-offset-y, 0px));
 }
@@ -782,8 +782,8 @@
     border: none;
     border-radius: 0;
     background-image: var(--duel-skill-slot-image);
-    background-position: center;
-    background-size: 100% 100%;
+    background-position: center var(--duel-skill-slot-bg-pos-y);
+    background-size: 100% 125%;
     background-repeat: no-repeat;
     padding: var(--duel-skill-slot-padding-y) var(--duel-skill-slot-padding-x);
 }
@@ -798,6 +798,7 @@
     border: none;
     padding: 0;
     text-align: left;
+    transform: translate(var(--duel-skill-main-x), var(--duel-skill-main-y));
 }
 
 .duel__skill-main:disabled {
@@ -807,6 +808,13 @@
 
 .duel__skill-card--active {
     filter: brightness(1.08);
+}
+
+.duel__skill-card--expanded {
+    min-height: calc(var(--duel-skill-slot-min-height) + 0.7rem);
+    padding-top: calc(var(--duel-skill-slot-padding-y) + 0.16rem);
+    padding-bottom: calc(var(--duel-skill-slot-padding-y) + 0.34rem);
+    transform: translateY(-0.18rem);
 }
 
 .duel__skill-icon {
@@ -850,6 +858,7 @@
     background: rgba(255, 245, 226, 0.94);
     color: #593616;
     line-height: 1;
+    transform: translateX(var(--duel-skill-info-toggle-x));
 }
 
 .duel__skill-info-toggle:hover,
@@ -927,10 +936,10 @@
     gap: 0.9rem;
     padding: 1rem 1.2rem;
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: linear-gradient(135deg, rgba(20, 14, 10, 0.95), rgba(48, 31, 18, 0.92));
-    color: #fff;
-    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.45);
+    border: 2px solid rgba(42, 33, 23, 0.16);
+    background: linear-gradient(180deg, rgba(255, 248, 236, 0.98), rgba(246, 234, 213, 0.97));
+    color: var(--popup-paper-text, #1f1711);
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.24);
     pointer-events: none;
     animation: duel-skill-announcement 2s ease-in-out both;
 }
@@ -942,7 +951,8 @@
     display: grid;
     place-items: center;
     font-size: 2rem;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(42, 33, 23, 0.07);
+    border: 1px solid rgba(42, 33, 23, 0.12);
 }
 
 .duel__skill-announcement-icon img {
@@ -963,54 +973,61 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    color: rgba(255, 255, 255, 0.78);
+    color: var(--popup-paper-muted, #473a2f);
 }
 
 .duel__skill-announcement-name {
     font-size: 1.25rem;
     font-weight: 800;
+    color: var(--popup-paper-text, #1f1711);
 }
 
 .duel__skill-announcement--self {
-    border-color: rgba(104, 183, 255, 0.55);
+    border-color: rgba(25, 143, 59, 0.24);
 }
 
 .duel__skill-announcement--opponent {
-    border-color: rgba(255, 138, 138, 0.58);
+    border-color: rgba(179, 122, 0, 0.24);
 }
 
 .duel__skill-announcement--bomb .duel__skill-announcement-icon {
-    background: linear-gradient(145deg, rgba(255, 132, 111, 0.62), rgba(245, 174, 93, 0.45));
+    background: linear-gradient(145deg, rgba(195, 50, 50, 0.16), rgba(226, 146, 92, 0.18));
 }
 
 .duel__skill-announcement--gravity .duel__skill-announcement-icon {
-    background: linear-gradient(145deg, rgba(117, 217, 239, 0.54), rgba(122, 145, 255, 0.45));
+    background: linear-gradient(145deg, rgba(69, 128, 173, 0.16), rgba(116, 166, 205, 0.18));
 }
 
 .duel__skill-announcement--trick .duel__skill-announcement-icon {
-    background: linear-gradient(145deg, rgba(214, 161, 255, 0.56), rgba(255, 163, 203, 0.48));
+    background: linear-gradient(145deg, rgba(144, 112, 49, 0.14), rgba(208, 172, 88, 0.18));
 }
 
 .duel__skill-announcement--control .duel__skill-announcement-icon {
-    background: linear-gradient(145deg, rgba(140, 234, 165, 0.52), rgba(255, 221, 135, 0.46));
+    background: linear-gradient(145deg, rgba(25, 143, 59, 0.16), rgba(178, 122, 0, 0.16));
 }
 
-.duel__ability-error {
-    position: fixed;
-    top: 5.7rem;
+.duel__skill-announcement--error {
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     z-index: 72;
-    width: min(720px, calc(100% - 2rem));
-    border-radius: 16px;
-    border: 1px solid rgba(255, 136, 136, 0.58);
-    background: linear-gradient(145deg, rgba(157, 44, 30, 0.96), rgba(195, 51, 44, 0.95));
-    color: #fff7f4;
-    text-align: center;
-    padding: 0.82rem 1rem;
-    font-size: 0.92rem;
-    font-weight: 700;
-    pointer-events: none;
+    width: min(620px, calc(100% - 2rem));
+    animation: duel-skill-announcement 2.6s ease-in-out both;
+    border-color: rgba(195, 50, 50, 0.28);
+}
+
+.duel__skill-announcement--error .duel__skill-announcement-icon {
+    background: linear-gradient(145deg, rgba(195, 50, 50, 0.16), rgba(227, 116, 116, 0.14));
+    color: #c33232;
+    border-color: rgba(195, 50, 50, 0.18);
+}
+
+.duel__skill-announcement--error .duel__skill-announcement-actor {
+    color: #8f1f1f;
+}
+
+.duel__skill-announcement--error .duel__skill-announcement-name {
+    color: #b32121;
 }
 
 .duel-result {
@@ -1041,15 +1058,30 @@
 }
 
 .duel-result__status--win {
-    color: #64e783;
+    color: #198f3b;
+    text-shadow:
+        -1px -1px 0 rgba(24, 18, 12, 0.82),
+        1px -1px 0 rgba(24, 18, 12, 0.82),
+        -1px 1px 0 rgba(24, 18, 12, 0.82),
+        1px 1px 0 rgba(24, 18, 12, 0.82);
 }
 
 .duel-result__status--lose {
-    color: #ff8c8c;
+    color: #c33232;
+    text-shadow:
+        -1px -1px 0 rgba(24, 18, 12, 0.82),
+        1px -1px 0 rgba(24, 18, 12, 0.82),
+        -1px 1px 0 rgba(24, 18, 12, 0.82),
+        1px 1px 0 rgba(24, 18, 12, 0.82);
 }
 
 .duel-result__status--draw {
-    color: #ffd67f;
+    color: #b27a00;
+    text-shadow:
+        -1px -1px 0 rgba(24, 18, 12, 0.82),
+        1px -1px 0 rgba(24, 18, 12, 0.82),
+        -1px 1px 0 rgba(24, 18, 12, 0.82),
+        1px 1px 0 rgba(24, 18, 12, 0.82);
 }
 
 .duel-result__scores {
@@ -1090,15 +1122,30 @@
 }
 
 .duel-result__rr--up {
-    color: #64e783;
+    color: #198f3b;
+    text-shadow:
+        -1px -1px 0 rgba(24, 18, 12, 0.82),
+        1px -1px 0 rgba(24, 18, 12, 0.82),
+        -1px 1px 0 rgba(24, 18, 12, 0.82),
+        1px 1px 0 rgba(24, 18, 12, 0.82);
 }
 
 .duel-result__rr--down {
-    color: #ff8c8c;
+    color: #c33232;
+    text-shadow:
+        -1px -1px 0 rgba(24, 18, 12, 0.82),
+        1px -1px 0 rgba(24, 18, 12, 0.82),
+        -1px 1px 0 rgba(24, 18, 12, 0.82),
+        1px 1px 0 rgba(24, 18, 12, 0.82);
 }
 
 .duel-result__rr--neutral {
-    color: #ffd67f;
+    color: #b27a00;
+    text-shadow:
+        -1px -1px 0 rgba(24, 18, 12, 0.82),
+        1px -1px 0 rgba(24, 18, 12, 0.82),
+        -1px 1px 0 rgba(24, 18, 12, 0.82),
+        1px 1px 0 rgba(24, 18, 12, 0.82);
 }
 
 .duel-result__back-btn {

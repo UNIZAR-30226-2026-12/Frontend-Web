@@ -419,7 +419,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
     const [selectingGravityDirection, setSelectingGravityDirection] = useState<{ inventoryIndex: number } | null>(null)
     const [localPiece, setLocalPiece] = useState<Piece>('black')
-    const [statusMessage, setStatusMessage] = useState('Conectando...')
+    const [, setStatusMessage] = useState('Conectando...')
     const [abilityError, setAbilityError] = useState<string | null>(null)
     const [skillAnnouncement, setSkillAnnouncement] = useState<SkillAnnouncement | null>(null)
     const [expandedSkillKey, setExpandedSkillKey] = useState<string | null>(null)
@@ -427,7 +427,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         black: 0, white: 0, red: 0, blue: 0,
     })
     const [abandonedPieces, setAbandonedPieces] = useState<Piece[]>([])
-    const [abandonNotice, setAbandonNotice] = useState<string>('')
+    const [, setAbandonNotice] = useState<string>('')
     const [onlineValidMoves, setOnlineValidMoves] = useState<Set<string>>(new Set())
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
     const [isLeaving, setIsLeaving] = useState(false)
@@ -771,7 +771,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 }
 
                 if (data?.type === 'error' && data?.payload?.message) {
-                    setStatusMessage(data.payload.message)
+                    setStatusMessage('Partida online conectada')
                     showAbilityError(data.payload.message)
                     pendingOnlineSkillRef.current = null
                 }
@@ -1270,7 +1270,6 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
     const leftPlayers = normalizedPlayers.slice(0, 2)
     const rightPlayers = normalizedPlayers.slice(2, 4)
-    const visibleStatusMessage = statusMessage
 
     return (
         <div className="duel-quad">
@@ -1299,8 +1298,18 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                 </div>
             )}
             {abilityError && (
-                <div className="duel-quad__ability-error" aria-live="assertive" role="alert">
-                    {abilityError}
+                <div
+                    className="duel-quad__skill-announcement duel-quad__skill-announcement--error"
+                    aria-live="assertive"
+                    role="alert"
+                >
+                    <span className="duel-quad__skill-announcement-icon" aria-hidden="true">
+                        🚫
+                    </span>
+                    <div className="duel-quad__skill-announcement-copy">
+                        <span className="duel-quad__skill-announcement-actor">Movimiento inválido</span>
+                        <span className="duel-quad__skill-announcement-name">{abilityError}</span>
+                    </div>
                 </div>
             )}
 
@@ -1310,7 +1319,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     '--duel-quad-frame-image': `url(${activeTheme.frame})`,
                     '--duel-quad-board-background-image': `url(${activeTheme.boardBackground})`,
                     '--duel-quad-question-image': `url(${activeTheme.questionCell})`,
-                    '--duel-quad-skill-slot-image': `url(${skillSlotImage})`,
+                    '--dq-skill-slot-image': `url(${skillSlotImage})`,
                 } as CSSProperties}
             >
                 <div className="duel-quad__actions duel-quad__actions--corner">
@@ -1425,17 +1434,10 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                                 setSelectingGravityDirection(null)
                                             }}
                                         >
-                                            {dir === 'up' ? 'Arriba' : dir === 'down' ? 'Abajo' : dir === 'left' ? 'Izq' : 'Der'}
+                                            {dir === 'up' ? '⬆️' : dir === 'down' ? '⬇️' : dir === 'left' ? '⬅️' : '➡️'}
                                         </button>
                                     ))}
                                 </div>
-                            )}
-
-                            {!pendingAbility && !selectingGravityDirection && visibleStatusMessage && (
-                                <div className="duel-quad__timer">{visibleStatusMessage}</div>
-                            )}
-                            {!pendingAbility && !selectingGravityDirection && abandonNotice && (
-                                <span className="duel-quad__abandon-notice">{abandonNotice}</span>
                             )}
                         </header>
 
@@ -1516,8 +1518,11 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
                         {ENABLE_SPECIAL_MECHANICS_4V4 && (
                             <section className={`duel-quad__skills-panel ${pausedUsernames.includes(localPlayerName) ? 'duel-quad__panel--paused' : ''}`}>
-                                <div className="duel-quad__skills">
-                                    {inventories[localPiece].length === 0 && <span className="duel-quad__empty-skills">Sin habilidades</span>}
+                                <div className={`duel-quad__skills ${inventories[localPiece].length === 0 ? 'duel-quad__skills--empty' : ''}`}>
+                                    {inventories[localPiece].length === 0 && (
+                                        <span className="duel-quad__empty-skills">Sin habilidades</span>
+                                    )}
+
                                     {inventories[localPiece].map((ability, idx) => renderSkillCard(ability, idx))}
                                 </div>
                             </section>

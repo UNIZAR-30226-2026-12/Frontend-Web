@@ -311,14 +311,14 @@
 .menu__image-btn--online {
   --tilt: -6deg;
   --tilt-hover: -2deg;
-  width: clamp(15.8rem, 30vw, 29rem);
+  width: clamp(14.8rem, 27vw, 25.6rem);
   animation-delay: -0.4s;
 }
 
 .menu__image-btn--ia {
   --tilt: 6deg;
   --tilt-hover: 2deg;
-  width: clamp(15rem, 28vw, 26rem);
+  width: clamp(14.1rem, 25.5vw, 23.4rem);
   animation-delay: -0.2s;
 }
 
@@ -474,11 +474,11 @@
   }
 
   .menu__image-btn--online {
-    width: clamp(12.2rem, 26vw, 23.5rem);
+    width: clamp(11.8rem, 24.4vw, 21.8rem);
   }
 
   .menu__image-btn--ia {
-    width: clamp(11.8rem, 24.5vw, 21.8rem);
+    width: clamp(11.2rem, 23vw, 20.4rem);
   }
 
   .menu__image-btn--custom,
@@ -527,11 +527,11 @@
   }
 
   .menu__image-btn--online {
-    width: clamp(11.2rem, 22vw, 20rem);
+    width: clamp(10.6rem, 20.8vw, 18.6rem);
   }
 
   .menu__image-btn--ia {
-    width: clamp(10.8rem, 21vw, 18.8rem);
+    width: clamp(10.2rem, 19.8vw, 17.6rem);
   }
 
   .menu__image-btn--custom,
@@ -654,11 +654,11 @@
   }
 
   .menu__image-btn--online {
-    width: clamp(12.2rem, 54vw, 16rem);
+    width: clamp(11.2rem, 50vw, 14.8rem);
   }
 
   .menu__image-btn--ia {
-    width: clamp(11.5rem, 51vw, 15.3rem);
+    width: clamp(10.7rem, 47vw, 14.2rem);
   }
 
   .menu__image-btn--custom,

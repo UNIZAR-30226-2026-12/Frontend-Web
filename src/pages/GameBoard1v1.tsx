@@ -474,7 +474,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [currentUserAvatar, setCurrentUserAvatar] = useState<string | undefined>(undefined)
     const [currentUserElo, setCurrentUserElo] = useState(PLAYER.rr)
     const [localPiece, setLocalPiece] = useState<Piece>('black')
-    const [onlineStatusMessage, setOnlineStatusMessage] = useState('Partida online en curso')
     const [onlineValidMoves, setOnlineValidMoves] = useState<Set<string>>(new Set())
     const [onlineWinner, setOnlineWinner] = useState<Piece | null>(null)
     const onlineWsRef = useRef<WebSocket | null>(null)
@@ -522,7 +521,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
 
         setAbilityError(message)
-        setSystemMessage(message)
         abilityErrorTimeoutRef.current = window.setTimeout(() => {
             setAbilityError(null)
             abilityErrorTimeoutRef.current = null
@@ -564,7 +562,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
     const [selectingGravityDirection, setSelectingGravityDirection] = useState<{ inventoryIndex: number } | null>(null)
     const [gameOver, setGameOver] = useState(false)
-    const [systemMessage, setSystemMessage] = useState('Haz una jugada o usa una habilidad.')
     const [abilityError, setAbilityError] = useState<string | null>(null)
     const [skillAnnouncement, setSkillAnnouncement] = useState<SkillAnnouncement | null>(null)
     const [expandedSkillKey, setExpandedSkillKey] = useState<string | null>(null)
@@ -675,7 +672,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
         const token = localStorage.getItem('token')
         if (!token) {
-            setOnlineStatusMessage('No hay sesion activa')
+            //setOnlineStatusMessage('No hay sesion activa')
             return
         }
 
@@ -684,7 +681,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         onlineWsRef.current = ws
 
         ws.onopen = () => {
-            setOnlineStatusMessage('Partida online conectada')
+            //setOnlineStatusMessage('Partida online conectada')
             // Indicar al backend que este jugador está listo para empezar
             ws.send(JSON.stringify({ action: 'set_ready', ready: true }))
         }
@@ -699,7 +696,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 }
 
                 if (data?.type === 'waiting_for_player') {
-                    setOnlineStatusMessage('Esperando al rival...')
+                    //setOnlineStatusMessage('Esperando al rival...')
                 }
 
                 if (data?.type === 'game_state_update' && data?.payload) {
@@ -736,11 +733,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         ((payload.valid_moves ?? []) as Array<{ row: number; col: number }>).map(move => `${move.row}-${move.col}`),
                     ))
                     if (payload.game_over) {
-                        setOnlineStatusMessage('Partida finalizada')
+                        //setOnlineStatusMessage('Partida finalizada')
                     } else if (payload.current_player === localPieceRef.current) {
-                        setOnlineStatusMessage('')
+                        //setOnlineStatusMessage('')
                     } else {
-                        setOnlineStatusMessage('')
+                        //setOnlineStatusMessage('')
                     }
 
                     if (Array.isArray(payload.paused_usernames)) {
@@ -780,7 +777,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 }
 
                 if (data?.type === 'error' && data?.payload?.message) {
-                    setOnlineStatusMessage(data.payload.message)
                     showAbilityError(data.payload.message)
                     pendingOnlineSkillRef.current = null
                 }
@@ -796,7 +792,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         }
 
         ws.onclose = () => {
-            setOnlineStatusMessage('Conexion cerrada')
+            //setOnlineStatusMessage('Conexion cerrada')
         }
 
         return () => {
@@ -821,7 +817,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         if (skipTurns[currentTurn] > 0) {
             setSkipTurns(prev => ({ ...prev, [currentTurn]: prev[currentTurn] - 1 }))
             setPendingAbility(null)
-            setSystemMessage(`${playerNameByPiece(currentTurn)} pierde este turno.`)
+            //setSystemMessage(`${playerNameByPiece(currentTurn)} pierde este turno.`)
             setCurrentTurn(getOpponent(currentTurn))
             return
         }
@@ -833,13 +829,13 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         if (!currentHasActions && !opponentHasActions) {
             setGameOver(true)
             setPendingAbility(null)
-            setSystemMessage('Partida terminada: no hay acciones disponibles.')
+            //setSystemMessage('Partida terminada: no hay acciones disponibles.')
             return
         }
 
         if (!currentHasActions && opponentHasActions) {
             setPendingAbility(null)
-            setSystemMessage(`${playerNameByPiece(currentTurn)} no tiene acciones. Turno perdido.`)
+            //setSystemMessage(`${playerNameByPiece(currentTurn)} no tiene acciones. Turno perdido.`)
             setCurrentTurn(opponent)
         }
     }, [board, currentTurn, gameOver, inventories, isOnlineMatch, skipTurns])
@@ -952,14 +948,13 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
         nextQuestions: Set<string>,
         nextInventories: Record<Piece, AbilityId[]>,
         nextSkipTurns: Record<Piece, number>,
-        actionMessage: string,
+        _actionMessage: string,
     ) => {
         setBoard(nextBoard)
         setQuestionCells(nextQuestions)
         setInventories(nextInventories)
         setSkipTurns(nextSkipTurns)
         setPendingAbility(null)
-        setSystemMessage(actionMessage)
         setCurrentTurn(getOpponent(currentTurn))
     }
 
@@ -1192,13 +1187,13 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 
         if (ABILITY_META[ability].needsTarget) {
             setPendingAbility({ id: ability, inventoryIndex })
-            setSystemMessage(`Selecciona casilla para ${getAbilityDisplayName(ability)}.`)
+            //setSystemMessage(`Selecciona casilla para ${getAbilityDisplayName(ability)}.`)
             return
         }
 
         if (ability === 'gravity') {
             setSelectingGravityDirection({ inventoryIndex })
-            setSystemMessage('Selecciona direccion para la gravedad.')
+            //setSystemMessage('Selecciona direccion para la gravedad.')
             return
         }
 
@@ -1458,8 +1453,18 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 </div>
             )}
             {abilityError && (
-                <div className="duel__ability-error" aria-live="assertive" role="alert">
-                    {abilityError}
+                <div
+                    className="duel__skill-announcement duel__skill-announcement--error"
+                    aria-live="assertive"
+                    role="alert"
+                >
+                    <span className="duel__skill-announcement-icon" aria-hidden="true">
+                        🚫
+                    </span>
+                    <div className="duel__skill-announcement-copy">
+                        <span className="duel__skill-announcement-actor">Movimiento inválido</span>
+                        <span className="duel__skill-announcement-name">{abilityError}</span>
+                    </div>
                 </div>
             )}
             <div
@@ -1489,9 +1494,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                         <header className="duel__center-info">
                             <span className="duel__turn-label">Turno actual</span>
                             <span className="duel__turn-value">{turnLabel}</span>
-                            <span className="duel__turn-state">
-                                {isOnlineMatch ? onlineStatusMessage : systemMessage}
-                            </span>
 
                             {(pendingAbility || selectingGravityDirection) && (
                                 <div className="duel__ability-pending-bar">
@@ -1506,7 +1508,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                         onClick={() => {
                                             setPendingAbility(null)
                                             setSelectingGravityDirection(null)
-                                            setSystemMessage('Accion cancelada.')
                                         }}
                                     >
                                         Cancelar
@@ -1543,7 +1544,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                                                 setSelectingGravityDirection(null)
                                             }}
                                         >
-                                            {dir === 'up' ? 'Arriba' : dir === 'down' ? 'Abajo' : dir === 'left' ? 'Izq' : 'Der'}
+                                            {dir === 'up' ? '⬆️' : dir === 'down' ? '⬇️' : dir === 'left' ? '⬅️' : '➡️'}
                                         </button>
                                     ))}
                                 </div>

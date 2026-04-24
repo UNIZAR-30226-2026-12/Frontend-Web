@@ -183,6 +183,10 @@
     padding-left: clamp(0.52rem, 1.08vw, 0.86rem);
 }
 
+.friends__section-title--requests {
+    font-size: clamp(1.05rem, 1.4vw, 1.5rem);
+}
+
 .friends__list,
 .friends__requests-list,
 .friends__paused-list {
@@ -1076,6 +1080,10 @@
     .friends__section-title {
         font-size: clamp(1.14rem, 1.4vw, 1.5rem);
         padding-bottom: 0.32rem;
+    }
+
+    .friends__section-title--requests {
+        font-size: clamp(1rem, 1.28vw, 1.36rem);
     }
 
     .friends__section--requests .friends__requests-list {

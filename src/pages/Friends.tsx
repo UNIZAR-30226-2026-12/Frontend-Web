@@ -531,7 +531,7 @@ function Friends({ onNavigate }: FriendsProps) {
                     <section className="friends__section friends__section--requests">
                         <img className="friends__section-image" src={friendRequestsSheetImage} alt="" aria-hidden="true" />
                         <div className="friends__section-inner">
-                            <h2 className="friends__section-title">Solicitudes de Amistad ({requests.length})</h2>
+                            <h2 className="friends__section-title friends__section-title--requests">Solicitudes de Amistad ({requests.length})</h2>
                             <div className="friends__requests-list">
                                 {requests.length === 0 ? (
                                     <div className="friends__empty-state friends__empty-state--requests">
