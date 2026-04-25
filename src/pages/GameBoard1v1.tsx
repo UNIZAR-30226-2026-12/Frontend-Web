@@ -1774,5 +1774,3 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
 }
 
 export default GameBoard1v1
-
-

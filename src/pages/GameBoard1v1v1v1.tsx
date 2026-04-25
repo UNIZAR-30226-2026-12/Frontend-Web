@@ -1281,7 +1281,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             {!gameOver && !isAiMatch && pausedUsernames.length > 0 && (
                 <div className="duel__paused-status">
                     <p className="duel__paused-text">
-                        Partida pausada: espera a que vuelva(n) {pausedUsernames.join(', ')}.
+                        Partida pausada: espera a que vuelva {pausedUsernames.join(', ')}.
                     </p>
                 </div>
             )}

@@ -374,13 +374,13 @@
 }
 
 .friend-card--paused .friend-card__waiting-text {
-    margin: 0.26rem 0 0;
+    margin: 0.42rem 0 0;
 }
 
 .friend-card__mode-tag--paused-corner {
     position: absolute;
-    top: 0.46rem;
-    right: 0.5rem;
+    left: 0.5rem;
+    bottom: 0.46rem;
 }
 
 .friend-card--paused .friend-card__actions {
@@ -869,6 +869,10 @@
     cursor: not-allowed;
 }
 
+.friends-group-invite__item--offline {
+    filter: grayscale(0.22);
+}
+
 .friends-group-invite__item--selected {
     border-color: #2f6a32;
     background: rgba(133, 206, 122, 0.35);
@@ -888,6 +892,12 @@
     flex: 1;
     text-align: left;
     font-weight: 800;
+}
+
+.friends-group-invite__status {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: rgba(77, 64, 50, 0.85);
 }
 
 .friends-group-invite__rr {

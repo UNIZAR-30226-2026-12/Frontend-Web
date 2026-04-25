@@ -44,7 +44,8 @@ interface GameRequest {
 
 interface PausedGame {
     game_id: number
-    mode: '1vs1' | '1vs1vs1vs1'
+    mode: string
+    raw_mode?: string
     participants: string[]
     paused_by: string[]
     active_players: string[]
@@ -55,6 +56,8 @@ const normalizeMode = (rawMode: unknown): '1vs1' | '1vs1vs1vs1' => {
     if (cleanedMode.startsWith('1vs1vs1vs1') || cleanedMode.startsWith('1v1v1v1')) return '1vs1vs1vs1'
     return '1vs1'
 }
+
+const formatModeLabel = (rawMode: unknown) => normalizeMode(rawMode)
 
 const normalizeFriendStatus = (rawStatus: unknown): Friend['status'] => {
     const cleanedStatus = String(rawStatus || '').toLowerCase()
@@ -73,11 +76,6 @@ const friendStatusLabel: Record<Friend['status'], string> = {
     online: 'En linea',
     playing: 'Jugando',
     offline: 'Desconectado',
-}
-
-const toInitial = (name: string) => {
-    const trimmed = name.trim()
-    return trimmed ? trimmed.charAt(0).toUpperCase() : '?'
 }
 
 interface Toast {
@@ -147,7 +145,15 @@ function Friends({ onNavigate }: FriendsProps) {
                 playersCount: request.playersCount,
             }))
             setGameRequests(normalizedGameRequests)
-            setPausedGames(data.pausedGames || [])
+            const normalizedPausedGames: PausedGame[] = (data.pausedGames || []).map((game: any) => ({
+                game_id: Number(game.game_id),
+                mode: normalizeMode(game.mode),
+                raw_mode: String(game.mode || ''),
+                participants: Array.isArray(game.participants) ? game.participants : [],
+                paused_by: Array.isArray(game.paused_by) ? game.paused_by : [],
+                active_players: Array.isArray(game.active_players) ? game.active_players : [],
+            }))
+            setPausedGames(normalizedPausedGames)
         } catch (err) {
             showToast('Error al cargar amigos', 'error')
         }
@@ -340,6 +346,9 @@ function Friends({ onNavigate }: FriendsProps) {
     }
 
     const handleToggleExtraFriend = (friendId: number) => {
+        const friend = friends.find((candidate) => candidate.id === friendId)
+        if (!friend || friend.status !== 'online') return
+
         setSelectedExtraFriends((prev) => {
             if (prev.includes(friendId)) return prev.filter((id) => id !== friendId)
             if (prev.length >= 2) return prev
@@ -658,10 +667,9 @@ function Friends({ onNavigate }: FriendsProps) {
                                     </div>
                                 ) : (
                                     pausedGames.map(pg => {
-                                        const participants = pg.participants.length > 0 ? pg.participants : pg.active_players
                                         const others = pg.active_players.filter((u) => !pg.paused_by.includes(u))
                                         const waitingText = others.length > 0
-                                            ? `Esperando a ${others.join(', ')}`
+                                            ? `Te espera ${others.join(', ')}`
                                             : 'No hay jugadores activos'
 
                                         return (
@@ -671,21 +679,10 @@ function Friends({ onNavigate }: FriendsProps) {
                                                         <div className="friend-card__name-row">
                                                             <span className="friend-card__name">Partida en pausa</span>
                                                         </div>
-                                                        <div className="friend-card__participants">
-                                                            {participants.slice(0, 4).map((name) => (
-                                                                <span
-                                                                    key={`${pg.game_id}-${name}`}
-                                                                    className="friend-card__participant-avatar"
-                                                                    title={name}
-                                                                >
-                                                                    {toInitial(name)}
-                                                                </span>
-                                                            ))}
-                                                        </div>
                                                         <p className="friend-card__waiting-text">{waitingText}</p>
                                                     </div>
                                                 </div>
-                                                <span className="friend-card__mode-tag friend-card__mode-tag--paused-corner">{pg.mode}</span>
+                                                <span className="friend-card__mode-tag friend-card__mode-tag--paused-corner">{formatModeLabel(pg.raw_mode ?? pg.mode)}</span>
                                                 <div className="friend-card__actions friend-card__actions--inline">
                                                     <button
                                                         className="friend-btn friend-btn--resume"
@@ -801,14 +798,16 @@ function Friends({ onNavigate }: FriendsProps) {
                         )}
                         {groupInviteCandidates.map((friend) => {
                             const isSelected = selectedExtraFriends.includes(friend.id)
-                            const isDisabled = !isSelected && selectedExtraFriends.length >= 2
+                            const isOffline = friend.status !== 'online'
+                            const isDisabled = isOffline || (!isSelected && selectedExtraFriends.length >= 2)
                             return (
                                 <button
                                     key={friend.id}
                                     type="button"
-                                    className={`friends-group-invite__item ${isSelected ? 'friends-group-invite__item--selected' : ''}`}
+                                    className={`friends-group-invite__item ${isSelected ? 'friends-group-invite__item--selected' : ''} ${isOffline ? 'friends-group-invite__item--offline' : ''}`}
                                     disabled={isDisabled}
                                     onClick={() => handleToggleExtraFriend(friend.id)}
+                                    title={isOffline ? `${friend.name} esta desconectado` : undefined}
                                 >
                                     <img
                                         className="friends-group-invite__avatar"
@@ -816,6 +815,9 @@ function Friends({ onNavigate }: FriendsProps) {
                                         alt={`Avatar de ${friend.name}`}
                                     />
                                     <span className="friends-group-invite__name">{friend.name}</span>
+                                    <span className="friends-group-invite__status">
+                                        {isOffline ? 'Desconectado' : 'En linea'}
+                                    </span>
                                     <span className="friends-group-invite__rr">{friend.rr} RR</span>
                                 </button>
                             )
