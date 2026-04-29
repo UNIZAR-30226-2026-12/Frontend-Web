@@ -162,12 +162,12 @@
     position: absolute;
     left: 8.4%;
     right: 8.4%;
-    bottom: 4.4%;
+    bottom: 5.6%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: clamp(0.6rem, 1.1vw, 1.1rem);
+    gap: clamp(0.48rem, 0.92vw, 0.92rem);
     align-items: start;
-    --piece-token-size: clamp(1.55rem, 2.7vw, 2.35rem);
+    --piece-token-size: clamp(1.24rem, 2.18vw, 1.9rem);
 }
 
 .customization__piece-group {
@@ -306,18 +306,18 @@
 
 .customization__board-preview--1v1 {
     left: 47%;
-    top: 74%;
+    top: 72%;
     transform: translate(-50%, -50%);
 }
 
 .customization__board-preview--4p {
     left: 44%;
-    top: 82%;
+    top: 80%;
     transform: translate(-50%, -50%);
 }
 
 .customization__board-piece {
-    width: clamp(1.35rem, 2.35vw, 2rem);
+    width: clamp(1.20rem, 2.10vw, 1.95rem);
     aspect-ratio: 1;
     border-radius: 50%;
     border: 2px solid rgba(31, 19, 12, 0.84);
@@ -379,7 +379,7 @@
     }
 
     .customization__piece-groups {
-        --piece-token-size: clamp(1.9rem, 4.8vw, 2.95rem);
+        --piece-token-size: clamp(1.52rem, 3.9vw, 2.38rem);
     }
 }
 
@@ -414,9 +414,9 @@
     .customization__piece-groups {
         left: 7.1%;
         right: 7.1%;
-        bottom: 5.2%;
-        gap: 0.3rem;
-        --piece-token-size: clamp(1.2rem, 5.2vw, 1.8rem);
+        bottom: 6.2%;
+        gap: 0.24rem;
+        --piece-token-size: clamp(0.98rem, 4.25vw, 1.46rem);
     }
 
     .customization__piece-group {

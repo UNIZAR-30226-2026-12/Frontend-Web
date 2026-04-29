@@ -1470,9 +1470,11 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                         <div className="duel-quad__player-data">
                                             <span className="duel-quad__player-row">
                                                 <span className="duel-quad__player-name">{player.name}</span>
+                                            </span>
+                                            <span className="duel-quad__player-meta">
+                                                <span>{player.color}</span>
                                                 <span className="duel-quad__player-score">{rawScoreByPiece[player.piece]} pts</span>
                                             </span>
-                                            <span className="duel-quad__player-meta">{player.color}</span>
                                             {abandonedPieces.includes(player.piece) && (
                                                 <span className="duel-quad__player-abandoned">Ha abandonado</span>
                                             )}
@@ -1622,9 +1624,11 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                         <div className="duel-quad__player-data">
                                             <span className="duel-quad__player-row">
                                                 <span className="duel-quad__player-name">{player.name}</span>
+                                            </span>
+                                            <span className="duel-quad__player-meta">
+                                                <span>{player.color}</span>
                                                 <span className="duel-quad__player-score">{rawScoreByPiece[player.piece]} pts</span>
                                             </span>
-                                            <span className="duel-quad__player-meta">{player.color}</span>
                                             {abandonedPieces.includes(player.piece) && (
                                                 <span className="duel-quad__player-abandoned">Ha abandonado</span>
                                             )}

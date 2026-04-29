@@ -72,7 +72,7 @@
     --dq-chat-width: 70%;
     --dq-chat-max-width: 100%;
     --dq-chat-height: auto;
-    --dq-skills-x: 65px;
+    --dq-skills-x: 52px;
     --dq-skills-y: 88px;
     --dq-skills-width: 100%;
     --dq-skills-max-width: 70%;
@@ -117,7 +117,7 @@
     --dq-l1-data-y: 0px;
     --dq-l1-name-x: 10px;
     --dq-l1-name-y: 0px;
-    --dq-l1-score-x: -138px;
+    --dq-l1-score-x: 0px;
     --dq-l1-score-y: 0px;
     --dq-l1-score-gap: 0.06rem;
     --dq-l1-meta-x: 10px;
@@ -136,45 +136,45 @@
     --dq-l2-data-y: 0px;
     --dq-l2-name-x: 18px;
     --dq-l2-name-y: 0px;
-    --dq-l2-score-x: -140px;
+    --dq-l2-score-x: 0px;
     --dq-l2-score-y: 0px;
     --dq-l2-score-gap: 0.06rem;
     --dq-l2-meta-x: 18px;
     --dq-l2-meta-y: 0px;
 
     /* ==== Jugador Derecha Arriba (R1) ==== */
-    --dq-r1-panel-x: 45px;
+    --dq-r1-panel-x: 32px;
     --dq-r1-panel-y: 0px;
     --dq-r1-card-x: 0px;
     --dq-r1-card-y: 0px;
-    --dq-r1-avatar-x: 16px;
+    --dq-r1-avatar-x: 10px;
     --dq-r1-avatar-y: 6px;
     --dq-r1-avatar-size: clamp(78px, 5vw, 90px);
     --dq-r1-avatar-rotate: -5deg;
-    --dq-r1-data-x: 24px;
+    --dq-r1-data-x: 20px;
     --dq-r1-data-y: 0px;
     --dq-r1-name-x: 22px;
     --dq-r1-name-y: 0px;
-    --dq-r1-score-x: -95px;
+    --dq-r1-score-x: 0px;
     --dq-r1-score-y: 0px;
     --dq-r1-score-gap: 0.06rem;
     --dq-r1-meta-x: 22px;
     --dq-r1-meta-y: 0px;
 
     /* ==== Jugador Derecha Abajo (R2) ==== */
-    --dq-r2-panel-x: 45px;
+    --dq-r2-panel-x: 32px;
     --dq-r2-panel-y: 0px;
     --dq-r2-card-x: 0px;
     --dq-r2-card-y: 0px;
-    --dq-r2-avatar-x: 18px;
+    --dq-r2-avatar-x: 16px;
     --dq-r2-avatar-y: 6px;
     --dq-r2-avatar-size: clamp(78px, 5vw, 90px);
     --dq-r2-avatar-rotate: -5deg;
-    --dq-r2-data-x: 24px;
+    --dq-r2-data-x: 20px;
     --dq-r2-data-y: 0px;
     --dq-r2-name-x: 22px;
     --dq-r2-name-y: 0px;
-    --dq-r2-score-x: -95px;
+    --dq-r2-score-x: 0px;
     --dq-r2-score-y: 0px;
     --dq-r2-score-gap: 0.06rem;
     --dq-r2-meta-x: 22px;
@@ -399,7 +399,7 @@
 .duel-quad__player-score {
     color: #2a1a0d;
     margin-left: var(--dq-score-gap);
-    font-size: clamp(0.82rem, 1vw, 1.06rem);
+    font-size: inherit;
     font-weight: 800;
     white-space: nowrap;
     transform: translate(var(--dq-score-x), var(--dq-score-y));
@@ -409,6 +409,9 @@
     color: rgba(74, 49, 25, 0.78);
     font-size: clamp(0.68rem, 0.82vw, 0.9rem);
     font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.34rem;
     transform: translate(var(--dq-meta-x), var(--dq-meta-y));
 }
 

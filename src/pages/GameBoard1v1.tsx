@@ -1735,9 +1735,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                             <div className="duel__player-data">
                                 <span className="duel__player-row">
                                     <span className="duel__name">{opponentProfile.name}</span>
+                                </span>
+                                <span className="duel__meta">
+                                    <span>{opponentProfile.color}</span>
                                     <span className="duel__player-score">{opponentScoreRaw} pts</span>
                                 </span>
-                                <span className="duel__meta">{opponentProfile.color}</span>
                             </div>
                         </div>
 
@@ -1750,9 +1752,11 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                             <div className="duel__player-data">
                                 <span className="duel__player-row">
                                     <span className="duel__name">{playerProfile.name}</span>
+                                </span>
+                                <span className="duel__meta">
+                                    <span>{playerProfile.color}</span>
                                     <span className="duel__player-score">{playerScoreRaw} pts</span>
                                 </span>
-                                <span className="duel__meta">{playerProfile.color}</span>
                             </div>
                         </div>
 
