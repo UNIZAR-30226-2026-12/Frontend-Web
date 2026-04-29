@@ -697,31 +697,6 @@
     --duel-score-gap-extra: var(--duel-self-score-gap);
 }
 
-.duel__player-card--opponent,
-.duel__player-card--self {
-    --duel-card-left: 12%;
-    --duel-card-right: 2%;
-    --duel-card-gap: 1rem;
-    --duel-card-x: 0px;
-    --duel-card-y: 0px;
-    --duel-avatar-offset-x: 0px;
-    --duel-avatar-offset-y: 0px;
-    --duel-avatar-rotate: 0deg;
-    --duel-text-offset-x: 0px;
-    --duel-text-offset-y: 0px;
-    --duel-name-offset-x: 0px;
-    --duel-name-offset-y: 0px;
-    --duel-score-offset-x: 0px;
-    --duel-score-offset-y: 0px;
-    --duel-meta-offset-x: 0px;
-    --duel-meta-offset-y: 0px;
-    --duel-score-gap-extra: 0px;
-}
-
-.duel__player-card--self {
-    top: 26.5%;
-}
-
 .duel__player-card--active {
     filter: brightness(1.06);
     transform: translate(var(--duel-card-x, 0px), calc(var(--duel-card-y, 0px) - 1px)) scale(1.01);
@@ -751,15 +726,6 @@
     align-items: center;
     gap: 0.3rem;
     min-width: 0;
-}
-
-.duel__player-card {
-    justify-content: center;
-}
-
-.duel__player-data,
-.duel__player-row {
-    text-align: left;
 }
 
 .duel__name {

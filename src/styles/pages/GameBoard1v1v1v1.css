@@ -6,7 +6,10 @@
     min-height: 100svh;
     min-height: 100dvh;
     padding:
-        max(env(safe-area-inset-top), 0.35rem) max(env(safe-area-inset-right), 0.35rem) max(env(safe-area-inset-bottom), 0.35rem) max(env(safe-area-inset-left), 0.35rem);
+        max(env(safe-area-inset-top), 0.35rem)
+        max(env(safe-area-inset-right), 0.35rem)
+        max(env(safe-area-inset-bottom), 0.35rem)
+        max(env(safe-area-inset-left), 0.35rem);
     display: flex;
     align-items: stretch;
     justify-content: center;
@@ -84,10 +87,10 @@
     --dq-actions-x: 0px;
     --dq-actions-y: 0px;
     --dq-leave-width: clamp(6.8rem, 10.6vw, 11rem);
-    --dq-board-bg-area-width: 108%;
-    --dq-board-bg-area-height: 90%;
+    --dq-board-bg-area-width: 112%;
+    --dq-board-bg-area-height: 94%;
     --dq-board-bg-area-x: -28px;
-    --dq-board-bg-area-y: -4px;
+    --dq-board-bg-area-y: 6px;
 
     /* ==== Controles Del Chat ==== */
     --dq-chat-input-gap: 0.16rem;
@@ -345,46 +348,9 @@
     --dq-meta-y: var(--dq-r2-meta-y);
 }
 
-.duel-quad__panel--slot-l1,
-.duel-quad__panel--slot-l2,
-.duel-quad__panel--slot-r1,
-.duel-quad__panel--slot-r2 {
-    --dq-panel-x: 0px;
-    --dq-panel-y: 0px;
-    --dq-card-x: 0px;
-    --dq-card-y: 0px;
-    --dq-avatar-x: 0px;
-    --dq-avatar-y: 0px;
-    --dq-avatar-rotate: 0deg;
-    --dq-data-x: 0px;
-    --dq-data-y: 0px;
-    --dq-name-x: 0px;
-    --dq-name-y: 0px;
-    --dq-score-x: 0px;
-    --dq-score-y: 0px;
-    --dq-score-gap: 0.22rem;
-    --dq-meta-x: 0px;
-    --dq-meta-y: 0px;
-}
-
-.duel-quad__panel--slot-l1 {
-    --dq-panel-x: -120px;
-    --dq-panel-y: -12px;
-}
-
-.duel-quad__panel--slot-l2 {
-    --dq-panel-x: -120px;
-    --dq-panel-y: -80px;
-}
-
-.duel-quad__panel--slot-r2 {
-    --dq-panel-y: -20px;
-}
-
 .duel-quad__player-card {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 0.6rem;
     min-height: 100%;
     transform: translate(var(--dq-card-x), var(--dq-card-y));
@@ -415,17 +381,6 @@
     justify-content: flex-start;
     gap: 0.08rem;
     min-width: 0;
-}
-
-.duel-quad__panel {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.duel-quad__player-data,
-.duel-quad__player-row {
-    text-align: left;
 }
 
 .duel-quad__player-name {
@@ -725,7 +680,7 @@
 }
 
 .duel-quad__board {
-    width: min(80%, 540px);
+    width: min(84%, 580px);
     aspect-ratio: 1;
     position: relative;
     z-index: 1;
@@ -737,7 +692,7 @@
     background-repeat: no-repeat;
     border-radius: 8px;
     overflow: hidden;
-    transform: translate(-20px, -2px);
+    transform: translate(-20px, 8px);
 }
 
 .duel-quad__cell {
@@ -1518,7 +1473,10 @@
 @media (max-width: 1024px) {
     .duel-quad {
         padding:
-            max(env(safe-area-inset-top), 0) max(env(safe-area-inset-right), 0) max(env(safe-area-inset-bottom), 0) max(env(safe-area-inset-left), 0);
+            max(env(safe-area-inset-top), 0)
+            max(env(safe-area-inset-right), 0)
+            max(env(safe-area-inset-bottom), 0)
+            max(env(safe-area-inset-left), 0);
     }
 
     .duel-quad__container {
