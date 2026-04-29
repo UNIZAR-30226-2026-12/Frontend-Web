@@ -63,4 +63,49 @@ describe('api', () => {
       }),
     )
   })
+
+  it('forgotPassword returns the backend message on non-blocking server errors', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: vi.fn().mockResolvedValue({ detail: 'No se pudo enviar el correo' }),
+    } as unknown as Response)
+
+    await expect(api.auth.forgotPassword('test@example.com')).resolves.toEqual({
+      message: 'No se pudo enviar el correo',
+    })
+  })
+
+  it('forgotPassword throws when the email does not exist', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: vi.fn().mockResolvedValue({ detail: 'No existe ninguna cuenta con ese correo' }),
+    } as unknown as Response)
+
+    await expect(api.auth.forgotPassword('missing@example.com')).rejects.toThrow(
+      'No existe ninguna cuenta con ese correo',
+    )
+  })
+
+  it('users.getMe throws SESSION_EXPIRED for unauthorized requests', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 401,
+    } as unknown as Response)
+
+    await expect(api.users.getMe()).rejects.toThrow('SESSION_EXPIRED')
+  })
+
+  it('friends.sendRequest surfaces backend validation errors', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: vi.fn().mockResolvedValue({ detail: 'No puedes enviarte una solicitud a ti mismo' }),
+    } as unknown as Response)
+
+    await expect(api.friends.sendRequest('tester')).rejects.toThrow(
+      'No puedes enviarte una solicitud a ti mismo',
+    )
+  })
 })

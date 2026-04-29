@@ -38,15 +38,15 @@ describe('ForgotPasswordModal', () => {
     fireEvent.change(screen.getByPlaceholderText('usuario@ejemplo.com'), {
       target: { value: 'correo@ejemplo.com' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
+    fireEvent.click(screen.getByRole('button', { name: /Restablecer contraseña/i }))
 
     await waitFor(() => {
       expect(forgotPasswordMock).toHaveBeenCalledWith('correo@ejemplo.com')
     })
 
-    expect(
-      await screen.findByText('Revise la bandeja de entrada de su correo electrónico para restablecer su contraseña.'),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Revise la bandeja de entrada de su correo electrónico para restablecer su contraseña.',
+    )
   })
 
   it('shows the backend error when the request fails', async () => {
@@ -57,7 +57,7 @@ describe('ForgotPasswordModal', () => {
     fireEvent.change(screen.getByPlaceholderText('usuario@ejemplo.com'), {
       target: { value: 'correo@ejemplo.com' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
+    fireEvent.click(screen.getByRole('button', { name: /Restablecer contraseña/i }))
 
     expect(await screen.findByText('Correo no encontrado')).toBeInTheDocument()
   })
@@ -71,16 +71,41 @@ describe('ForgotPasswordModal', () => {
     fireEvent.change(screen.getByPlaceholderText('usuario@ejemplo.com'), {
       target: { value: 'correo@ejemplo.com' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Restablecer contraseña' }))
+    fireEvent.click(screen.getByRole('button', { name: /Restablecer contraseña/i }))
 
-    expect(
-      await screen.findByText('Revise la bandeja de entrada de su correo electrónico para restablecer su contraseña.'),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Revise la bandeja de entrada de su correo electrónico para restablecer su contraseña.',
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar modal' }))
 
     expect(onClose).toHaveBeenCalledTimes(1)
-    expect(screen.queryByText('Revise la bandeja de entrada de su correo electrónico para restablecer su contraseña.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Revise la bandeja de entrada de su correo electrÃ³nico para restablecer su contraseÃ±a.')).not.toBeInTheDocument()
     expect(screen.getByPlaceholderText('usuario@ejemplo.com')).toHaveValue('')
+  })
+
+  it('clears the previous error when a new submit starts', async () => {
+    forgotPasswordMock
+      .mockRejectedValueOnce(new Error('Correo no encontrado'))
+      .mockResolvedValueOnce({ message: 'ok' })
+
+    render(<ForgotPasswordModal isOpen onClose={vi.fn()} />)
+
+    fireEvent.change(screen.getByPlaceholderText('usuario@ejemplo.com'), {
+      target: { value: 'correo@ejemplo.com' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Restablecer contraseña/i }))
+
+    expect(await screen.findByText('Correo no encontrado')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Restablecer contraseña/i }))
+
+    await waitFor(() => {
+      expect(forgotPasswordMock).toHaveBeenCalledTimes(2)
+    })
+    expect(screen.queryByText('Correo no encontrado')).not.toBeInTheDocument()
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Revise la bandeja de entrada de su correo electrónico para restablecer su contraseña.',
+    )
   })
 })

@@ -88,4 +88,21 @@ describe('RegisterModal', () => {
 
     expect(await screen.findByText('Usuario ya existe')).toBeInTheDocument()
   })
+
+  it('toggles visibility independently for both password fields', () => {
+    render(<RegisterModal isOpen onClose={vi.fn()} onRegisterSuccess={vi.fn()} />)
+
+    const [passwordInput, confirmPasswordInput] = screen.getAllByPlaceholderText('********')
+    const toggleButtons = screen.getAllByRole('button', { name: 'Mostrar contraseña' })
+
+    expect(passwordInput).toHaveAttribute('type', 'password')
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password')
+
+    fireEvent.click(toggleButtons[0])
+    expect(passwordInput).toHaveAttribute('type', 'text')
+    expect(confirmPasswordInput).toHaveAttribute('type', 'password')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar contraseña' }))
+    expect(passwordInput).toHaveAttribute('type', 'password')
+  })
 })
