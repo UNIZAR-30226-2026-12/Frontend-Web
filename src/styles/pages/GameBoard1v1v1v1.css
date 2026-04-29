@@ -2,13 +2,19 @@
 
 .duel-quad {
     position: relative;
-    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100svh;
     min-height: 100dvh;
-    padding: 0.35rem;
+    padding:
+        max(env(safe-area-inset-top), 0.35rem)
+        max(env(safe-area-inset-right), 0.35rem)
+        max(env(safe-area-inset-bottom), 0.35rem)
+        max(env(safe-area-inset-left), 0.35rem);
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     color: #22170c;
     isolation: isolate;
 }
@@ -39,11 +45,13 @@
 }
 
 .duel-quad__container {
-    width: min(92vw, calc(92dvh * 724 / 380));
-    height: min(92dvh, calc(92vw * 380 / 724));
+    width: min(92vw, calc(92svh * 724 / 380), calc(92dvh * 724 / 380));
+    height: min(92svh, 92dvh, calc(92vw * 380 / 724));
+    max-width: 100%;
     max-height: 100%;
     aspect-ratio: 724 / 380;
     position: relative;
+    margin: auto;
     background-image: var(--duel-quad-frame-image);
     background-position: center;
     background-repeat: no-repeat;
@@ -1461,12 +1469,19 @@
 
 @media (max-width: 1024px) {
     .duel-quad {
-        padding: 0;
+        padding:
+            max(env(safe-area-inset-top), 0)
+            max(env(safe-area-inset-right), 0)
+            max(env(safe-area-inset-bottom), 0)
+            max(env(safe-area-inset-left), 0);
     }
 
     .duel-quad__container {
         width: 100vw;
-        height: 100dvh;
+        min-height: 100vh;
+        min-height: 100svh;
+        min-height: 100dvh;
+        height: auto;
         aspect-ratio: auto;
         background-image: none;
         border-radius: 0;
@@ -1476,12 +1491,13 @@
             radial-gradient(circle at 88% 18%, rgba(98, 180, 183, 0.24), transparent 42%),
             rgba(25, 45, 53, 0.94);
         filter: none;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: visible;
     }
 
     .duel-quad__layout {
         position: static;
-        height: 100%;
+        min-height: inherit;
         grid-template-columns: 1fr;
         grid-template-rows: auto auto auto;
         row-gap: 0.7rem;

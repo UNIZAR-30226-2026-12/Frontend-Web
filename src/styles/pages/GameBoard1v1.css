@@ -2,13 +2,19 @@
 
 .duel {
     position: relative;
-    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100svh;
     min-height: 100dvh;
-    padding: 0.2rem;
+    padding:
+        max(env(safe-area-inset-top), 0.2rem)
+        max(env(safe-area-inset-right), 0.2rem)
+        max(env(safe-area-inset-bottom), 0.2rem)
+        max(env(safe-area-inset-left), 0.2rem);
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     color: #1f170d;
     isolation: isolate;
 }
@@ -39,8 +45,9 @@
 }
 
 .duel__container {
-    width: min(90vw, calc(90dvh * 715 / 382));
-    height: min(90dvh, calc(90vw * 382 / 715));
+    width: min(90vw, calc(90svh * 715 / 382), calc(90dvh * 715 / 382));
+    height: min(90svh, 90dvh, calc(90vw * 382 / 715));
+    max-width: 100%;
     max-height: 100%;
     aspect-ratio: 715 / 382;
     /* ==== Controles de layout global ==== */
@@ -184,6 +191,7 @@
     --duel-skill-main-x: 0.50rem;
     --duel-skill-main-y: -0.18rem;
     position: relative;
+    margin: auto;
     background-image: var(--duel-frame-image);
     background-size: 100% 100%;
     background-position: center;
@@ -1322,12 +1330,19 @@
 
 @media (max-width: 980px) {
     .duel {
-        padding: 0;
+        padding:
+            max(env(safe-area-inset-top), 0)
+            max(env(safe-area-inset-right), 0)
+            max(env(safe-area-inset-bottom), 0)
+            max(env(safe-area-inset-left), 0);
     }
 
     .duel__container {
         width: 100vw;
-        height: 100dvh;
+        min-height: 100vh;
+        min-height: 100svh;
+        min-height: 100dvh;
+        height: auto;
         aspect-ratio: auto;
         background-image: none;
         border-radius: 0;
@@ -1337,12 +1352,13 @@
             radial-gradient(circle at 88% 18%, rgba(98, 180, 183, 0.24), transparent 42%),
             rgba(25, 45, 53, 0.94);
         filter: none;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: visible;
     }
 
     .duel__layout {
         position: static;
-        height: 100%;
+        min-height: inherit;
         grid-template-columns: 1fr;
         grid-template-rows: auto auto auto;
         gap: 0.75rem;
