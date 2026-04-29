@@ -55,6 +55,12 @@ interface PendingAbility {
     inventoryIndex: number
 }
 
+interface PendingTransferSkill {
+    ability: 'exchange_skill' | 'give_skill'
+    inventoryIndex: number
+    targetPlayer: Piece | null
+}
+
 type GravityDirection = 'up' | 'down' | 'left' | 'right'
 
 interface SkillAnnouncement {
@@ -136,8 +142,8 @@ const ABILITY_DESCRIPTIONS: Record<AbilityId, string> = {
     flip_rival: 'Convierte una ficha rival elegida a tu color.',
     swap_colors: 'Intercambia todas tus fichas del tablero con las del rival seleccionado.',
     steal_skill: 'Robas una habilidad aleatoria de un rival. Si nadie tiene habilidades, no se puede usar.',
-    exchange_skill: 'Das una habilidad tuya y recibes una del rival. Si no hay habilidades en origen o destino, no se puede usar.',
-    give_skill: 'Entregas una habilidad de tu mano a otro jugador. Si no tienes ninguna, no se puede usar.',
+    exchange_skill: 'Eliges una habilidad de tu inventario para entregarla y recibes una del rival. Si no hay habilidades en origen o destino, no se puede usar.',
+    give_skill: 'Eliges una habilidad de tu inventario para regalarla a otro jugador. Si no tienes otra habilidad, no se puede usar.',
 }
 const ABILITY_POOL = Object.keys(ABILITY_META) as AbilityId[]
 const GRAVITY_DIRECTION_LABELS: Record<GravityDirection, string> = {
@@ -159,7 +165,7 @@ const ABILITY_RULE_NAMES: Record<AbilityId, string> = {
     skip_rival: 'Saltar turno del rival',
     lose_turn: 'Pierdes tu turno',
     flip_rival: 'Voltear una ficha rival',
-    swap_colors: 'Cambiar colores con otro jugador',
+    swap_colors: 'Cambiar colores',
     steal_skill: 'Robar habilidad',
     exchange_skill: 'Intercambiar habilidad',
     give_skill: 'Dar habilidad',
@@ -409,6 +415,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         ENABLE_SPECIAL_MECHANICS_4V4 ? createQuestionCells(createInitialBoard()) : new Set(),
     )
     const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
+    const [pendingTransferSkill, setPendingTransferSkill] = useState<PendingTransferSkill | null>(null)
     const [selectingGravityDirection, setSelectingGravityDirection] = useState<{ inventoryIndex: number } | null>(null)
     const [localPiece, setLocalPiece] = useState<Piece>('black')
     const [, setStatusMessage] = useState('Conectando...')
@@ -874,6 +881,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         setInventories(nextInventories)
         setSkipTurns(advance.nextSkipTurns)
         setPendingAbility(null)
+        setPendingTransferSkill(null)
         setSelectingGravityDirection(null)
         setStatusMessage(actionMessage)
         setCurrentTurn(advance.nextTurn)
@@ -891,27 +899,39 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
         }
     }
 
-    const useInstantAbility = (ability: AbilityId, inventoryIndex: number, direction?: GravityDirection) => {
+    const useInstantAbility = (
+        ability: AbilityId,
+        inventoryIndex: number,
+        direction?: GravityDirection,
+        options?: { targetPlayer?: Piece; givenSkillIndex?: number },
+    ) => {
         if (isOnlineMatch) {
             if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return
             if (currentTurn !== localPiece) return
             const targetPlayer = ability === 'steal_skill'
                 ? getRandomOpponentPiece(localPiece)
-                : getPrimaryOpponentPiece(localPiece)
+                : options?.targetPlayer ?? getPrimaryOpponentPiece(localPiece)
 
             pendingOnlineSkillRef.current = { actor: localPiece, ability, direction }
-            wsRef.current.send(JSON.stringify({
+            const payload: Record<string, unknown> = {
                 action: 'use_skill',
                 type: ability,
                 direction,
                 target_player: targetPlayer,
                 inventory_index: inventoryIndex,
-            }))
+            }
+
+            if ((ability === 'exchange_skill' || ability === 'give_skill') && typeof options?.givenSkillIndex === 'number') {
+                payload.given_skill_index = options.givenSkillIndex
+            }
+
+            setPendingTransferSkill(null)
+            wsRef.current.send(JSON.stringify(payload))
             return
         }
 
         const player = currentTurn
-        const opponent = getPrimaryOpponentPiece(player)
+        const opponent = options?.targetPlayer ?? getPrimaryOpponentPiece(player)
         const nextBoard = cloneBoard(board)
         const nextQuestions = new Set(questionCells)
         const nextInventories: Record<Piece, AbilityId[]> = {
@@ -921,6 +941,49 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             blue: [...inventories.blue],
         }
         const nextSkipTurns = { ...skipTurns }
+
+        if (ability === 'exchange_skill' || ability === 'give_skill') {
+            const givenSkillIndex = options?.givenSkillIndex
+
+            if (typeof givenSkillIndex !== 'number' || givenSkillIndex === inventoryIndex) {
+                showAbilityError('Selecciona otra habilidad distinta para entregar.')
+                return
+            }
+
+            const chosenSkill = nextInventories[player][givenSkillIndex]
+            if (!chosenSkill) {
+                showAbilityError('La habilidad seleccionada ya no esta disponible.')
+                return
+            }
+
+            const indicesToRemove = [inventoryIndex, givenSkillIndex].sort((a, b) => b - a)
+            indicesToRemove.forEach(index => {
+                nextInventories[player].splice(index, 1)
+            })
+
+            let transferMessage = `${playerNameByPiece(player)} usó ${getAbilityDisplayName(ability)}.`
+
+            if (ability === 'exchange_skill') {
+                if (nextInventories[opponent].length > 0) {
+                    const opponentIndex = Math.floor(Math.random() * nextInventories[opponent].length)
+                    const [received] = nextInventories[opponent].splice(opponentIndex, 1)
+                    nextInventories[player].push(received)
+                    nextInventories[opponent].push(chosenSkill)
+                    transferMessage = `${playerNameByPiece(player)} intercambió ${getAbilityDisplayName(chosenSkill)} con ${playerNameByPiece(opponent)}.`
+                } else {
+                    transferMessage = 'No se pudo intercambiar: el rival no tiene habilidades.'
+                }
+            }
+
+            if (ability === 'give_skill') {
+                nextInventories[opponent].push(chosenSkill)
+                transferMessage = `${playerNameByPiece(player)} dio ${getAbilityDisplayName(chosenSkill)} a ${playerNameByPiece(opponent)}.`
+            }
+
+            showSkillAnnouncement(player, ability)
+            finishLocalAction(nextBoard, nextQuestions, nextInventories, nextSkipTurns, transferMessage)
+            return
+        }
 
         nextInventories[player].splice(inventoryIndex, 1)
         let message = `${playerNameByPiece(player)} usó ${getAbilityDisplayName(ability)}.`
@@ -943,7 +1006,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             }
         }
 
-        if (ability === 'exchange_skill') {
+        if ((ability as string) === 'exchange_skill') {
             if (nextInventories[player].length > 0 && nextInventories[opponent].length > 0) {
                 const playerIndex = Math.floor(Math.random() * nextInventories[player].length)
                 const opponentIndex = Math.floor(Math.random() * nextInventories[opponent].length)
@@ -956,7 +1019,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             }
         }
 
-        if (ability === 'give_skill') {
+        if ((ability as string) === 'give_skill') {
             if (nextInventories[player].length > 0) {
                 const giveIndex = Math.floor(Math.random() * nextInventories[player].length)
                 const [given] = nextInventories[player].splice(giveIndex, 1)
@@ -1091,7 +1154,30 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             return
         }
 
+        if (ability === 'exchange_skill' || ability === 'give_skill') {
+            const hasAnotherSkill = inventories[localPiece].some((_, index) => index !== inventoryIndex)
+            if (!hasAnotherSkill) {
+                showAbilityError(
+                    ability === 'exchange_skill'
+                        ? 'Necesitas otra habilidad en tu inventario para intercambiar.'
+                        : 'Necesitas otra habilidad en tu inventario para regalar.',
+                )
+                return
+            }
+
+            setPendingAbility(null)
+            setSelectingGravityDirection(null)
+            setPendingTransferSkill({
+                ability,
+                inventoryIndex,
+                targetPlayer: null,
+            })
+            setStatusMessage('Selecciona un rival y despues la habilidad que quieres entregar.')
+            return
+        }
+
         if (ABILITY_META[ability].needsTarget) {
+            setPendingTransferSkill(null)
             setSelectingGravityDirection(null)
             setPendingAbility({ id: ability, inventoryIndex })
             setStatusMessage(`Selecciona casilla para ${getAbilityDisplayName(ability)}.`)
@@ -1100,6 +1186,7 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
         if (ability === 'gravity') {
             setPendingAbility(null)
+            setPendingTransferSkill(null)
             setSelectingGravityDirection({ inventoryIndex })
             setStatusMessage('Selecciona dirección para la gravedad.')
             return
@@ -1232,7 +1319,8 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const renderSkillCard = (ability: AbilityId, index: number) => {
         const skillKey = `${localPiece}-${ability}-${index}`
         const isExpanded = expandedSkillKey === skillKey
-        const isActive = pendingAbility?.inventoryIndex === index && currentTurn === localPiece
+        const isActive = currentTurn === localPiece
+            && (pendingAbility?.inventoryIndex === index || pendingTransferSkill?.inventoryIndex === index)
         const meta = ABILITY_META[ability] || { iconSrc: questionCellDefault, name: 'Desconocida', needsTarget: false }
         const displayName = getAbilityDisplayName(ability)
         const description = ABILITY_DESCRIPTIONS[ability] || 'Sin descripcion disponible.'
@@ -1272,6 +1360,31 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
 
     const leftPlayers = normalizedPlayers.slice(0, 2)
     const rightPlayers = normalizedPlayers.slice(2, 4)
+    const transferTargetOptions = pendingTransferSkill ? getAliveOpponents(localPiece) : []
+    const transferSkillChoices = pendingTransferSkill
+        ? inventories[localPiece].map((ability, index) => ({ ability, index })).filter(({ index }) => index !== pendingTransferSkill.inventoryIndex)
+        : []
+    const handleTransferSkillSelection = (givenSkillIndex: number) => {
+        if (!pendingTransferSkill?.targetPlayer) {
+            return
+        }
+
+        const transferSelection = pendingTransferSkill
+        const targetPlayer = transferSelection.targetPlayer
+        if (!targetPlayer) {
+            return
+        }
+        setPendingTransferSkill(null)
+        useInstantAbility(
+            transferSelection.ability,
+            transferSelection.inventoryIndex,
+            undefined,
+            {
+                targetPlayer,
+                givenSkillIndex,
+            },
+        )
+    }
 
     return (
         <div className="duel-quad">
@@ -1390,18 +1503,21 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                                 {gameOver ? 'Partida finalizada' : `${currentTurnPlayer?.name ?? '-'} (${currentTurnPlayer?.color ?? '-'})`}
                             </span>
 
-                            {(pendingAbility || selectingGravityDirection) && (
+                            {(pendingAbility || selectingGravityDirection || pendingTransferSkill) && (
                                 <div className="duel-quad__ability-pending-bar">
                                     <span className="duel-quad__ability-pending-text">
-                                        {pendingAbility
-                                            ? `Usando: ${getAbilityDisplayName(pendingAbility.id)}`
-                                            : 'Selecciona direccion de gravedad'}
+                                        {pendingTransferSkill
+                                            ? `Usando: ${getAbilityDisplayName(pendingTransferSkill.ability)}`
+                                            : pendingAbility
+                                                ? `Usando: ${getAbilityDisplayName(pendingAbility.id)}`
+                                                : 'Selecciona direccion de gravedad'}
                                     </span>
                                     <button
                                         className="duel-quad__ability-cancel-btn"
                                         type="button"
                                         onClick={() => {
                                             setPendingAbility(null)
+                                            setPendingTransferSkill(null)
                                             setSelectingGravityDirection(null)
                                             setStatusMessage('Accion cancelada.')
                                         }}
@@ -1532,6 +1648,77 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
                     </aside>
                 </main>
             </div>
+
+            <Modal
+                isOpen={Boolean(pendingTransferSkill)}
+                onClose={() => {
+                    setPendingTransferSkill(null)
+                    setStatusMessage('Accion cancelada.')
+                }}
+                maxWidth="720px"
+                overlayClassName="popup-overlay"
+                boxClassName="popup-box popup-box--game"
+                closeButtonClassName="popup-close"
+                ariaLabelledBy="duel-quad-transfer-skill-title"
+            >
+                {pendingTransferSkill && (
+                    <div className="duel-quad-result popup-surface">
+                        <div className="duel-quad-result__top">
+                            <h2 className="duel-quad-result__title" id="duel-quad-transfer-skill-title">
+                                {pendingTransferSkill.ability === 'exchange_skill' ? 'Intercambiar habilidad' : 'Regalar habilidad'}
+                            </h2>
+                        </div>
+
+                        <p className="duel-modal__text">
+                            Paso 1: Selecciona el rival objetivo.
+                        </p>
+                        <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', marginTop: '1rem' }}>
+                            {transferTargetOptions.map((piece) => (
+                                <button
+                                    key={`transfer-target-${piece}`}
+                                    type="button"
+                                    className={`duel-quad__target-player-btn ${pendingTransferSkill.targetPlayer === piece ? 'duel-quad__target-player-btn--selected' : ''}`}
+                                    onClick={() => setPendingTransferSkill(current => current ? { ...current, targetPlayer: piece } : current)}
+                                >
+                                    <div className="duel-quad__target-player-text">
+                                        <span className="duel-quad__target-player-name">{playerNameByPiece(piece)}</span>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+
+                        <p className="duel-modal__text" style={{ marginTop: '1rem' }}>
+                            Paso 2: Elige qué habilidad de tu inventario quieres entregar.
+                        </p>
+                        <div style={{ display: 'grid', gap: '0.75rem', marginTop: '1rem' }}>
+                            {transferSkillChoices.map(({ ability, index }) => {
+                                const meta = ABILITY_META[ability] || { iconSrc: questionCellDefault, name: 'Desconocida', needsTarget: false }
+                                return (
+                                    <button
+                                        key={`transfer-choice-${index}-${ability}`}
+                                        type="button"
+                                        className="duel-quad__skill-main duel-quad__skill-main--transfer-modal"
+                                        disabled={!pendingTransferSkill.targetPlayer}
+                                        onClick={() => handleTransferSkillSelection(index)}
+                                        style={{
+                                            width: '100%',
+                                            justifyContent: 'flex-start',
+                                            backgroundImage: `url(${skillSlotImage})`,
+                                        }}
+                                    >
+                                        <span className="duel-quad__skill-icon duel-quad__skill-icon--transfer-modal">
+                                            <img src={meta.iconSrc} alt="" aria-hidden="true" />
+                                        </span>
+                                        <div className="duel-quad__skill-text duel-quad__skill-text--transfer-modal">
+                                            <span className="duel-quad__skill-name duel-quad__skill-name--transfer-modal">{getAbilityDisplayName(ability)}</span>
+                                        </div>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
+            </Modal>
 
             <Modal
                 isOpen={gameOver}

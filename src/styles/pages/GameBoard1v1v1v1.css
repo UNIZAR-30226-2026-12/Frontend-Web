@@ -936,6 +936,66 @@
     transform: translateX(0.22rem);
 }
 
+.duel-quad__skill-main--transfer-modal {
+    min-height: 4.6rem;
+    gap: 0.48rem;
+    padding: 0.9rem 1rem 0.9rem 1.4rem;
+    background-position: center 54%;
+    background-size: 100% 128%;
+    background-repeat: no-repeat;
+    transform: translateX(0.26rem);
+}
+
+.duel-quad__target-player-btn {
+    width: 100%;
+    min-height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem 1rem;
+    border: 2px solid rgba(108, 69, 34, 0.5);
+    border-radius: 16px;
+    background:
+        linear-gradient(180deg, rgba(255, 247, 227, 0.98) 0%, rgba(244, 219, 175, 0.96) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 8px 18px rgba(70, 41, 15, 0.16);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.duel-quad__target-player-btn:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        0 10px 22px rgba(70, 41, 15, 0.2);
+}
+
+.duel-quad__target-player-btn--selected {
+    border-color: rgba(167, 101, 33, 0.95);
+    background:
+        linear-gradient(180deg, rgba(255, 240, 202, 1) 0%, rgba(238, 196, 124, 0.98) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 0 0 3px rgba(255, 246, 217, 0.78),
+        0 10px 22px rgba(70, 41, 15, 0.22);
+}
+
+.duel-quad__target-player-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+}
+
+.duel-quad__target-player-name {
+    color: #38210f;
+    font-size: clamp(1rem, 1.35vw, 1.14rem);
+    font-weight: 800;
+    line-height: 1.15;
+    text-align: center;
+    text-shadow: 0 1px 0 rgba(255, 247, 227, 0.55);
+}
+
 .duel-quad__skill-main:disabled {
     opacity: 0.56;
     cursor: default;
@@ -959,6 +1019,11 @@
     filter: drop-shadow(0 2px 2px rgba(31, 20, 10, 0.3));
 }
 
+.duel-quad__skill-icon--transfer-modal {
+    width: 2.35rem;
+    height: 2.35rem;
+}
+
 .duel-quad__skill-text {
     min-width: 0;
 }
@@ -969,6 +1034,16 @@
     font-weight: 700;
     line-height: 1.12;
     text-shadow: 0 1px 0 rgba(255, 240, 212, 0.4);
+}
+
+.duel-quad__skill-text--transfer-modal {
+    display: flex;
+    align-items: center;
+}
+
+.duel-quad__skill-name--transfer-modal {
+    font-size: clamp(0.9rem, 1.16vw, 1.02rem);
+    font-weight: 800;
 }
 
 .duel-quad__skill-info-toggle {

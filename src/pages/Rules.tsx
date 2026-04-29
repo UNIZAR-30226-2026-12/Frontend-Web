@@ -121,11 +121,11 @@ function Rules({ onNavigate }: RulesProps) {
               </details>
               <details>
                 <summary>Intercambiar habilidad</summary>
-                <p>Das una habilidad aleatoria tuya y recibes una aleatoria del rival. Si no hay habilidades en origen o destino, no se puede usar.</p>
+                <p>Eliges una habilidad de tu inventario para entregarla y recibes una del rival. Si no hay habilidades en origen o destino, no se puede usar.</p>
               </details>
               <details>
                 <summary>Dar habilidad</summary>
-                <p>Entregas una habilidad aleatoria de tu mano a otro jugador. Si no tienes ninguna, no se puede usar.</p>
+                <p>Eliges una habilidad de tu inventario para regalarla a otro jugador. Si no tienes otra habilidad, no se puede usar.</p>
               </details>
             </div>
           </article>
