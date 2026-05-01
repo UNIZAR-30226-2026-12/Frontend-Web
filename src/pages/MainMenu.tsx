@@ -60,15 +60,18 @@ function MainMenu({ onNavigate }: MainMenuProps) {
         onNavigate('home')
     }
 
-    const handleSelectAIMode = async (mode: '1vs1' | '1vs1vs1vs1') => {
+    const handleSelectAIMode = async (mode: string) => {
         if (isCreatingAI) return
 
         try {
             setIsCreatingAI(true)
             setShowIAModal(false)
 
-            if (mode === '1vs1') {
-                const res = await api.games.create('vs_ai_skills')
+            const isFourPlayers = mode.includes('1vs1vs1vs1')
+
+            if (!isFourPlayers) {
+                const backendMode = mode === '1vs1' ? 'vs_ai' : 'vs_ai_skills'
+                const res = await api.games.create(backendMode)
                 onNavigate('game-1vs1', {
                     matchData: {
                         online: true,
@@ -84,7 +87,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                 return
             }
 
-            const res = await api.games.create('1vs1vs1vs1_skills')
+            const res = await api.games.create(mode)
             const gameId = String(res.game_id)
 
             await api.games.addBot(gameId)

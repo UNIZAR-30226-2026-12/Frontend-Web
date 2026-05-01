@@ -411,9 +411,12 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
     const [inventories, setInventories] = useState<Record<Piece, AbilityId[]>>({
         black: [], white: [], red: [], blue: []
     })
-    const [questionCells, setQuestionCells] = useState<Set<string>>(() =>
-        ENABLE_SPECIAL_MECHANICS_4V4 ? createQuestionCells(createInitialBoard()) : new Set(),
-    )
+    const [questionCells, setQuestionCells] = useState<Set<string>>(() => {
+        if (isOnlineMatch || !ENABLE_SPECIAL_MECHANICS_4V4) {
+            return new Set<string>()
+        }
+        return createQuestionCells(createInitialBoard())
+    })
     const [pendingAbility, setPendingAbility] = useState<PendingAbility | null>(null)
     const [pendingTransferSkill, setPendingTransferSkill] = useState<PendingTransferSkill | null>(null)
     const [selectingGravityDirection, setSelectingGravityDirection] = useState<{ inventoryIndex: number } | null>(null)
@@ -669,6 +672,9 @@ function GameBoard1v1v1v1({ onNavigate, matchData }: GameBoard1v1v1v1Props) {
             setStatusMessage('No hay sesion activa')
             return
         }
+
+        // Evita mostrar casillas de habilidad "fantasma" antes del primer sync real del backend.
+        setQuestionCells(new Set<string>())
 
         const wsUrl = `${WS_BASE_URL}/ws/play/${encodeURIComponent(matchData.gameId)}?token=${encodeURIComponent(token)}`
         const ws = new WebSocket(wsUrl)
