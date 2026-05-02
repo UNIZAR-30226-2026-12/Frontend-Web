@@ -530,7 +530,11 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                 <div className="profile__paper-card profile__paper-card--settings">
                                     <h3 className="profile__paper-title">Ajustes de cuenta</h3>
 
-                                    <div className="profile__form-grid">
+                                    <form
+                                        className="profile__form-grid"
+                                        onSubmit={(e) => { e.preventDefault(); handleSaveSettings() }}
+                                        noValidate
+                                    >
                                         <label className="profile__form-field">
                                             <span>Nombre de usuario</span>
                                             <input
@@ -539,6 +543,7 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                                 value={settingsForm.username}
                                                 onChange={(e) => setSettingsForm((prev) => ({ ...prev, username: e.target.value }))}
                                                 placeholder="Tu nombre"
+                                                autoComplete="username"
                                             />
                                         </label>
 
@@ -550,6 +555,7 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                                 value={settingsForm.email}
                                                 onChange={(e) => setSettingsForm((prev) => ({ ...prev, email: e.target.value }))}
                                                 placeholder="tu@email.com"
+                                                autoComplete="email"
                                             />
                                         </label>
 
@@ -561,6 +567,7 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                                 value={settingsForm.currentPassword}
                                                 onChange={(e) => setSettingsForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
                                                 placeholder="********"
+                                                autoComplete="current-password"
                                             />
                                         </label>
 
@@ -574,6 +581,7 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                                 value={settingsForm.newPassword}
                                                 onChange={(e) => setSettingsForm((prev) => ({ ...prev, newPassword: e.target.value }))}
                                                 placeholder="********"
+                                                autoComplete="new-password"
                                             />
                                         </label>
 
@@ -585,16 +593,17 @@ function Profile({ onNavigate, userId, username, returnTo }: ProfileProps) {
                                                 value={settingsForm.confirmPassword}
                                                 onChange={(e) => setSettingsForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                                                 placeholder="********"
+                                                autoComplete="new-password"
                                             />
                                         </label>
-                                    </div>
 
-                                    {settingsError && <p className="profile__form-msg profile__form-msg--error" role="alert">{settingsError}</p>}
-                                    {settingsSuccess && <p className="profile__form-msg profile__form-msg--ok" role="status">{settingsSuccess}</p>}
+                                        {settingsError && <p className="profile__form-msg profile__form-msg--error" role="alert">{settingsError}</p>}
+                                        {settingsSuccess && <p className="profile__form-msg profile__form-msg--ok" role="status">{settingsSuccess}</p>}
 
-                                    <button type="button" className="profile__save-btn" onClick={handleSaveSettings} disabled={savingSettings}>
-                                        {savingSettings ? 'Guardando...' : 'Guardar cambios'}
-                                    </button>
+                                        <button type="submit" className="profile__save-btn" disabled={savingSettings}>
+                                            {savingSettings ? 'Guardando...' : 'Guardar cambios'}
+                                        </button>
+                                    </form>
                                 </div>
                             </section>
                         )

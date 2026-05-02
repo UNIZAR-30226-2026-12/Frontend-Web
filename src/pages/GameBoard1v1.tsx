@@ -856,7 +856,7 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
     }, [board, currentTurn, gameOver, inventories, isOnlineMatch, skipTurns])
 
     useEffect(() => {
-        if (isOnlineMatch || isAiMatch) {
+        if (!isOnlineMatch || isAiMatch) {
             return
         }
 
@@ -1075,30 +1075,6 @@ function GameBoard1v1({ onNavigate, matchData }: GameBoard1v1Props) {
                 message = `${playerNameByPiece(player)} robó una habilidad al rival.`
             } else {
                 message = 'No se pudo robar habilidad: el rival no tiene.'
-            }
-        }
-
-        if ((ability as string) === 'exchange_skill') {
-            if (nextInventories[player].length > 0 && nextInventories[opponent].length > 0) {
-                const playerIndex = randomInt(nextInventories[player].length)
-                const opponentIndex = randomInt(nextInventories[opponent].length)
-                const playerAbility = nextInventories[player][playerIndex]
-                nextInventories[player][playerIndex] = nextInventories[opponent][opponentIndex]
-                nextInventories[opponent][opponentIndex] = playerAbility
-                message = 'Se intercambió una habilidad al azar entre ambos jugadores.'
-            } else {
-                message = 'No se pudo intercambiar: faltan habilidades en alguno de los jugadores.'
-            }
-        }
-
-        if ((ability as string) === 'give_skill') {
-            if (nextInventories[player].length > 0) {
-                const giveIndex = randomInt(nextInventories[player].length)
-                const [given] = nextInventories[player].splice(giveIndex, 1)
-                nextInventories[opponent].push(given)
-                message = `${playerNameByPiece(player)} entregó una habilidad al rival.`
-            } else {
-                message = 'No había otra habilidad para entregar.'
             }
         }
 

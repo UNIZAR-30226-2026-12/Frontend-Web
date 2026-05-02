@@ -1,4 +1,4 @@
-﻿import { useState, type FormEvent } from 'react'
+﻿import { useState, useEffect, type FormEvent } from 'react'
 import { api } from '../services/api'
 import Modal from './Modal'
 import loginPostit from '../assets/inicio/positIniciarSesion.png'
@@ -53,6 +53,16 @@ function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword, successMess
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const titleId = 'login-modal-title'
+
+  useEffect(() => {
+    if (!isOpen) {
+      setUsername('')
+      setPassword('')
+      setShowPassword(false)
+      setError('')
+    }
+  }, [isOpen])
+
   const errorId = 'login-modal-error'
 
   const handleLogin = async (e: FormEvent) => {
@@ -85,6 +95,7 @@ function LoginModal({ isOpen, onClose, onNavigate, onForgotPassword, successMess
     >
       <div className="auth-form auth-form--prototype auth-form--login">
         <img className="auth-form__paper" src={loginPostit} alt="" aria-hidden="true" />
+        <button type="button" className="auth-modal-close auth-modal-close--login" onClick={onClose} aria-label="Cerrar" title="Cerrar">X</button>
         <img className="auth-form__mascot auth-form__mascot--login" src={loginMascot} alt="" aria-hidden="true" />
 
         <div className="auth-form__content">

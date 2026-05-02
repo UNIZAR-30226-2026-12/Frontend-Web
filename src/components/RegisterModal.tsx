@@ -79,14 +79,15 @@ function RegisterModal({ isOpen, onClose, onRegisterSuccess }: RegisterModalProp
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      showCloseButton={false}
       overlayClassName="auth-modal-overlay"
       boxClassName="auth-modal-box auth-modal-box--register"
-      closeButtonClassName="auth-modal-close"
       ariaLabelledBy={titleId}
       ariaDescribedBy={error ? errorId : undefined}
     >
       <div className="auth-form auth-form--prototype auth-form--register">
         <img className="auth-form__paper" src={registerPostit} alt="" aria-hidden="true" />
+        <button type="button" className="auth-modal-close" onClick={onClose} aria-label="Cerrar" title="Cerrar">X</button>
 
         <div className="auth-form__content">
           <h2 className="auth-form__sr-title" id={titleId}>Crear Cuenta</h2>

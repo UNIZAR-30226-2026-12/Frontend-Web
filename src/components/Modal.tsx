@@ -141,6 +141,7 @@ function Modal({
             className={closeClasses}
             onClick={onClose}
             title="Cerrar"
+            aria-label="Cerrar"
             ref={closeButtonRef}
           >
             x
