@@ -108,6 +108,7 @@ function Friends({ onNavigate }: FriendsProps) {
     const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false)
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null)
     const [selectedExtraFriends, setSelectedExtraFriends] = useState<number[]>([])
+    const [selectedGroupMode, setSelectedGroupMode] = useState<string>('1vs1vs1vs1')
     const [isChatModalOpen, setIsChatModalOpen] = useState(false)
     const [activeChatFriend, setActiveChatFriend] = useState<Friend | null>(null)
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
@@ -317,8 +318,7 @@ function Friends({ onNavigate }: FriendsProps) {
     }
 
     const sendInvite = async (mode: string, friendIds: number[]) => {
-        const backendMode = mode === '1vs1' ? '1vs1_skills' : '1vs1vs1vs1_skills'
-        const response = await api.games.invite(friendIds, backendMode)
+        const response = await api.games.invite(friendIds, mode)
         showToast(`Invitacion enviada`, 'info')
         onNavigate('waiting-room', {
             mode,
@@ -330,9 +330,10 @@ function Friends({ onNavigate }: FriendsProps) {
     const handleConfirmInvite = async (mode: string) => {
         if (!selectedFriend) return
 
-        if (mode === '1vs1vs1vs1') {
+        if (mode === '1vs1vs1vs1' || mode === '1vs1vs1vs1_skills') {
             setIsGameModalOpen(false)
             setSelectedExtraFriends([])
+            setSelectedGroupMode(mode)
             setIsGroupInviteModalOpen(true)
             return
         }
@@ -365,7 +366,7 @@ function Friends({ onNavigate }: FriendsProps) {
 
         try {
             const friendIds = [selectedFriend.id, ...selectedExtraFriends]
-            await sendInvite('1vs1vs1vs1', friendIds)
+            await sendInvite(selectedGroupMode, friendIds)
             setIsGroupInviteModalOpen(false)
         } catch {
             showToast('Error al enviar invitaciones', 'error')

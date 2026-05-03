@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import GameModal from '../components/GameModal'
+import ConfirmModal from '../components/ConfirmModal'
 import { resolveUserAvatar } from '../config/avatarOptions'
 import menuBackground from '../assets/elementosGenerales/nuevoFondoReversi.png'
 import logoReversi from '../assets/elementosGenerales/logoReversi.png'
@@ -28,6 +29,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
     const [user, setUser] = useState<UserData | null>(null)
     const [showIAModal, setShowIAModal] = useState(false)
     const [isCreatingAI, setIsCreatingAI] = useState(false)
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -58,6 +60,11 @@ function MainMenu({ onNavigate }: MainMenuProps) {
     const handleLogout = () => {
         localStorage.removeItem('token')
         onNavigate('home')
+    }
+
+    const handleLogoutConfirm = () => {
+        setShowLogoutConfirm(false)
+        handleLogout()
     }
 
     const handleSelectAIMode = async (mode: string) => {
@@ -161,7 +168,7 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                     <span className="menu__profile-elo">{user?.elo ?? 1000} RR</span>
                 </button>
 
-                <button className="menu__logout-btn" onClick={handleLogout} title="Cerrar sesion" aria-label="Cerrar sesion">
+                <button className="menu__logout-btn" onClick={() => setShowLogoutConfirm(true)} title="Cerrar sesion" aria-label="Cerrar sesion">
                     <img src={logoutSticker} alt="" />
                 </button>
             </div>
@@ -208,6 +215,16 @@ function MainMenu({ onNavigate }: MainMenuProps) {
                 availableModes={['1vs1', '1vs1vs1vs1']}
                 onSelectMode={handleSelectAIMode}
                 isLoading={isCreatingAI}
+            />
+
+            <ConfirmModal
+                isOpen={showLogoutConfirm}
+                onClose={() => setShowLogoutConfirm(false)}
+                onConfirm={handleLogoutConfirm}
+                title="Cerrar sesión"
+                message="¿Seguro que quieres cerrar sesión?"
+                confirmLabel="Cerrar sesión"
+                cancelLabel="Cancelar"
             />
         </div>
     )
