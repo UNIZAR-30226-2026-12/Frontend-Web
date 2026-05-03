@@ -15,6 +15,74 @@ interface GameModalProps {
     isLoading?: boolean
 }
 
+interface PreviewCell {
+    color?: 'white' | 'black' | 'red' | 'blue'
+    gridArea: string
+}
+
+const oneVsOnePreviewCells: PreviewCell[] = [
+    { color: 'white', gridArea: '4 / 4' },
+    { color: 'black', gridArea: '4 / 5' },
+    { color: 'black', gridArea: '5 / 4' },
+    { color: 'white', gridArea: '5 / 5' },
+]
+
+const oneVsOneSpecialCells: PreviewCell[] = [
+    { gridArea: '2 / 7' },
+    { gridArea: '6 / 2' },
+    { gridArea: '2 / 2' },
+    { gridArea: '7 / 6' },
+]
+
+const fourPlayersPreviewCells: PreviewCell[] = [
+    { color: 'black', gridArea: '4 / 4' },
+    { color: 'white', gridArea: '4 / 5' },
+    { color: 'red', gridArea: '5 / 4' },
+    { color: 'blue', gridArea: '5 / 5' },
+    { color: 'white', gridArea: '4 / 12' },
+    { color: 'black', gridArea: '4 / 13' },
+    { color: 'blue', gridArea: '5 / 12' },
+    { color: 'red', gridArea: '5 / 13' },
+    { color: 'red', gridArea: '12 / 4' },
+    { color: 'blue', gridArea: '12 / 5' },
+    { color: 'black', gridArea: '13 / 4' },
+    { color: 'white', gridArea: '13 / 5' },
+    { color: 'blue', gridArea: '12 / 12' },
+    { color: 'red', gridArea: '12 / 13' },
+    { color: 'white', gridArea: '13 / 12' },
+    { color: 'black', gridArea: '13 / 13' },
+]
+
+const fourPlayersSpecialCells: PreviewCell[] = [
+    { gridArea: '2 / 10' },
+    { gridArea: '10 / 2' },
+    { gridArea: '15 / 12' },
+    { gridArea: '3 / 15' },
+    { gridArea: '8 / 7' },
+]
+
+function BoardPreview({ mode, withSkills }: { mode: BaseMode, withSkills: boolean }) {
+    const isOneVsOne = mode === '1vs1'
+    const sizeClass = isOneVsOne ? '8' : '16'
+    const pieceCells = isOneVsOne ? oneVsOnePreviewCells : fourPlayersPreviewCells
+    const specialCells = isOneVsOne ? oneVsOneSpecialCells : fourPlayersSpecialCells
+
+    return (
+        <div className={`board-preview board-preview--${sizeClass}`}>
+            {withSkills && specialCells.map((cell) => (
+                <div key={`special-${cell.gridArea}`} className="board-preview__special-cell" style={{ gridArea: cell.gridArea }}>?</div>
+            ))}
+            {pieceCells.map((cell) => (
+                <div
+                    key={`${cell.color}-${cell.gridArea}`}
+                    className={`board-preview__piece board-preview__piece--${cell.color}`}
+                    style={{ gridArea: cell.gridArea }}
+                ></div>
+            ))}
+        </div>
+    )
+}
+
 function GameModal({
     isOpen,
     onClose,
@@ -92,7 +160,7 @@ function GameModal({
                         onClick={handleBack}
                         aria-label="Volver a selección de modo"
                     >
-                        ← Atrás
+                        Atrás
                     </button>
                 )}
 
@@ -104,16 +172,7 @@ function GameModal({
                         {showOneVsOne && (
                             <button type="button" className="game-modal__option" onClick={() => handleModeClick('1vs1')} disabled={isLoading}>
                                 <div className="game-modal__option-icon">
-                                    <div className="board-preview board-preview--8">
-                                        <div className="board-preview__special-cell" style={{ gridArea: '2 / 7' }}>?</div>
-                                        <div className="board-preview__special-cell" style={{ gridArea: '6 / 2' }}>?</div>
-                                        <div className="board-preview__special-cell" style={{ gridArea: '2 / 2' }}>?</div>
-                                        <div className="board-preview__special-cell" style={{ gridArea: '7 / 6' }}>?</div>
-                                        <div className="board-preview__piece board-preview__piece--white" style={{ gridArea: '4 / 4' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--black" style={{ gridArea: '4 / 5' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--black" style={{ gridArea: '5 / 4' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--white" style={{ gridArea: '5 / 5' }}></div>
-                                    </div>
+                                    <BoardPreview mode="1vs1" withSkills={true} />
                                 </div>
                                 <div className="game-modal__option-info">
                                     <span className="game-modal__option-name">1 vs 1</span>
@@ -125,29 +184,7 @@ function GameModal({
                         {showFourPlayers && (
                             <button type="button" className="game-modal__option" onClick={() => handleModeClick('1vs1vs1vs1')} disabled={isLoading}>
                                 <div className="game-modal__option-icon">
-                                    <div className="board-preview board-preview--16">
-                                        <div className="board-preview__special-cell" style={{ gridArea: '2 / 10' }}>?</div>
-                                        <div className="board-preview__special-cell" style={{ gridArea: '10 / 2' }}>?</div>
-                                        <div className="board-preview__special-cell" style={{ gridArea: '15 / 12' }}>?</div>
-                                        <div className="board-preview__special-cell" style={{ gridArea: '3 / 15' }}>?</div>
-                                        <div className="board-preview__special-cell" style={{ gridArea: '8 / 7' }}>?</div>
-                                        <div className="board-preview__piece board-preview__piece--black" style={{ gridArea: '4 / 4' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--white" style={{ gridArea: '4 / 5' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--red" style={{ gridArea: '5 / 4' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--blue" style={{ gridArea: '5 / 5' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--white" style={{ gridArea: '4 / 12' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--black" style={{ gridArea: '4 / 13' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--blue" style={{ gridArea: '5 / 12' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--red" style={{ gridArea: '5 / 13' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--red" style={{ gridArea: '12 / 4' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--blue" style={{ gridArea: '12 / 5' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--black" style={{ gridArea: '13 / 4' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--white" style={{ gridArea: '13 / 5' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--blue" style={{ gridArea: '12 / 12' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--red" style={{ gridArea: '12 / 13' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--white" style={{ gridArea: '13 / 12' }}></div>
-                                        <div className="board-preview__piece board-preview__piece--black" style={{ gridArea: '13 / 13' }}></div>
-                                    </div>
+                                    <BoardPreview mode="1vs1vs1vs1" withSkills={true} />
                                 </div>
                                 <div className="game-modal__option-info">
                                     <span className="game-modal__option-name">1 vs 1 vs 1 vs 1</span>
@@ -162,12 +199,7 @@ function GameModal({
                     <div className="game-modal__options">
                         <button type="button" className="game-modal__option" onClick={() => handleVariantClick(false)} disabled={isLoading}>
                             <div className="game-modal__option-icon">
-                                <div className={`board-preview board-preview--${selectedMode === '1vs1' ? '8' : '16'}`}>
-                                    <div className="board-preview__piece board-preview__piece--white" style={{ gridArea: '4 / 4' }}></div>
-                                    <div className="board-preview__piece board-preview__piece--black" style={{ gridArea: '4 / 5' }}></div>
-                                    <div className="board-preview__piece board-preview__piece--black" style={{ gridArea: '5 / 4' }}></div>
-                                    <div className="board-preview__piece board-preview__piece--white" style={{ gridArea: '5 / 5' }}></div>
-                                </div>
+                                <BoardPreview mode={selectedMode!} withSkills={false} />
                             </div>
                             <div className="game-modal__option-info">
                                 <span className="game-modal__option-name">Clásico</span>
@@ -177,16 +209,7 @@ function GameModal({
 
                         <button type="button" className="game-modal__option" onClick={() => handleVariantClick(true)} disabled={isLoading}>
                             <div className="game-modal__option-icon">
-                                <div className={`board-preview board-preview--${selectedMode === '1vs1' ? '8' : '16'}`}>
-                                    <div className="board-preview__special-cell" style={{ gridArea: '2 / 7' }}>?</div>
-                                    <div className="board-preview__special-cell" style={{ gridArea: '6 / 2' }}>?</div>
-                                    <div className="board-preview__special-cell" style={{ gridArea: '2 / 2' }}>?</div>
-                                    <div className="board-preview__special-cell" style={{ gridArea: '7 / 6' }}>?</div>
-                                    <div className="board-preview__piece board-preview__piece--white" style={{ gridArea: '4 / 4' }}></div>
-                                    <div className="board-preview__piece board-preview__piece--black" style={{ gridArea: '4 / 5' }}></div>
-                                    <div className="board-preview__piece board-preview__piece--black" style={{ gridArea: '5 / 4' }}></div>
-                                    <div className="board-preview__piece board-preview__piece--white" style={{ gridArea: '5 / 5' }}></div>
-                                </div>
+                                <BoardPreview mode={selectedMode!} withSkills={true} />
                             </div>
                             <div className="game-modal__option-info">
                                 <span className="game-modal__option-name">Con Habilidades</span>

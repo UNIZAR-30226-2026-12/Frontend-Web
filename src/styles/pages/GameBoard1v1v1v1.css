@@ -6,10 +6,7 @@
     min-height: 100svh;
     min-height: 100dvh;
     padding:
-        max(env(safe-area-inset-top), 0.35rem)
-        max(env(safe-area-inset-right), 0.35rem)
-        max(env(safe-area-inset-bottom), 0.35rem)
-        max(env(safe-area-inset-left), 0.35rem);
+        max(env(safe-area-inset-top), 0.35rem) max(env(safe-area-inset-right), 0.35rem) max(env(safe-area-inset-bottom), 0.35rem) max(env(safe-area-inset-left), 0.35rem);
     display: flex;
     align-items: stretch;
     justify-content: center;
@@ -1473,10 +1470,7 @@
 @media (max-width: 1024px) {
     .duel-quad {
         padding:
-            max(env(safe-area-inset-top), 0)
-            max(env(safe-area-inset-right), 0)
-            max(env(safe-area-inset-bottom), 0)
-            max(env(safe-area-inset-left), 0);
+            max(env(safe-area-inset-top), 0) max(env(safe-area-inset-right), 0) max(env(safe-area-inset-bottom), 0) max(env(safe-area-inset-left), 0);
     }
 
     .duel-quad__container {
