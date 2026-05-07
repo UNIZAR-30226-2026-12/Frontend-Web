@@ -257,8 +257,7 @@ function OnlineGame({ onNavigate }: OnlineGameProps) {
 
     const handleCreateGame = async (mode: string) => {
         try {
-            const backendMode = mode === '1vs1' ? '1vs1_skills' : '1vs1vs1vs1_skills'
-            const res = await api.games.create(backendMode)
+            const res = await api.games.create(mode)
             setShowCreateModal(false)
             onNavigate('waiting-room', {
                 gameId: res.game_id,
