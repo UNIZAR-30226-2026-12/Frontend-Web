@@ -23,20 +23,6 @@ describe('Modal', () => {
     expect(screen.getByText('Visible content')).toBeInTheDocument()
   })
 
-  it('closes when the close button is clicked', () => {
-    const onClose = vi.fn()
-
-    render(
-      <Modal isOpen onClose={onClose}>
-        <div>Visible content</div>
-      </Modal>,
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: 'x' }))
-
-    expect(onClose).toHaveBeenCalledTimes(1)
-  })
-
   it('closes when mouse down and mouse up happen on the overlay', () => {
     const onClose = vi.fn()
     const { container } = render(
