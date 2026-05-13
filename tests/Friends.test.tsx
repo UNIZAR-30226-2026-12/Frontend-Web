@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Friends from '../src/pages/Friends'
 import { api } from '../src/services/api'
@@ -83,20 +83,6 @@ describe('Friends', () => {
     apiMocks.games.invite.mockResolvedValue({ game_id: 999 })
     apiMocks.games.leaveLobby.mockResolvedValue({})
   })
-
-  const openFourPlayersInviteFlow = async () => {
-    const batButton = await screen.findByRole('button', { name: 'Bat' })
-    const batCard = batButton.closest('.friend-card')
-    expect(batCard).not.toBeNull()
-    fireEvent.click(within(batCard as HTMLElement).getByRole('button', { name: 'Duelo' }))
-
-    const fourPlayersLabel = await screen.findByText('1 vs 1 vs 1 vs 1')
-    const fourPlayersButton = fourPlayersLabel.closest('button')
-    expect(fourPlayersButton).not.toBeNull()
-    fireEvent.click(fourPlayersButton as HTMLButtonElement)
-
-    return await screen.findByRole('dialog', { name: 'Selecciona 2 amigos extra' })
-  }
 
   it('muestra las partidas pausadas con el modo visual normalizado y permite reanudar', async () => {
     apiMocks.friends.list.mockResolvedValue({
